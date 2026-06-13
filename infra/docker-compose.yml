@@ -1,0 +1,34 @@
+# Local development infrastructure for the ERP platform.
+# Brings up PostgreSQL only (Phase 0). Production uses AWS RDS; secrets there
+# come from Secrets Manager, never this file (CLAUDE.md §4.4).
+#
+#   docker compose -f infra/docker-compose.yml up -d
+#
+# The credentials below are LOCAL-ONLY and match
+# backend/src/Erp.Api/appsettings.Development.json.
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: erp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: erp
+      POSTGRES_USER: erp
+      POSTGRES_PASSWORD: erp_local_dev
+      # Needed later so a dedicated, least-privilege app role (no UPDATE/DELETE
+      # on audit_logs) can be created alongside the superuser.
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    ports:
+      - "5432:5432"
+    volumes:
+      - erp_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U erp -d erp"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  erp_pgdata:
+    name: erp_pgdata

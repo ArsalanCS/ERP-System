@@ -1,0 +1,439 @@
+{
+  "app": {
+    "name": "ERP Administration",
+    "brand": "Xonfo ERP"
+  },
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "ar": "العربية"
+  },
+  "nav": {
+    "groups": {
+      "administration": "Administration",
+      "account": "Account"
+    },
+    "overview": "Administration Dashboard",
+    "users": "Users",
+    "accessControl": "Access Control",
+    "businessStructure": "Business Structure",
+    "security": "Security",
+    "audit": "Audit & Activity",
+    "settings": "Settings",
+    "profile": "My Profile"
+  },
+  "topbar": {
+    "searchPlaceholder": "Search…",
+    "newAction": "New",
+    "notifications": "Notifications",
+    "help": "Help"
+  },
+  "workspace": {
+    "switcher": "Switch workspace",
+    "current": "Current workspace"
+  },
+  "common": {
+    "comingSoon": "Coming soon",
+    "comingSoonBody": "This section is part of the Identity module and will be built in a later slice.",
+    "selectSection": "Select a section from the menu to get started.",
+    "loading": "Loading…",
+    "signOut": "Sign out",
+    "close": "Close",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search",
+    "actions": "Actions",
+    "all": "All",
+    "none": "None",
+    "retry": "Try again",
+    "loadError": "Couldn't load this data. Please try again.",
+    "saved": "Saved.",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "optional": "optional",
+    "never": "Never",
+    "pagination": {
+      "summary": "Showing {{from}}–{{to}} of {{total}}",
+      "prev": "Previous",
+      "next": "Next",
+      "page": "Page {{page}} of {{totalPages}}"
+    }
+  },
+  "auth": {
+    "backToLogin": "Back to sign in",
+    "fields": {
+      "workspace": "Workspace",
+      "email": "Email",
+      "password": "Password",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "twoFactorCode": "Authentication code"
+    },
+    "twoFactor": {
+      "prompt": "Enter the 6-digit code from your authenticator app.",
+      "verify": "Verify & sign in"
+    },
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Sign in to your workspace to continue.",
+      "submit": "Sign in",
+      "forgotLink": "Forgot your password?"
+    },
+    "forgot": {
+      "title": "Reset your password",
+      "subtitle": "Enter your workspace and email and we'll send you a reset link.",
+      "submit": "Send reset link",
+      "sent": "If an account exists for that workspace and email, a password reset link has been sent."
+    },
+    "reset": {
+      "title": "Set a new password",
+      "subtitle": "Choose a strong password you haven't used before.",
+      "submit": "Update password",
+      "success": "Your password has been updated. Please sign in.",
+      "failed": "This reset link is invalid or has expired.",
+      "missingToken": "This reset link is invalid or incomplete.",
+      "requestNew": "Request a new link"
+    },
+    "errors": {
+      "slugRequired": "Workspace is required.",
+      "emailRequired": "Email is required.",
+      "emailInvalid": "Enter a valid email address.",
+      "passwordRequired": "Password is required.",
+      "passwordWeak": "Use at least 8 characters.",
+      "confirmRequired": "Please confirm your password.",
+      "passwordMismatch": "Passwords do not match.",
+      "invalidCredentials": "Incorrect workspace, email, or password.",
+      "rateLimited": "Too many attempts. Please wait a moment and try again.",
+      "invalid2fa": "That authentication code is invalid or expired. Try the latest code."
+    }
+  },
+  "dashboard": {
+    "title": "Administration Dashboard",
+    "subtitle": "A scope-aware overview of your workspace.",
+    "groups": {
+      "people": "People",
+      "structure": "Structure",
+      "access": "Access"
+    },
+    "cards": {
+      "totalUsers": "Total users",
+      "activeUsers": "Active users",
+      "suspendedUsers": "Suspended",
+      "pendingInvitations": "Pending invitations",
+      "organizations": "Organizations",
+      "clusters": "Branches",
+      "roles": "Roles",
+      "activeSessions": "Active sessions"
+    },
+    "viewAll": "View"
+  },
+  "users": {
+    "title": "Users",
+    "subtitle": "Manage who can access this workspace and what they can do.",
+    "searchPlaceholder": "Search by name or email…",
+    "invite": "Invite user",
+    "newUser": "New user",
+    "editUser": "Edit user",
+    "filters": { "status": "Status", "allStatuses": "All statuses" },
+    "status": {
+      "0": "Pending invitation",
+      "1": "Active",
+      "2": "Inactive",
+      "3": "Suspended",
+      "4": "Locked",
+      "5": "Archived"
+    },
+    "columns": {
+      "user": "User",
+      "contact": "Contact",
+      "status": "Status",
+      "lastLogin": "Last login",
+      "twoFactor": "2FA",
+      "actions": "Actions"
+    },
+    "twoFactor": { "on": "On", "off": "Off" },
+    "empty": {
+      "title": "No users found",
+      "body": "Try adjusting your search or filters, or invite a new user."
+    },
+    "actions": {
+      "edit": "Edit",
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "archive": "Archive"
+    },
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "displayName": "Display name",
+      "email": "Email",
+      "mobile": "Mobile",
+      "jobTitle": "Job title",
+      "language": "Preferred language",
+      "timeZone": "Time zone",
+      "roles": "Roles",
+      "accessStart": "Access starts",
+      "accessExpiry": "Access expires",
+      "sendInvitation": "Send an invitation email"
+    },
+    "rolesHint": "Assign one or more roles to grant permissions.",
+    "noRoles": "No roles available.",
+    "suspendDialog": {
+      "title": "Suspend user",
+      "reason": "Reason for suspension",
+      "confirm": "Suspend"
+    },
+    "archiveDialog": {
+      "title": "Archive user",
+      "message": "This revokes their access and active sessions. Archived users can be restored by support.",
+      "confirm": "Archive"
+    },
+    "reactivateDialog": {
+      "title": "Reactivate user",
+      "message": "This restores the user's access to the workspace.",
+      "confirm": "Reactivate"
+    },
+    "feedback": {
+      "created": "User created.",
+      "invited": "User created and invitation sent.",
+      "updated": "User updated.",
+      "suspended": "User suspended.",
+      "reactivated": "User reactivated.",
+      "archived": "User archived."
+    },
+    "validation": {
+      "required": "This field is required.",
+      "email": "Enter a valid email address."
+    }
+  },
+  "security": {
+    "title": "Security",
+    "subtitle": "Two-factor authentication, active sessions, and workspace security policy.",
+    "twoFactor": {
+      "title": "Two-factor authentication",
+      "subtitle": "Add a second step at sign-in using an authenticator app.",
+      "on": "Enabled",
+      "off": "Disabled",
+      "setup": "Set up",
+      "disable": "Disable",
+      "setupHint": "Add this key to your authenticator app (Google Authenticator, Authy, …), then enter the 6-digit code it shows.",
+      "secretLabel": "Setup key",
+      "codeLabel": "6-digit code",
+      "verify": "Verify & enable",
+      "cancel": "Cancel",
+      "enabledMsg": "Two-factor authentication is on for your account.",
+      "disablePrompt": "Enter a current code from your authenticator to turn 2FA off.",
+      "enabledToast": "Two-factor authentication enabled.",
+      "disabledToast": "Two-factor authentication disabled.",
+      "invalidCode": "That code didn't match. Try the latest one from your app."
+    },
+    "policy": {
+      "title": "Workspace security policy",
+      "subtitle": "Password, lockout, and session rules applied to everyone in this workspace.",
+      "password": "Password rules",
+      "lockout": "Lockout",
+      "sessions": "Sessions",
+      "minLength": "Minimum length",
+      "requireUppercase": "Require an uppercase letter",
+      "requireLowercase": "Require a lowercase letter",
+      "requireDigit": "Require a number",
+      "requireSymbol": "Require a symbol",
+      "expiryDays": "Password expires after (days, blank = never)",
+      "maxFailed": "Max failed attempts before lockout",
+      "lockoutMinutes": "Lockout duration (minutes)",
+      "idleTimeout": "Session idle timeout (minutes)",
+      "refreshDays": "Stay signed in for (days)",
+      "requireTwoFactor": "Require two-factor authentication for all members",
+      "save": "Save policy",
+      "saved": "Security policy saved."
+    }
+  },
+  "structure": {
+    "title": "Business Structure",
+    "subtitle": "Organizations, branches, departments, and teams.",
+    "addOrganization": "Add organization",
+    "kinds": {
+      "organization": "Organization",
+      "cluster": "Branch",
+      "department": "Department",
+      "team": "Team"
+    },
+    "add": {
+      "organization": "Add organization",
+      "cluster": "Add branch",
+      "department": "Add department",
+      "team": "Add team"
+    },
+    "status": {
+      "0": "Active",
+      "1": "Inactive",
+      "2": "Archived"
+    },
+    "fields": {
+      "name": "Name",
+      "code": "Code",
+      "type": "Type",
+      "baseCurrency": "Base currency",
+      "country": "Country"
+    },
+    "archive": "Archive",
+    "archiveConfirm": "Archive this {{kind}}? It will be hidden but not deleted.",
+    "empty": {
+      "title": "No organizations yet",
+      "body": "Create your first organization to start building your structure."
+    },
+    "feedback": {
+      "created": "Created.",
+      "archived": "Archived."
+    }
+  },
+  "access": {
+    "title": "Access Control",
+    "subtitle": "Define roles and the permissions they grant.",
+    "newRole": "New role",
+    "rolesTitle": "Roles",
+    "type": {
+      "0": "System",
+      "1": "Workspace",
+      "2": "Organization",
+      "3": "Custom"
+    },
+    "assignedUsers": "{{count}} user",
+    "assignedUsers_other": "{{count}} users",
+    "selectRole": "Select a role",
+    "selectRoleBody": "Choose a role on the left to view and edit its permissions.",
+    "systemReadonly": "System roles are provided by the platform and can't be edited.",
+    "matrix": {
+      "title": "Permissions",
+      "subtitle": "Toggle permissions and set the data scope for each.",
+      "permission": "Permission",
+      "granted": "Granted",
+      "scope": "Scope",
+      "highRisk": "High risk"
+    },
+    "scope": {
+      "0": "Own",
+      "1": "Team",
+      "2": "Department",
+      "3": "Branch",
+      "4": "Organization",
+      "5": "Workspace",
+      "6": "All tenants"
+    },
+    "fields": {
+      "name": "Role name",
+      "code": "Code",
+      "description": "Description",
+      "color": "Color"
+    },
+    "savePermissions": "Save permissions",
+    "saveRole": "Save role",
+    "deleteRole": "Delete role",
+    "deleteConfirm": "Delete this role? Users assigned to it will lose its permissions.",
+    "feedback": {
+      "created": "Role created.",
+      "updated": "Role updated.",
+      "permissionsSaved": "Permissions saved.",
+      "deleted": "Role deleted."
+    }
+  },
+  "audit": {
+    "title": "Audit & Activity",
+    "subtitle": "An append-only record of important actions in this workspace.",
+    "searchPlaceholder": "Search action, resource, or actor…",
+    "filters": {
+      "result": "Result",
+      "allResults": "All results",
+      "from": "From",
+      "to": "To"
+    },
+    "result": {
+      "0": "Success",
+      "1": "Denied",
+      "2": "Failed"
+    },
+    "columns": {
+      "time": "Time",
+      "actor": "Actor",
+      "action": "Action",
+      "module": "Module",
+      "resource": "Resource",
+      "result": "Result",
+      "ip": "IP"
+    },
+    "system": "System",
+    "export": "Export",
+    "empty": {
+      "title": "No activity found",
+      "body": "No audit events match your current filters."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Workspace general information and localization.",
+    "general": "General",
+    "localization": "Localization",
+    "fields": {
+      "name": "Workspace name",
+      "legalName": "Legal name",
+      "slug": "Workspace URL",
+      "country": "Country",
+      "defaultLanguage": "Default language",
+      "timeZone": "Time zone",
+      "baseCurrency": "Base currency",
+      "status": "Status"
+    },
+    "saved": "Settings saved.",
+    "save": "Save changes"
+  },
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "Manage your personal details, password, and active sessions.",
+    "details": "Personal details",
+    "fields": {
+      "firstName": "First name",
+      "lastName": "Last name",
+      "displayName": "Display name",
+      "email": "Email",
+      "mobile": "Mobile",
+      "language": "Preferred language",
+      "timeZone": "Time zone"
+    },
+    "saved": "Profile updated.",
+    "save": "Save changes",
+    "password": {
+      "title": "Change password",
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "submit": "Update password",
+      "changed": "Password changed. Other sessions have been signed out.",
+      "wrongCurrent": "Your current password is incorrect.",
+      "mismatch": "Passwords do not match.",
+      "weak": "Use at least 8 characters."
+    },
+    "sessions": {
+      "title": "Active sessions",
+      "subtitle": "Devices currently signed in to your account.",
+      "ip": "IP address",
+      "created": "Signed in",
+      "expires": "Expires",
+      "current": "This session",
+      "revoke": "Revoke",
+      "revoked": "Session revoked.",
+      "empty": "No active sessions."
+    }
+  },
+  "errors": {
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "The page you are looking for does not exist.",
+    "backToOverview": "Back to dashboard",
+    "genericTitle": "Something went wrong",
+    "genericBody": "An unexpected error occurred. Please try again."
+  }
+}

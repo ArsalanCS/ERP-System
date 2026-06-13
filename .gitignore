@@ -1,0 +1,24 @@
+# Environment variables
+.env.local
+.env.local.example
+.env
+
+# OS files
+.DS_Store
+.DS_Store?
+*.swp
+*.swo
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+logs/
+*.log
+
+# User-specific
+.claude/
+
+# Documentation (excluded per user request)
+docs/

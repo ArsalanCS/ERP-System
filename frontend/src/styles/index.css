@@ -1,0 +1,338 @@
+/* ============================================================
+   ERP — Design System (ported from docs/Design Kickoff erp.css)
+   White + warm stone neutrals · clay accent · Hanken Grotesk
+   Tailwind v4 CSS-first config. Token values are intentionally
+   exact — do not drift from the handoff.
+   ============================================================ */
+@import 'tailwindcss';
+
+@theme {
+  /* — warm neutral (stone) scale — */
+  --color-paper: #ffffff;
+  --color-canvas: #f7f6f3;
+  --color-stone-50: #faf9f7;
+  --color-stone-100: #f3f1ed;
+  --color-stone-150: #ece9e3;
+  --color-stone-200: #e4e0d8;
+  --color-stone-300: #d4cfc4;
+  --color-stone-400: #aca598;
+  --color-stone-500: #827b6e;
+  --color-stone-600: #5f594e;
+  --color-stone-700: #46413a;
+  --color-stone-800: #2c2925;
+  --color-stone-900: #1c1a17;
+
+  /* — clay accent (primary brand) — */
+  --color-clay: #c96442;
+  --color-clay-hover: #b5563a;
+  --color-clay-active: #9d4a30;
+  --color-clay-100: #fbeee8;
+  --color-clay-200: #f4d9cd;
+  --color-clay-tint: #fdf6f2;
+
+  /* — semantic — */
+  --color-green: #4f7a55;
+  --color-green-100: #e7f0e7;
+  --color-amber: #b5821f;
+  --color-amber-100: #f8eed6;
+  --color-red: #b23b30;
+  --color-red-100: #f7e3df;
+  --color-blue: #3b6ea5;
+  --color-blue-100: #e3edf6;
+  --color-violet: #6b5ca5;
+  --color-violet-100: #ece9f6;
+
+  /* — chart palette — */
+  --color-c1: #c96442;
+  --color-c2: #5b8a8a;
+  --color-c3: #b5821f;
+  --color-c4: #3b6ea5;
+  --color-c5: #4f7a55;
+  --color-c6: #a8748f;
+
+  /* — text — */
+  --color-ink: #1c1a17;
+  --color-ink-2: #46413a;
+  --color-ink-3: #6e675b;
+  --color-ink-4: #928b7d;
+
+  /* — type — */
+  --font-sans: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-arabic: 'IBM Plex Sans Arabic', 'Hanken Grotesk', ui-sans-serif, sans-serif;
+
+  /* — radius — */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 11px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-2xl: 28px;
+
+  /* — shadow — */
+  --shadow-xs: 0 1px 2px rgba(28, 25, 23, 0.05);
+  --shadow-sm: 0 1px 3px rgba(28, 25, 23, 0.06), 0 1px 2px rgba(28, 25, 23, 0.04);
+  --shadow-md: 0 6px 16px rgba(28, 25, 23, 0.07), 0 2px 5px rgba(28, 25, 23, 0.05);
+  --shadow-lg: 0 18px 44px rgba(28, 25, 23, 0.11), 0 6px 14px rgba(28, 25, 23, 0.06);
+  --shadow-xl: 0 36px 80px rgba(28, 25, 23, 0.16), 0 12px 28px rgba(28, 25, 23, 0.08);
+}
+
+/* Focus ring used across inputs / search (handoff --ring). */
+:root {
+  --ring-clay: 0 0 0 3px rgba(201, 100, 66, 0.18);
+}
+
+/* ===== base ===== */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    background: var(--color-canvas);
+    font-size: 15px;
+    line-height: 1.55;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'cv01', 'cv11';
+  }
+  /* Arabic locale swaps the UI typeface. */
+  html[dir='rtl'] body {
+    font-family: var(--font-arabic);
+  }
+  h1, h2, h3, h4, h5 {
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    line-height: 1.18;
+    color: var(--color-ink);
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+  ::selection {
+    background: var(--color-clay-200);
+    color: var(--color-stone-900);
+  }
+}
+
+/* ===== component classes (faithful to handoff erp.css) ===== */
+@layer components {
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: 9px 15px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.005em;
+    white-space: nowrap;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.04s, color 0.15s;
+  }
+  .btn:active {
+    transform: translateY(0.5px);
+  }
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  .btn svg {
+    width: 17px;
+    height: 17px;
+    flex: none;
+  }
+  .btn-primary {
+    background: var(--color-clay);
+    color: #fff;
+    box-shadow: var(--shadow-xs);
+  }
+  .btn-primary:hover {
+    background: var(--color-clay-hover);
+  }
+  .btn-primary:active {
+    background: var(--color-clay-active);
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--color-ink-2);
+  }
+  .btn-ghost:hover {
+    background: var(--color-stone-150);
+  }
+  .btn-outline {
+    background: var(--color-paper);
+    color: var(--color-ink-2);
+    border-color: var(--color-stone-200);
+    box-shadow: var(--shadow-xs);
+  }
+  .btn-outline:hover {
+    background: var(--color-stone-50);
+    border-color: var(--color-stone-300);
+  }
+  .btn-dark {
+    background: var(--color-stone-900);
+    color: #fff;
+  }
+  .btn-dark:hover {
+    background: var(--color-stone-800);
+  }
+  .btn-danger {
+    background: var(--color-red);
+    color: #fff;
+  }
+  .btn-danger:hover {
+    background: #9c322a;
+  }
+  .btn-lg {
+    padding: 13px 22px;
+    font-size: 15px;
+    border-radius: var(--radius-md);
+  }
+  .btn-sm {
+    padding: 6px 11px;
+    font-size: 13px;
+    gap: 6px;
+  }
+  .btn-block {
+    width: 100%;
+  }
+
+  /* chips / badges */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--color-stone-100);
+    color: var(--color-ink-2);
+    line-height: 1.5;
+    border: 1px solid var(--color-stone-200);
+  }
+  .chip .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .chip-green { background: var(--color-green-100); color: #3a5c3f; border-color: transparent; }
+  .chip-amber { background: var(--color-amber-100); color: #7c5a16; border-color: transparent; }
+  .chip-red { background: var(--color-red-100); color: #852b23; border-color: transparent; }
+  .chip-blue { background: var(--color-blue-100); color: #2b5179; border-color: transparent; }
+  .chip-violet { background: var(--color-violet-100); color: #4c4178; border-color: transparent; }
+  .chip-clay { background: var(--color-clay-100); color: var(--color-clay-active); border-color: transparent; }
+
+  /* cards */
+  .card {
+    background: var(--color-paper);
+    border: 1px solid var(--color-stone-200);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+  }
+  .card-pad {
+    padding: 20px 22px;
+  }
+
+  /* forms */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-ink-2);
+    letter-spacing: -0.005em;
+  }
+  .input {
+    width: 100%;
+    background: var(--color-paper);
+    border: 1px solid var(--color-stone-300);
+    border-radius: var(--radius-sm);
+    padding: 11px 13px;
+    font-size: 14.5px;
+    color: var(--color-ink);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .input::placeholder {
+    color: var(--color-ink-4);
+  }
+  .input:focus {
+    outline: none;
+    border-color: var(--color-clay);
+    box-shadow: var(--ring-clay);
+  }
+
+  /* avatar (handoff `.avatar`) */
+  .avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    color: #fff;
+    flex: none;
+    letter-spacing: 0.01em;
+  }
+
+  /* brand lockup (handoff `.logo` / `.logo-mark`) */
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+  }
+  .logo-mark {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: var(--color-clay);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16), var(--shadow-xs);
+  }
+
+  /* entrance animation (translateY only — opacity stays visible, per handoff) */
+  .fade-up {
+    animation: fadeUp 0.45s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  @keyframes fadeUp {
+    from { transform: translateY(9px); }
+    to { transform: none; }
+  }
+  @keyframes drawerIn {
+    from { transform: translateX(var(--drawer-in-x, 16px)); opacity: 0.4; }
+    to { transform: none; opacity: 1; }
+  }
+  :root[dir='rtl'] {
+    --drawer-in-x: -16px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fade-up { animation: none; }
+  }
+}
