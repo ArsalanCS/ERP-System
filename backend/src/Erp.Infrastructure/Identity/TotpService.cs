@@ -12,7 +12,7 @@ public sealed class TotpService(IClock clock) : ITotpService
 {
     private const int StepSeconds = 30;
     private const int Digits = 6;
-    private const int DriftSteps = 1; // accept the previous/next 30s window
+    private const int DriftSteps = 2; // accept ±2 windows (±60s) to tolerate phone clock drift
 
     public string GenerateSecret()
     {

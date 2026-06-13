@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { QRCodeSVG } from 'qrcode.react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardHeader, Badge, Button, Input, Spinner, LoadingBlock } from '@/shared/ui';
 import { useToast } from '@/shared/ui/toast-context';
@@ -78,6 +79,9 @@ export function TwoFactorCard() {
         ) : mode === 'enrolling' && setup ? (
           <div className="flex max-w-md flex-col gap-3">
             <p className="text-[13px] text-ink-3">{t('security.twoFactor.setupHint')}</p>
+            <div className="flex justify-center rounded-lg border border-stone-200 bg-white p-4">
+              <QRCodeSVG value={setup.otpAuthUri} size={176} level="M" includeMargin={false} />
+            </div>
             <div>
               <span className="label">{t('security.twoFactor.secretLabel')}</span>
               <code className="mt-1 block break-all rounded-md border border-stone-200 bg-stone-50 px-3 py-2 font-mono text-[15px] tracking-[0.15em] text-ink">

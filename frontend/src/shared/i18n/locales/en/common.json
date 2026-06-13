@@ -139,7 +139,10 @@
     "invite": "Invite user",
     "newUser": "New user",
     "editUser": "Edit user",
-    "filters": { "status": "Status", "allStatuses": "All statuses" },
+    "filters": {
+      "status": "Status",
+      "allStatuses": "All statuses"
+    },
     "status": {
       "0": "Pending invitation",
       "1": "Active",
@@ -156,7 +159,10 @@
       "twoFactor": "2FA",
       "actions": "Actions"
     },
-    "twoFactor": { "on": "On", "off": "Off" },
+    "twoFactor": {
+      "on": "On",
+      "off": "Off"
+    },
     "empty": {
       "title": "No users found",
       "body": "Try adjusting your search or filters, or invite a new user."
@@ -221,8 +227,8 @@
       "off": "Disabled",
       "setup": "Set up",
       "disable": "Disable",
-      "setupHint": "Add this key to your authenticator app (Google Authenticator, Authy, …), then enter the 6-digit code it shows.",
-      "secretLabel": "Setup key",
+      "setupHint": "Scan this QR code with your authenticator app (Google Authenticator, Authy, …), then enter the 6-digit code it shows. Can’t scan? Enter the setup key below manually.",
+      "secretLabel": "Or enter this setup key manually",
       "codeLabel": "6-digit code",
       "verify": "Verify & enable",
       "cancel": "Cancel",
