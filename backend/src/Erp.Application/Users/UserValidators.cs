@@ -11,6 +11,7 @@ public sealed class CreateUserRequestValidator : AbstractValidator<CreateUserReq
         RuleFor(x => x.LastName).NotEmpty().MaximumLength(100);
         RuleFor(x => x.Mobile).MaximumLength(32);
         RuleFor(x => x.JobTitle).MaximumLength(150);
+        RuleFor(x => x.EmployeeNumber).MaximumLength(40);
         RuleFor(x => x.PreferredLanguage).NotEmpty().MaximumLength(8);
     }
 }
@@ -22,6 +23,9 @@ public sealed class UpdateUserRequestValidator : AbstractValidator<UpdateUserReq
         RuleFor(x => x.FirstName).NotEmpty().MaximumLength(100);
         RuleFor(x => x.LastName).NotEmpty().MaximumLength(100);
         RuleFor(x => x.DisplayName).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Mobile).MaximumLength(32);
+        RuleFor(x => x.JobTitle).MaximumLength(150);
+        RuleFor(x => x.EmployeeNumber).MaximumLength(40);
         RuleFor(x => x.PreferredLanguage).NotEmpty().MaximumLength(8);
         RuleFor(x => x.TimeZone).NotEmpty().MaximumLength(64);
         RuleFor(x => x.AccessExpiryDate)

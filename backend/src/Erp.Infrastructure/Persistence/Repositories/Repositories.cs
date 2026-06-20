@@ -55,8 +55,7 @@ public sealed class UserRepository(ErpDbContext context) : IUserRepository
             var term = $"%{search.Trim()}%";
             query = query.Where(u =>
                 EF.Functions.ILike(u.DisplayName, term) ||
-                EF.Functions.ILike(u.Email, term) ||
-                (u.JobTitle != null && EF.Functions.ILike(u.JobTitle, term)));
+                EF.Functions.ILike(u.Email, term));
         }
 
         if (status is { } s)

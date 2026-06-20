@@ -37,6 +37,7 @@ public interface IAccountService
 public sealed class AccountService(
     ICurrentUser currentUser,
     IUserRepository users,
+    IEmployeeRepository employees,
     IRefreshTokenRepository refreshTokens,
     IPasswordHasher passwordHasher,
     ITotpService totp,
@@ -51,8 +52,9 @@ public sealed class AccountService(
         if (currentUser.UserId is not { } userId) return Result.Failure<MyProfileDto>(AccountErrors.Unauthenticated());
         var user = await users.GetByIdAsync(userId, ct);
         if (user is null) return Result.Failure<MyProfileDto>(AccountErrors.Unauthenticated());
+        var employee = await employees.GetByUserIdAsync(userId, ct);
         return new MyProfileDto(user.Id, user.Email, user.FirstName, user.LastName, user.DisplayName,
-            user.Mobile, user.PreferredLanguage, user.TimeZone, user.JobTitle, user.TwoFactorEnabled);
+            employee?.Mobile, user.PreferredLanguage, user.TimeZone, employee?.JobTitle, user.TwoFactorEnabled);
     }
 
     public async Task<Result> UpdateProfileAsync(UpdateMyProfileRequest request, CancellationToken ct = default)
@@ -61,8 +63,18 @@ public sealed class AccountService(
         var user = await users.GetByIdAsync(userId, ct);
         if (user is null) return Result.Failure(AccountErrors.Unauthenticated());
 
-        user.UpdateProfile(request.FirstName, request.LastName, request.DisplayName, request.Mobile,
-            request.PreferredLanguage, request.TimeZone, user.JobTitle);
+        user.UpdateProfile(request.FirstName, request.LastName, request.DisplayName,
+            request.PreferredLanguage, request.TimeZone);
+
+        // Mobile lives on the employee record now — create it lazily, preserve job title.
+        var employee = await employees.GetByUserIdAsync(userId, ct);
+        if (employee is null)
+        {
+            employee = new Domain.Identity.Employee(user.WorkspaceId, user.Id);
+            employees.Add(employee);
+        }
+        employee.SetContact(employee.JobTitle, request.Mobile);
+
         await unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }

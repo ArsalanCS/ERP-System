@@ -12,6 +12,9 @@ public static class UserErrors
     public static Error UnknownRole() =>
         new("USER_UNKNOWN_ROLE", "One or more roles do not exist in this workspace.", ErrorType.Validation);
 
+    public static Error UnknownPlacementNode() =>
+        new("USER_UNKNOWN_PLACEMENT", "The selected structure node does not exist in this workspace.", ErrorType.Validation);
+
     public static Error LastWorkspaceOwner() =>
         new("USER_LAST_OWNER", "Cannot remove the last active Workspace Owner.", ErrorType.Conflict);
 

@@ -1,29 +1,24 @@
+using Erp.Application.Structure;
 using Erp.Domain.Structure;
 
 namespace Erp.Application.Abstractions;
 
-/// <summary>Persistence for business-structure entities (orgs, clusters, departments, teams).</summary>
+/// <summary>Persistence for the unified business-structure node tree (Identity spec §6).</summary>
 public interface IStructureRepository
 {
-    Task<IReadOnlyList<Organization>> ListOrganizationsAsync(CancellationToken ct = default);
-    Task<Organization?> GetOrganizationAsync(Guid id, CancellationToken ct = default);
-    void AddOrganization(Organization organization);
-    Task<bool> OrganizationHasChildrenAsync(Guid id, CancellationToken ct = default);
+    /// <summary>All active (non-archived) nodes for the workspace, ordered for tree building.</summary>
+    Task<IReadOnlyList<StructureNode>> ListNodesAsync(CancellationToken ct = default);
 
-    Task<IReadOnlyList<Cluster>> ListClustersAsync(CancellationToken ct = default);
-    Task<Cluster?> GetClusterAsync(Guid id, CancellationToken ct = default);
-    void AddCluster(Cluster cluster);
-    Task<bool> ClusterHasChildrenAsync(Guid id, CancellationToken ct = default);
+    Task<StructureNode?> GetNodeAsync(Guid id, CancellationToken ct = default);
+    void AddNode(StructureNode node);
 
-    Task<IReadOnlyList<Department>> ListDepartmentsAsync(CancellationToken ct = default);
-    Task<Department?> GetDepartmentAsync(Guid id, CancellationToken ct = default);
-    void AddDepartment(Department department);
-    Task<bool> DepartmentHasChildrenAsync(Guid id, CancellationToken ct = default);
+    Task<bool> NodeExistsAsync(Guid id, CancellationToken ct = default);
+    Task<bool> NodeHasChildrenAsync(Guid id, CancellationToken ct = default);
+    Task<bool> CodeExistsAsync(string code, CancellationToken ct = default);
 
-    Task<IReadOnlyList<Team>> ListTeamsAsync(CancellationToken ct = default);
-    Task<Team?> GetTeamAsync(Guid id, CancellationToken ct = default);
-    void AddTeam(Team team);
+    /// <summary>Number of employees placed directly on each node, keyed by node id.</summary>
+    Task<IReadOnlyDictionary<Guid, int>> MemberCountsAsync(CancellationToken ct = default);
 
-    Task<bool> OrganizationExistsAsync(Guid id, CancellationToken ct = default);
-    Task<bool> DepartmentExistsAsync(Guid id, CancellationToken ct = default);
+    /// <summary>Users placed directly on a node, joined with their employee details.</summary>
+    Task<IReadOnlyList<StructureMemberDto>> ListMembersAsync(Guid nodeId, CancellationToken ct = default);
 }

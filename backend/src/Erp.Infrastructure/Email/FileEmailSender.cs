@@ -34,6 +34,15 @@ public sealed class FileEmailSender(IConfiguration config, ILogger<FileEmailSend
             "Reset password", url, cancellationToken);
     }
 
+    public Task SendEmailVerificationAsync(string toEmail, string displayName, string token, CancellationToken cancellationToken = default)
+    {
+        var url = $"{WebBaseUrl}/verify-email?token={Uri.EscapeDataString(token)}";
+        return WriteAsync(toEmail, "Confirm your email to activate your workspace",
+            $"Hello {displayName}, thanks for signing up. "
+            + "Confirm your email address with the button below to activate your workspace, then sign in.",
+            "Confirm email", url, cancellationToken);
+    }
+
     private async Task WriteAsync(string toEmail, string subject, string body, string cta, string url, CancellationToken ct)
     {
         Directory.CreateDirectory(OutboxPath);

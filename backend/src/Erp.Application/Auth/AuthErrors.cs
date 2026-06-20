@@ -23,6 +23,12 @@ public static class AuthErrors
     public static Error InvalidResetToken() =>
         new("AUTH_INVALID_RESET_TOKEN", "The reset link is invalid or has expired.", ErrorType.Validation);
 
+    public static Error SlugTaken() =>
+        new("AUTH_SLUG_TAKEN", "That workspace address is already taken. Please choose another.", ErrorType.Conflict);
+
+    public static Error InvalidVerificationToken() =>
+        new("AUTH_INVALID_VERIFICATION_TOKEN", "The verification link is invalid or has expired.", ErrorType.Validation);
+
     /// <summary>The account has 2FA enabled but no code was supplied — prompt for one.</summary>
     public static Error TwoFactorRequired() =>
         new("AUTH_2FA_REQUIRED", "A two-factor authentication code is required.", ErrorType.Unauthorized);

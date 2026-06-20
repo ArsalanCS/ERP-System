@@ -20,7 +20,10 @@ public sealed class AuthController(
     IValidator<RefreshRequest> refreshValidator,
     IValidator<LogoutRequest> logoutValidator,
     IValidator<ForgotPasswordRequest> forgotValidator,
-    IValidator<ResetPasswordRequest> resetValidator) : ApiControllerBase
+    IValidator<ResetPasswordRequest> resetValidator,
+    IValidator<RegisterWorkspaceRequest> registerValidator,
+    IValidator<VerifyEmailRequest> verifyValidator,
+    IValidator<ResendVerificationRequest> resendValidator) : ApiControllerBase
 {
     [HttpPost("login")]
     [ProducesResponseType(typeof(AuthTokens), StatusCodes.Status200OK)]
@@ -68,6 +71,36 @@ public sealed class AuthController(
         if (await ValidateAsync(resetValidator, request, ct) is { } invalid) return invalid;
         var result = await auth.ResetPasswordAsync(request, ct);
         return FromResult(result, NoContent);
+    }
+
+    /// <summary>Self-service signup: create a workspace + owner, then email a verification link.</summary>
+    [HttpPost("register")]
+    [ProducesResponseType(typeof(RegisterWorkspaceResult), StatusCodes.Status201Created)]
+    public async Task<IActionResult> Register([FromBody] RegisterWorkspaceRequest request, CancellationToken ct)
+    {
+        if (await ValidateAsync(registerValidator, request, ct) is { } invalid) return invalid;
+        var result = await auth.RegisterWorkspaceAsync(request, ct);
+        return FromResult(result, value => StatusCode(StatusCodes.Status201Created, value));
+    }
+
+    /// <summary>Confirms an email-verification link and activates the owner account.</summary>
+    [HttpPost("verify-email")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyEmailRequest request, CancellationToken ct)
+    {
+        if (await ValidateAsync(verifyValidator, request, ct) is { } invalid) return invalid;
+        var result = await auth.VerifyEmailAsync(request, ct);
+        return FromResult(result, NoContent);
+    }
+
+    /// <summary>Re-sends a verification link. Always returns 202 (no account enumeration).</summary>
+    [HttpPost("resend-verification")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    public async Task<IActionResult> ResendVerification([FromBody] ResendVerificationRequest request, CancellationToken ct)
+    {
+        if (await ValidateAsync(resendValidator, request, ct) is { } invalid) return invalid;
+        await auth.ResendVerificationAsync(request, ct);
+        return Accepted();
     }
 
     /// <summary>Returns the authenticated caller's identity. Requires a valid access token.</summary>

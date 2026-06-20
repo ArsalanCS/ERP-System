@@ -5,9 +5,11 @@ using Erp.Infrastructure.Persistence;
 using Erp.Infrastructure.Tenancy;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace Erp.IntegrationTests.Infrastructure;
@@ -22,6 +24,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         Environment.GetEnvironmentVariable("ERP_TEST_CONNECTION")
         ?? "Host=localhost;Port=5432;Database=erp_test;Username=erp;Password=erp_local_dev";
 
+    /// <summary>Captures token-bearing emails so token flows can be driven in tests.</summary>
+    public TestEmailSender Email { get; } = new();
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment(Environments.Development);
@@ -32,6 +37,14 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         // Tests share one client IP; raise the auth rate limit so parallel tests
         // don't trip it (the limit itself is covered by its own dedicated test).
         builder.UseSetting("RateLimit:Auth:PermitLimit", "100000");
+
+        // Swap the real email sender for a capturing double — raw tokens are never
+        // returned by the API, so this is the only way tests can read them.
+        builder.ConfigureTestServices(services =>
+        {
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(Email);
+        });
     }
 
     /// <summary>Ensures the schema exists (idempotent).</summary>

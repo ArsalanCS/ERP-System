@@ -13,4 +13,7 @@ public interface IEmailSender
 
     /// <summary>Sends a password-reset link.</summary>
     Task SendPasswordResetAsync(string toEmail, string displayName, string token, CancellationToken cancellationToken = default);
+
+    /// <summary>Sends an email-verification link to the owner of a newly self-registered workspace.</summary>
+    Task SendEmailVerificationAsync(string toEmail, string displayName, string token, CancellationToken cancellationToken = default);
 }

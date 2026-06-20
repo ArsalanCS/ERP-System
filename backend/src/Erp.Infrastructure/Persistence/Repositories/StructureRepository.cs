@@ -1,4 +1,5 @@
 using Erp.Application.Abstractions;
+using Erp.Application.Structure;
 using Erp.Domain.Structure;
 using Microsoft.EntityFrameworkCore;
 
@@ -6,50 +7,44 @@ namespace Erp.Infrastructure.Persistence.Repositories;
 
 public sealed class StructureRepository(ErpDbContext context) : IStructureRepository
 {
-    public async Task<IReadOnlyList<Organization>> ListOrganizationsAsync(CancellationToken ct = default)
-        => await context.Organizations.AsNoTracking().OrderBy(o => o.Name).ToListAsync(ct);
+    public async Task<IReadOnlyList<StructureNode>> ListNodesAsync(CancellationToken ct = default)
+        => await context.StructureNodes.AsNoTracking()
+            .OrderBy(n => n.NodeType).ThenBy(n => n.SortOrder).ThenBy(n => n.Name)
+            .ToListAsync(ct);
 
-    public Task<Organization?> GetOrganizationAsync(Guid id, CancellationToken ct = default)
-        => context.Organizations.FirstOrDefaultAsync(o => o.Id == id, ct);
+    public Task<StructureNode?> GetNodeAsync(Guid id, CancellationToken ct = default)
+        => context.StructureNodes.FirstOrDefaultAsync(n => n.Id == id, ct);
 
-    public void AddOrganization(Organization organization) => context.Organizations.Add(organization);
+    public void AddNode(StructureNode node) => context.StructureNodes.Add(node);
 
-    public Task<bool> OrganizationHasChildrenAsync(Guid id, CancellationToken ct = default)
-        => context.Clusters.AnyAsync(c => c.OrganizationId == id, ct);
+    public Task<bool> NodeExistsAsync(Guid id, CancellationToken ct = default)
+        => context.StructureNodes.AnyAsync(n => n.Id == id, ct);
 
-    public async Task<IReadOnlyList<Cluster>> ListClustersAsync(CancellationToken ct = default)
-        => await context.Clusters.AsNoTracking().OrderBy(c => c.Name).ToListAsync(ct);
+    public Task<bool> NodeHasChildrenAsync(Guid id, CancellationToken ct = default)
+        => context.StructureNodes.AnyAsync(n => n.ParentId == id, ct);
 
-    public Task<Cluster?> GetClusterAsync(Guid id, CancellationToken ct = default)
-        => context.Clusters.FirstOrDefaultAsync(c => c.Id == id, ct);
+    public Task<bool> CodeExistsAsync(string code, CancellationToken ct = default)
+        => context.StructureNodes.AnyAsync(n => n.Code == code, ct);
 
-    public void AddCluster(Cluster cluster) => context.Clusters.Add(cluster);
+    public async Task<IReadOnlyDictionary<Guid, int>> MemberCountsAsync(CancellationToken ct = default)
+    {
+        var counts = await context.Employees.AsNoTracking()
+            .Where(e => e.PlacementNodeId != null)
+            .GroupBy(e => e.PlacementNodeId!.Value)
+            .Select(g => new { NodeId = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+        return counts.ToDictionary(x => x.NodeId, x => x.Count);
+    }
 
-    public Task<bool> ClusterHasChildrenAsync(Guid id, CancellationToken ct = default)
-        => context.Clusters.AnyAsync(c => c.ParentClusterId == id, ct);
-
-    public async Task<IReadOnlyList<Department>> ListDepartmentsAsync(CancellationToken ct = default)
-        => await context.Departments.AsNoTracking().OrderBy(d => d.Name).ToListAsync(ct);
-
-    public Task<Department?> GetDepartmentAsync(Guid id, CancellationToken ct = default)
-        => context.Departments.FirstOrDefaultAsync(d => d.Id == id, ct);
-
-    public void AddDepartment(Department department) => context.Departments.Add(department);
-
-    public Task<bool> DepartmentHasChildrenAsync(Guid id, CancellationToken ct = default)
-        => context.Teams.AnyAsync(t => t.DepartmentId == id, ct);
-
-    public async Task<IReadOnlyList<Team>> ListTeamsAsync(CancellationToken ct = default)
-        => await context.Teams.AsNoTracking().OrderBy(t => t.Name).ToListAsync(ct);
-
-    public Task<Team?> GetTeamAsync(Guid id, CancellationToken ct = default)
-        => context.Teams.FirstOrDefaultAsync(t => t.Id == id, ct);
-
-    public void AddTeam(Team team) => context.Teams.Add(team);
-
-    public Task<bool> OrganizationExistsAsync(Guid id, CancellationToken ct = default)
-        => context.Organizations.AnyAsync(o => o.Id == id, ct);
-
-    public Task<bool> DepartmentExistsAsync(Guid id, CancellationToken ct = default)
-        => context.Departments.AnyAsync(d => d.Id == id, ct);
+    public async Task<IReadOnlyList<StructureMemberDto>> ListMembersAsync(Guid nodeId, CancellationToken ct = default)
+    {
+        var query =
+            from e in context.Employees.AsNoTracking()
+            where e.PlacementNodeId == nodeId
+            join u in context.Users.AsNoTracking() on e.UserId equals u.Id
+            orderby u.DisplayName
+            select new StructureMemberDto(
+                u.Id, u.DisplayName, u.Email, e.JobTitle, e.Mobile, e.EmployeeNumber, u.Status, false);
+        return await query.ToListAsync(ct);
+    }
 }

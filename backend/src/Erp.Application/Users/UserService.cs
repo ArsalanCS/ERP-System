@@ -15,6 +15,8 @@ namespace Erp.Application.Users;
 public sealed class UserService(
     IUserRepository users,
     IRoleRepository roles,
+    IEmployeeRepository employees,
+    IStructureRepository structure,
     IRefreshTokenRepository refreshTokens,
     IPasswordResetTokenRepository resetTokens,
     ITokenHasher tokenHasher,
@@ -30,8 +32,13 @@ public sealed class UserService(
     public async Task<PagedResult<UserListItem>> ListAsync(UserListQuery query, CancellationToken cancellationToken = default)
     {
         var (items, total) = await users.ListAsync(query.Search, query.Status, query.Sort, query.Page, query.PageSize, cancellationToken);
-        var mapped = items.Select(u => new UserListItem(
-            u.Id, u.Email, u.DisplayName, u.Mobile, u.JobTitle, u.Status, u.TwoFactorEnabled, u.LastLoginAt, u.CreatedAt)).ToList();
+        var emps = await employees.GetByUserIdsAsync(items.Select(u => u.Id).ToList(), cancellationToken);
+        var mapped = items.Select(u =>
+        {
+            var emp = emps.GetValueOrDefault(u.Id);
+            return new UserListItem(u.Id, u.Email, u.DisplayName, emp?.Mobile, emp?.JobTitle,
+                u.Status, u.TwoFactorEnabled, u.LastLoginAt, u.CreatedAt);
+        }).ToList();
         return new PagedResult<UserListItem>(mapped, query.Page, query.PageSize, total);
     }
 
@@ -40,7 +47,8 @@ public sealed class UserService(
         var user = await users.GetByIdAsync(id, cancellationToken);
         if (user is null) return UserErrors.NotFound();
         var roleIds = await users.GetRoleIdsAsync(id, cancellationToken);
-        return Map(user, roleIds);
+        var emp = await employees.GetByUserIdAsync(id, cancellationToken);
+        return Map(user, emp, roleIds);
     }
 
     public async Task<Result<CreateUserResult>> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default)
@@ -57,10 +65,22 @@ public sealed class UserService(
             return Result.Failure<CreateUserResult>(roleError);
         }
 
+        if (request.PlacementNodeId is { } placeId && !await structure.NodeExistsAsync(placeId, cancellationToken))
+        {
+            return Result.Failure<CreateUserResult>(UserErrors.UnknownPlacementNode());
+        }
+
         var user = new User(workspaceId, request.Email, request.FirstName, request.LastName);
         user.UpdateProfile(request.FirstName, request.LastName, $"{request.FirstName} {request.LastName}".Trim(),
-            request.Mobile, request.PreferredLanguage, request.TimeZone ?? "Asia/Riyadh", request.JobTitle);
+            request.PreferredLanguage, request.TimeZone ?? "Asia/Riyadh");
         users.Add(user);
+
+        // Employee (HR) record — 1:1 with the user, holds details + tree placement.
+        var employee = new Employee(workspaceId, user.Id);
+        employee.UpdateDetails(request.EmployeeNumber, request.JobTitle, request.Mobile, request.HireDate);
+        employee.PlaceAt(request.PlacementNodeId);
+        employee.SetManager(request.ManagerId);
+        employees.Add(employee);
 
         if (request.RoleIds is { Count: > 0 })
         {
@@ -107,9 +127,25 @@ public sealed class UserService(
             return Result.Failure(roleError);
         }
 
-        user.UpdateProfile(request.FirstName, request.LastName, request.DisplayName, request.Mobile,
-            request.PreferredLanguage, request.TimeZone, request.JobTitle);
+        if (request.PlacementNodeId is { } placeId && !await structure.NodeExistsAsync(placeId, cancellationToken))
+        {
+            return Result.Failure(UserErrors.UnknownPlacementNode());
+        }
+
+        user.UpdateProfile(request.FirstName, request.LastName, request.DisplayName,
+            request.PreferredLanguage, request.TimeZone);
         user.SetAccessWindow(request.AccessStartDate, request.AccessExpiryDate);
+
+        // Employee details — create the record lazily if it doesn't exist yet.
+        var employee = await employees.GetByUserIdAsync(user.Id, cancellationToken);
+        if (employee is null)
+        {
+            employee = new Employee(workspaceId, user.Id);
+            employees.Add(employee);
+        }
+        employee.UpdateDetails(request.EmployeeNumber, request.JobTitle, request.Mobile, request.HireDate);
+        employee.PlaceAt(request.PlacementNodeId);
+        employee.SetManager(request.ManagerId);
 
         if (request.RoleIds is not null)
         {
@@ -194,8 +230,9 @@ public sealed class UserService(
         NewValues = $"{{\"status\":\"{user.Status}\"}}",
     };
 
-    private static UserDetail Map(User u, IReadOnlyList<Guid> roleIds) => new(
-        u.Id, u.WorkspaceId, u.Email, u.FirstName, u.LastName, u.DisplayName, u.Mobile,
-        u.PreferredLanguage, u.TimeZone, u.JobTitle, u.Status, u.TwoFactorEnabled, u.RequirePasswordChange,
+    private static UserDetail Map(User u, Employee? e, IReadOnlyList<Guid> roleIds) => new(
+        u.Id, u.WorkspaceId, u.Email, u.FirstName, u.LastName, u.DisplayName, e?.Mobile,
+        u.PreferredLanguage, u.TimeZone, e?.JobTitle, e?.EmployeeNumber, e?.PlacementNodeId, e?.ManagerId, e?.HireDate,
+        u.Status, u.TwoFactorEnabled, u.RequirePasswordChange,
         u.AccessStartDate, u.AccessExpiryDate, u.LastLoginAt, u.CreatedAt, roleIds);
 }

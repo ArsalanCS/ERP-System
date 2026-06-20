@@ -62,7 +62,9 @@
       "prev": "Previous",
       "next": "Next",
       "page": "Page {{page}} of {{totalPages}}"
-    }
+    },
+    "back": "Back",
+    "next": "Next"
   },
   "auth": {
     "backToLogin": "Back to sign in",
@@ -110,7 +112,9 @@
       "invalidCredentials": "Incorrect workspace, email, or password.",
       "rateLimited": "Too many attempts. Please wait a moment and try again.",
       "invalid2fa": "That authentication code is invalid or expired. Try the latest code."
-    }
+    },
+    "noAccount": "Don't have a workspace?",
+    "signupLink": "Create one"
   },
   "dashboard": {
     "title": "Administration Dashboard",
@@ -185,7 +189,8 @@
       "roles": "Roles",
       "accessStart": "Access starts",
       "accessExpiry": "Access expires",
-      "sendInvitation": "Send an invitation email"
+      "sendInvitation": "Send an invitation email",
+      "employeeNumber": "Employee number"
     },
     "rolesHint": "Assign one or more roles to grant permissions.",
     "noRoles": "No roles available.",
@@ -215,6 +220,25 @@
     "validation": {
       "required": "This field is required.",
       "email": "Enter a valid email address."
+    },
+    "steps": {
+      "account": "Account",
+      "placement": "Placement",
+      "roles": "Roles"
+    },
+    "placement": {
+      "hint": "Where does this person sit in the organization?",
+      "noAccess": "You don't have access to the business structure.",
+      "empty": "No organizations yet — create your business structure first.",
+      "organization": "Organization",
+      "selectOrg": "Select an organization…",
+      "node": "Department / team (placement)"
+    },
+    "roleGroups": {
+      "system": "System roles",
+      "workspace": "Workspace roles",
+      "organization": "Organization roles",
+      "custom": "Custom roles"
     }
   },
   "security": {
@@ -285,17 +309,51 @@
       "code": "Code",
       "type": "Type",
       "baseCurrency": "Base currency",
-      "country": "Country"
+      "country": "Country",
+      "description": "Description"
     },
     "archive": "Archive",
-    "archiveConfirm": "Archive this {{kind}}? It will be hidden but not deleted.",
+    "archiveConfirm": "Archive “{{name}}”? You can only archive a node once its children are removed.",
     "empty": {
       "title": "No organizations yet",
       "body": "Create your first organization to start building your structure."
     },
     "feedback": {
-      "created": "Created.",
-      "archived": "Archived."
+      "created": "Node created.",
+      "archived": "Node archived.",
+      "updated": "Node updated."
+    },
+    "nodeTypes": {
+      "0": "Organization",
+      "1": "Department",
+      "2": "Branch",
+      "3": "Sub-department",
+      "4": "Team",
+      "5": "Sub-team"
+    },
+    "addChild": "Add child",
+    "addChildTo": "Add under {{parent}}",
+    "editNode": "Edit node",
+    "memberCount": "{{count}} members",
+    "addMember": "Add member",
+    "noMembers": "Add member",
+    "noMembersShort": "No members",
+    "assign": {
+      "title": "Add member",
+      "addNew": "Add a new user",
+      "or": "or",
+      "existingHint": "Assign an existing user to this node.",
+      "assign": "Assign",
+      "assigned": "Member assigned.",
+      "noUsers": "No users found"
+    },
+    "members": {
+      "view": "View members",
+      "manager": "Manager",
+      "empty": {
+        "title": "No members yet",
+        "body": "No users are placed on this node."
+      }
     }
   },
   "access": {
@@ -441,5 +499,252 @@
     "backToOverview": "Back to dashboard",
     "genericTitle": "Something went wrong",
     "genericBody": "An unexpected error occurred. Please try again."
+  },
+  "landing": {
+    "nav": {
+      "modules": "Modules",
+      "platform": "Platform",
+      "compliance": "Compliance",
+      "pricing": "Pricing",
+      "docs": "Docs",
+      "login": "Log in",
+      "startTrial": "Start free trial"
+    },
+    "hero": {
+      "tag": "New",
+      "eyebrow": "ZATCA Phase 2 e-invoicing, built in",
+      "title": "Run your entire business on one platform.",
+      "lead": "Finance, sales, inventory, HR, projects and fleet — unified in a single multi-tenant system of record. Built for Saudi compliance, designed for clarity.",
+      "ctaPrimary": "Start free trial",
+      "ctaSecondary": "View live demo",
+      "trust": "Trusted by 600+ finance & operations teams across the GCC",
+      "mockTitle": "Executive overview · 2026",
+      "mockRevenue": "Revenue (MTD)",
+      "mockCash": "Cash position",
+      "mockReceivables": "Receivables",
+      "mockChart": "Revenue vs. target"
+    },
+    "band": "Powering finance & operations teams across the Kingdom",
+    "modules": {
+      "eyebrow": "16 integrated modules",
+      "title": "Every part of the business, talking to every other part.",
+      "subtitle": "No more disconnected spreadsheets and point tools. One data model, shared across finance, operations, sales and HR.",
+      "items": [
+        {
+          "name": "General Ledger",
+          "desc": "Chart of accounts, journals, period close, and live financial statements — the engine every module posts to."
+        },
+        {
+          "name": "Sales & Invoicing",
+          "desc": "Standard, simplified and credit-note invoices with ZATCA QR signing and Fatoorah submission tracking."
+        },
+        {
+          "name": "Inventory",
+          "desc": "Multi-warehouse stock, valuation by FIFO or weighted average, and automated reorder alerts."
+        },
+        {
+          "name": "CRM & Pipeline",
+          "desc": "Capture leads, manage opportunities through a visual pipeline, and convert won deals to customers."
+        },
+        {
+          "name": "HR & Payroll",
+          "desc": "Employee lifecycle, attendance, leave, and GOSI-compliant monthly payroll that posts straight to the GL."
+        },
+        {
+          "name": "Fleet & Vehicles",
+          "desc": "Track assignments, fuel, maintenance and renewals — with alerts before any registration expires."
+        }
+      ]
+    },
+    "platform": {
+      "eyebrow": "Multi-tenant by design",
+      "title": "One login. Many companies. Total isolation.",
+      "subtitle": "A holding group can run every subsidiary from a single deployment. Our architecture scopes every record to a workspace and cluster — so the Riyadh team never sees Jeddah's data, unless you say so.",
+      "features": [
+        {
+          "name": "Cluster-level permissions",
+          "desc": "Assign a user different roles per cluster — Accountant in Riyadh, read-only in Jeddah."
+        },
+        {
+          "name": "Action-based RBAC",
+          "desc": "Roles bundle granular actions per module — view, create, post, approve, export."
+        },
+        {
+          "name": "Complete audit trail",
+          "desc": "Every record carries workspace and cluster context, logged for full traceability."
+        }
+      ],
+      "layers": [
+        {
+          "name": "Identity Layer",
+          "nodes": [
+            "Users",
+            "Workspaces",
+            "Organizations",
+            "Roles",
+            "Actions"
+          ]
+        },
+        {
+          "name": "Cluster Layer",
+          "nodes": [
+            "Clusters",
+            "AssetClusters",
+            "EventClusters",
+            "UserClusters"
+          ]
+        },
+        {
+          "name": "Assets Layer",
+          "nodes": [
+            "Assets",
+            "Resources",
+            "Customers",
+            "Suppliers",
+            "Invoices"
+          ]
+        },
+        {
+          "name": "Events Layer",
+          "nodes": [
+            "Sales",
+            "Projects",
+            "Issues",
+            "Renewals",
+            "Opportunities"
+          ]
+        }
+      ]
+    },
+    "compliance": {
+      "badge": "ZATCA Phase 2 certified",
+      "title": "E-invoicing that just works with Fatoorah.",
+      "subtitle": "Generate compliant tax invoices with cryptographic signing, embedded QR codes, and real-time clearance status. No bolt-ons, no middleware — it's native to the invoicing module.",
+      "chips": [
+        "QR generation",
+        "Cryptographic signing",
+        "Clearance tracking",
+        "Credit notes"
+      ],
+      "invoiceLabel": "TAX INVOICE",
+      "invoiceStatus": "Cleared",
+      "invoiceCustomer": "Customer",
+      "invoiceSubtotal": "Subtotal",
+      "invoiceVat": "VAT (15%)",
+      "invoiceTotal": "Total",
+      "invoiceScan": "Scan to verify on the ZATCA Fatoorah portal."
+    },
+    "stats": {
+      "items": [
+        {
+          "value": "99.9%",
+          "label": "Uptime SLA"
+        },
+        {
+          "value": "16",
+          "label": "Integrated modules"
+        },
+        {
+          "value": "<200ms",
+          "label": "Median API response"
+        },
+        {
+          "value": "600+",
+          "label": "Teams onboarded"
+        }
+      ]
+    },
+    "cta": {
+      "title": "Ready to see it on your numbers?",
+      "subtitle": "Spin up a workspace in minutes. Invite your team and start working.",
+      "primary": "Start free trial",
+      "secondary": "Explore the demo"
+    },
+    "footer": {
+      "tagline": "The unified business platform for finance and operations teams across the GCC.",
+      "product": "Product",
+      "company": "Company",
+      "resources": "Resources",
+      "about": "About",
+      "customers": "Customers",
+      "careers": "Careers",
+      "contact": "Contact",
+      "documentation": "Documentation",
+      "apiReference": "API reference",
+      "status": "Status",
+      "security": "Security",
+      "rights": "All rights reserved.",
+      "privacy": "Privacy",
+      "terms": "Terms"
+    }
+  },
+  "signup": {
+    "loginPrompt": "Already have a workspace?",
+    "loginLink": "Log in",
+    "steps": {
+      "account": "Account",
+      "workspace": "Workspace",
+      "review": "Review"
+    },
+    "account": {
+      "title": "Create your account",
+      "subtitle": "Start your free trial. No credit card required.",
+      "fullName": "Full name",
+      "email": "Work email",
+      "password": "Password",
+      "continue": "Continue"
+    },
+    "pwHint": {
+      "weak": "Use 8+ characters with mixed case and a number.",
+      "good": "Good — add a symbol for a stronger password.",
+      "strong": "Strong — 8+ chars with uppercase, number & symbol."
+    },
+    "workspace": {
+      "title": "Set up your workspace",
+      "subtitle": "A workspace is your company's isolated tenant.",
+      "name": "Company / workspace name",
+      "slug": "Workspace address",
+      "slugHint": "This is the workspace name your team will use to sign in.",
+      "currency": "Base currency",
+      "language": "Default language",
+      "back": "Back",
+      "continue": "Continue"
+    },
+    "review": {
+      "title": "Review & create",
+      "subtitle": "Confirm the details below. You can change anything later in Settings.",
+      "admin": "Admin account",
+      "email": "Email",
+      "workspace": "Workspace",
+      "address": "Address",
+      "currency": "Currency",
+      "plan": "Plan",
+      "trial": "Free trial",
+      "agree": "I agree to the Terms of Service and Privacy Policy.",
+      "back": "Back",
+      "create": "Create workspace"
+    },
+    "success": {
+      "title": "Check your inbox",
+      "subtitle": "We've sent a verification link to {{email}}. Confirm your email to activate your workspace, then sign in.",
+      "resend": "Resend email",
+      "resent": "Verification email sent.",
+      "goLogin": "Go to sign in"
+    },
+    "errors": {
+      "slugTaken": "That workspace address is already taken. Please choose another.",
+      "generic": "Something went wrong. Please try again.",
+      "agreeRequired": "Please accept the terms to continue."
+    }
+  },
+  "verifyEmail": {
+    "verifying": "Verifying your email…",
+    "successTitle": "Email verified",
+    "successBody": "Your workspace is active. You can now sign in.",
+    "goLogin": "Continue to sign in",
+    "failTitle": "Verification failed",
+    "failBody": "This verification link is invalid or has expired. Request a new one from the sign-in page.",
+    "missingToken": "This verification link is missing its token.",
+    "backToLogin": "Back to sign in"
   }
 }

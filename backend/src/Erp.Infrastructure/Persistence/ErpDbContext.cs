@@ -35,10 +35,8 @@ public sealed class ErpDbContext(DbContextOptions<ErpDbContext> options, ITenant
     public DbSet<UserPermission> UserPermissions => Set<UserPermission>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<WorkspaceSecurityPolicy> WorkspaceSecurityPolicies => Set<WorkspaceSecurityPolicy>();
-    public DbSet<Organization> Organizations => Set<Organization>();
-    public DbSet<Cluster> Clusters => Set<Cluster>();
-    public DbSet<Department> Departments => Set<Department>();
-    public DbSet<Team> Teams => Set<Team>();
+    public DbSet<StructureNode> StructureNodes => Set<StructureNode>();
+    public DbSet<Employee> Employees => Set<Employee>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -25,6 +25,10 @@ public sealed record UserDetail(
     string PreferredLanguage,
     string TimeZone,
     string? JobTitle,
+    string? EmployeeNumber,
+    Guid? PlacementNodeId,
+    Guid? ManagerId,
+    DateTimeOffset? HireDate,
     UserStatus Status,
     bool TwoFactorEnabled,
     bool RequirePasswordChange,
@@ -48,6 +52,10 @@ public sealed record CreateUserRequest(
     string? JobTitle,
     string PreferredLanguage,
     string? TimeZone,
+    string? EmployeeNumber,
+    Guid? PlacementNodeId,
+    Guid? ManagerId,
+    DateTimeOffset? HireDate,
     IReadOnlyList<Guid>? RoleIds,
     bool SendInvitation);
 
@@ -59,6 +67,10 @@ public sealed record UpdateUserRequest(
     string? JobTitle,
     string PreferredLanguage,
     string TimeZone,
+    string? EmployeeNumber,
+    Guid? PlacementNodeId,
+    Guid? ManagerId,
+    DateTimeOffset? HireDate,
     DateTimeOffset? AccessStartDate,
     DateTimeOffset? AccessExpiryDate,
     IReadOnlyList<Guid>? RoleIds);

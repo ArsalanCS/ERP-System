@@ -41,6 +41,15 @@ public sealed class SmtpEmailSender(IConfiguration config, ILogger<SmtpEmailSend
             "Reset password", url, ct);
     }
 
+    public Task SendEmailVerificationAsync(string toEmail, string displayName, string token, CancellationToken ct = default)
+    {
+        var url = $"{WebBaseUrl}/verify-email?token={Uri.EscapeDataString(token)}";
+        return SendAsync(toEmail, "Confirm your email to activate your workspace",
+            $"Hello {displayName}, thanks for signing up. "
+            + "Confirm your email address with the button below to activate your workspace, then sign in.",
+            "Confirm email", url, ct);
+    }
+
     private async Task SendAsync(string to, string subject, string body, string cta, string url, CancellationToken ct)
     {
         var html = $"""

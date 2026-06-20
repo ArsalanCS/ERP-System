@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -31,6 +32,7 @@ interface DrawerState {
   open: boolean;
   mode: 'create' | 'edit';
   userId?: string;
+  presetPlacementNodeId?: string;
 }
 
 const PAGE_SIZE = 25;
@@ -41,6 +43,8 @@ export function UsersPage() {
   const { can } = usePermissions();
   const toast = useToast();
   const queryClient = useQueryClient();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState('');
@@ -49,6 +53,17 @@ export function UsersPage() {
 
   const [drawer, setDrawer] = useState<DrawerState>({ open: false, mode: 'create' });
   const [dialog, setDialog] = useState<{ kind: DialogKind; user: UserListItem } | null>(null);
+
+  // Arriving from "add member" on the business-structure tree: auto-open the
+  // new-user flow pre-placed at the chosen node, then clear the nav state so a
+  // refresh/back doesn't reopen it.
+  useEffect(() => {
+    const placementId = (location.state as { createUserPlacementNodeId?: string } | null)
+      ?.createUserPlacementNodeId;
+    if (!placementId) return;
+    setDrawer({ open: true, mode: 'create', presetPlacementNodeId: placementId });
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.state, location.pathname, navigate]);
 
   // Debounce the search box → query param.
   useEffect(() => {
@@ -289,6 +304,7 @@ export function UsersPage() {
         open={drawer.open}
         mode={drawer.mode}
         userId={drawer.userId}
+        presetPlacementNodeId={drawer.presetPlacementNodeId}
         onClose={() => setDrawer((d) => ({ ...d, open: false }))}
         onSaved={(kind) => {
           setDrawer((d) => ({ ...d, open: false }));

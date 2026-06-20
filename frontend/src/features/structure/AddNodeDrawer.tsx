@@ -1,33 +1,23 @@
-import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Drawer, Input, Button, Spinner } from '@/shared/ui';
+import { Drawer, Input, Select, Button, Spinner } from '@/shared/ui';
 import { useToast } from '@/shared/ui/toast-context';
 import { ApiError } from '@/shared/api/client';
-import { structureApi, structureKeys } from './api';
+import { structureApi, structureKeys, StructureNodeType, type StructureNodeDto } from './api';
 
-export type NodeKind = 'organization' | 'cluster' | 'department' | 'team';
-
-export interface AddContext {
-  kind: NodeKind;
-  organizationId?: string;
-  clusterId?: string | null;
-  parentClusterId?: string | null;
-  departmentId?: string;
+/** Describes what the drawer should create or edit. */
+export interface NodeEditorContext {
+  mode: 'create' | 'edit';
+  parentId: string | null;
+  parentName?: string | undefined;
+  allowedTypes: StructureNodeType[];
+  node?: StructureNodeDto | undefined;
 }
 
 interface AddNodeDrawerProps {
-  context: AddContext | null;
+  context: NodeEditorContext | null;
   onClose: () => void;
-}
-
-interface FormShape {
-  name: string;
-  code: string;
-  type: string;
-  baseCurrency: string;
-  country: string;
 }
 
 export function AddNodeDrawer({ context, onClose }: AddNodeDrawerProps) {
@@ -35,96 +25,116 @@ export function AddNodeDrawer({ context, onClose }: AddNodeDrawerProps) {
   const toast = useToast();
   const queryClient = useQueryClient();
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setError,
-    formState: { errors },
-  } = useForm<FormShape>();
+  const [name, setName] = useState('');
+  const [code, setCode] = useState('');
+  const [nodeType, setNodeType] = useState<StructureNodeType>(StructureNodeType.Department);
+  const [description, setDescription] = useState('');
+  const [codeError, setCodeError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (context) reset({ name: '', code: '', type: 'Branch', baseCurrency: 'SAR', country: '' });
-  }, [context, reset]);
+    if (!context) return;
+    setCodeError(null);
+    if (context.mode === 'edit' && context.node) {
+      setName(context.node.name);
+      setCode(context.node.code);
+      setNodeType(context.node.nodeType);
+      setDescription(context.node.description ?? '');
+    } else {
+      setName('');
+      setCode('');
+      setNodeType(context.allowedTypes[0] ?? StructureNodeType.Department);
+      setDescription('');
+    }
+  }, [context]);
 
   const mutation = useMutation({
-    mutationFn: (values: FormShape) => {
-      const name = values.name.trim();
-      const code = values.code.trim();
-      switch (context!.kind) {
-        case 'organization':
-          return structureApi.createOrganization({
-            name,
-            code,
-            baseCurrency: values.baseCurrency.trim() || null,
-            country: values.country.trim() || null,
-          });
-        case 'cluster':
-          return structureApi.createCluster({
-            organizationId: context!.organizationId!,
-            name,
-            code,
-            type: values.type.trim() || 'Branch',
-            parentClusterId: context!.parentClusterId ?? null,
-          });
-        case 'department':
-          return structureApi.createDepartment({
-            organizationId: context!.organizationId!,
-            clusterId: context!.clusterId ?? null,
-            name,
-            code,
-          });
-        case 'team':
-          return structureApi.createTeam({ departmentId: context!.departmentId!, name, code });
+    mutationFn: async () => {
+      const trimmed = { name: name.trim(), description: description.trim() || null };
+      if (context!.mode === 'edit') {
+        await structureApi.updateNode(context!.node!.id, trimmed);
+        return;
       }
+      await structureApi.createNode({
+        parentId: context!.parentId,
+        nodeType,
+        code: code.trim(),
+        ...trimmed,
+      });
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: structureKeys.tree });
-      toast.success(t('structure.feedback.created'));
+      toast.success(t(context!.mode === 'edit' ? 'structure.feedback.updated' : 'structure.feedback.created'));
       onClose();
     },
     onError: (err) => {
       if (err instanceof ApiError && err.details?.[0]) {
-        setError('code', { message: err.details[0].message });
+        setCodeError(err.details[0].message);
+      } else if (err instanceof ApiError && err.message) {
+        setCodeError(err.message);
       } else {
         toast.error(t('common.loadError'));
       }
     },
   });
 
-  const req = { required: t('users.validation.required') };
-  const kind = context?.kind;
+  const isEdit = context?.mode === 'edit';
+  const typeOptions = (context?.allowedTypes ?? []).map((tpe) => ({
+    value: String(tpe),
+    label: t(`structure.nodeTypes.${tpe}`),
+  }));
+  const canSubmit = name.trim().length > 0 && (isEdit || code.trim().length > 0);
+
+  const title = !context
+    ? ''
+    : isEdit
+      ? t('structure.editNode')
+      : context.parentName
+        ? t('structure.addChildTo', { parent: context.parentName })
+        : t('structure.addOrganization');
 
   return (
     <Drawer
       open={context !== null}
       onClose={onClose}
-      title={kind ? t(`structure.add.${kind}`) : ''}
+      title={title}
       footer={
         <>
           <Button variant="outline" size="sm" onClick={onClose} disabled={mutation.isPending}>
             {t('common.cancel')}
           </Button>
-          <Button size="sm" onClick={handleSubmit((v) => mutation.mutate(v))} disabled={mutation.isPending}>
+          <Button size="sm" onClick={() => mutation.mutate()} disabled={mutation.isPending || !canSubmit}>
             {mutation.isPending && <Spinner size={15} className="border-white/40 border-t-white" />}
-            {t('common.create')}
+            {t(isEdit ? 'common.save' : 'common.create')}
           </Button>
         </>
       }
     >
-      <form className="flex flex-col gap-4" onSubmit={handleSubmit((v) => mutation.mutate(v))}>
-        <Input label={t('structure.fields.name')} error={errors.name?.message} {...register('name', req)} />
-        <Input label={t('structure.fields.code')} error={errors.code?.message} {...register('code', req)} />
-        {kind === 'cluster' && (
-          <Input label={t('structure.fields.type')} {...register('type')} />
+      <div className="flex flex-col gap-4">
+        {!isEdit && typeOptions.length > 1 && (
+          <Select
+            label={t('structure.fields.type')}
+            value={String(nodeType)}
+            onChange={(e) => setNodeType(Number(e.target.value) as StructureNodeType)}
+            options={typeOptions}
+          />
         )}
-        {kind === 'organization' && (
-          <div className="grid grid-cols-2 gap-3">
-            <Input label={t('structure.fields.baseCurrency')} {...register('baseCurrency')} />
-            <Input label={t('structure.fields.country')} {...register('country')} />
-          </div>
-        )}
-      </form>
+        <Input label={t('structure.fields.name')} value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+        <Input
+          label={t('structure.fields.code')}
+          value={code}
+          onChange={(e) => {
+            setCode(e.target.value);
+            setCodeError(null);
+          }}
+          readOnly={isEdit}
+          error={codeError ?? undefined}
+        />
+        <Input
+          label={t('structure.fields.description')}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
     </Drawer>
   );
 }

@@ -42,7 +42,8 @@ public sealed class UsersEndpointTests : IAsyncLifetime
         var client = await LoginAsync(slug, "owner@x.test");
 
         var created = await client.PostAsJsonAsync("/api/v1/users",
-            new CreateUserRequest("newbie@x.test", "New", "Bie", null, "Analyst", "en", null, null, SendInvitation: true));
+            new CreateUserRequest("newbie@x.test", "New", "Bie", null, "Analyst", "en", null,
+                null, null, null, null, null, SendInvitation: true));
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
 
         var list = await client.GetFromJsonAsync<PagedResult<UserListItem>>("/api/v1/users");
@@ -94,11 +95,46 @@ public sealed class UsersEndpointTests : IAsyncLifetime
         var client = await LoginAsync(slug, "owner2@x.test");
 
         var created = await (await client.PostAsJsonAsync("/api/v1/users",
-            new CreateUserRequest("fetch@x.test", "Fetch", "Me", null, null, "en", null, null, false)))
+            new CreateUserRequest("fetch@x.test", "Fetch", "Me", null, null, "en", null,
+                null, null, null, null, null, false)))
             .Content.ReadFromJsonAsync<CreateUserResult>();
 
         var detail = await client.GetFromJsonAsync<UserDetail>($"/api/v1/users/{created!.UserId}");
         Assert.NotNull(detail);
         Assert.Equal("fetch@x.test", detail!.Email);
     }
+
+    [Fact]
+    public async Task Invite_with_placement_creates_employee_with_details_and_node()
+    {
+        var slug = Slug();
+        await _factory.SeedOwnerUserAsync(slug, "hr@x.test", Password);
+        var client = await LoginAsync(slug, "hr@x.test");
+        var u = Guid.NewGuid().ToString("N")[..6];
+
+        // Build a placement node (org → department).
+        var orgResp = await client.PostAsJsonAsync("/api/v1/structure/nodes",
+            new Erp.Application.Structure.CreateNodeRequest(
+                null, Erp.Domain.Structure.StructureNodeType.Organization, $"Org {u}", $"org-{u}", null, null, null));
+        var orgId = (await orgResp.Content.ReadFromJsonAsync<IdHolder>())!.Id;
+        var deptResp = await client.PostAsJsonAsync("/api/v1/structure/nodes",
+            new Erp.Application.Structure.CreateNodeRequest(
+                orgId, Erp.Domain.Structure.StructureNodeType.Department, $"Dept {u}", $"dep-{u}", null, null, null));
+        var deptId = (await deptResp.Content.ReadFromJsonAsync<IdHolder>())!.Id;
+
+        // Invite a user placed in that department, with HR details.
+        var created = await (await client.PostAsJsonAsync("/api/v1/users",
+            new CreateUserRequest("placed@x.test", "Placed", "Person", "+966500000000", "Accountant", "en", null,
+                "EMP-100", deptId, null, null, null, SendInvitation: false)))
+            .Content.ReadFromJsonAsync<CreateUserResult>();
+
+        var detail = await client.GetFromJsonAsync<UserDetail>($"/api/v1/users/{created!.UserId}");
+        Assert.NotNull(detail);
+        Assert.Equal("Accountant", detail!.JobTitle);
+        Assert.Equal("+966500000000", detail.Mobile);
+        Assert.Equal("EMP-100", detail.EmployeeNumber);
+        Assert.Equal(deptId, detail.PlacementNodeId);
+    }
+
+    private sealed record IdHolder(Guid Id);
 }

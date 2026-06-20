@@ -16,6 +16,9 @@ public sealed class AuthOptions
 
     public int PasswordResetTokenHours { get; set; } = 2;
 
+    /// <summary>How long a self-service signup email-verification link stays valid.</summary>
+    public int EmailVerificationTokenHours { get; set; } = 48;
+
     public string Issuer { get; set; } = "erp-platform";
     public string Audience { get; set; } = "erp-clients";
 }

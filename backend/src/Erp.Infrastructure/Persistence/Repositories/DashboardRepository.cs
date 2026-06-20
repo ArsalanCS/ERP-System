@@ -1,5 +1,6 @@
 using Erp.Application.Dashboard;
 using Erp.Domain.Identity;
+using Erp.Domain.Structure;
 using Microsoft.EntityFrameworkCore;
 
 namespace Erp.Infrastructure.Persistence.Repositories;
@@ -16,8 +17,8 @@ public sealed class DashboardRepository(ErpDbContext context) : IDashboardReposi
         var activeUsers = await context.Users.CountAsync(u => u.Status == UserStatus.Active, ct);
         var suspendedUsers = await context.Users.CountAsync(u => u.Status == UserStatus.Suspended, ct);
         var pendingInvites = await context.Users.CountAsync(u => u.Status == UserStatus.PendingInvitation, ct);
-        var organizations = await context.Organizations.CountAsync(ct);
-        var clusters = await context.Clusters.CountAsync(ct);
+        var organizations = await context.StructureNodes.CountAsync(n => n.NodeType == StructureNodeType.Organization, ct);
+        var clusters = await context.StructureNodes.CountAsync(n => n.NodeType == StructureNodeType.Branch, ct);
         var roles = await context.Roles.CountAsync(ct);
         var activeSessions = await context.RefreshTokens.CountAsync(t => t.RevokedAt == null && t.ExpiresAt > now, ct);
 

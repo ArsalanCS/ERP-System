@@ -36,6 +36,10 @@ export interface UserDetail {
   preferredLanguage: string;
   timeZone: string;
   jobTitle: string | null;
+  employeeNumber: string | null;
+  placementNodeId: string | null;
+  managerId: string | null;
+  hireDate: string | null;
   status: UserStatus;
   twoFactorEnabled: boolean;
   requirePasswordChange: boolean;
@@ -54,6 +58,10 @@ export interface CreateUserRequest {
   jobTitle?: string | null;
   preferredLanguage: string;
   timeZone?: string | null;
+  employeeNumber?: string | null;
+  placementNodeId?: string | null;
+  managerId?: string | null;
+  hireDate?: string | null;
   roleIds?: string[] | undefined;
   sendInvitation: boolean;
 }
@@ -66,6 +74,10 @@ export interface UpdateUserRequest {
   jobTitle?: string | null;
   preferredLanguage: string;
   timeZone: string;
+  employeeNumber?: string | null;
+  placementNodeId?: string | null;
+  managerId?: string | null;
+  hireDate?: string | null;
   accessStartDate?: string | null;
   accessExpiryDate?: string | null;
   roleIds?: string[] | undefined;

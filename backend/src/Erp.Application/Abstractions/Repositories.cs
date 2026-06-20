@@ -93,3 +93,15 @@ public interface ISecurityPolicyRepository
     Task<WorkspaceSecurityPolicy?> GetForWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default);
     void Add(WorkspaceSecurityPolicy policy);
 }
+
+/// <summary>Employee (HR details) records, 1:1 with a user.</summary>
+public interface IEmployeeRepository
+{
+    Task<Employee?> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>Employee records for the given users, keyed by user id (for list/detail joins).</summary>
+    Task<IReadOnlyDictionary<Guid, Employee>> GetByUserIdsAsync(
+        IReadOnlyCollection<Guid> userIds, CancellationToken cancellationToken = default);
+
+    void Add(Employee employee);
+}

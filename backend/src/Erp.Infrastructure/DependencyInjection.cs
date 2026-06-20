@@ -73,6 +73,7 @@ public static class DependencyInjection
         services.AddScoped<IPermissionResolver, Authorization.PermissionResolver>();
         services.AddScoped<IAuditLogger, Auditing.AuditLogger>();
         services.AddScoped<Persistence.Seeding.IIdentitySeeder, Persistence.Seeding.IdentitySeeder>();
+        services.AddScoped<IWorkspaceProvisioner, Persistence.Provisioning.WorkspaceProvisioner>();
 
         // Repositories + unit of work.
         services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -81,6 +82,7 @@ public static class DependencyInjection
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IPermissionRepository, PermissionRepository>();
         services.AddScoped<IStructureRepository, StructureRepository>();
+        services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<IAuditRepository, AuditRepository>();
         services.AddScoped<Application.Dashboard.IDashboardRepository, DashboardRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();

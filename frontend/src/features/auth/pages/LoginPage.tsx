@@ -75,9 +75,17 @@ export function LoginPage() {
       title={t('auth.login.title')}
       subtitle={t('auth.login.subtitle')}
       footer={
-        <Link to="/forgot-password" className="font-semibold text-clay hover:underline">
-          {t('auth.login.forgotLink')}
-        </Link>
+        <div className="flex flex-col gap-1.5">
+          <Link to="/forgot-password" className="font-semibold text-clay hover:underline">
+            {t('auth.login.forgotLink')}
+          </Link>
+          <span className="text-ink-4">
+            {t('auth.noAccount')}{' '}
+            <Link to="/signup" className="font-semibold text-clay hover:underline">
+              {t('auth.signupLink')}
+            </Link>
+          </span>
+        </div>
       }
     >
       {flash?.reset && !formError && (

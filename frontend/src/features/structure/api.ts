@@ -1,4 +1,5 @@
 import { api } from '@/shared/api/client';
+import type { UserStatus } from '@/features/users/types';
 
 /** Mirrors Erp.Domain.Structure.StructureStatus (serialized as numbers). */
 export enum StructureStatus {
@@ -7,85 +8,91 @@ export enum StructureStatus {
   Archived = 2,
 }
 
-export interface OrganizationDto {
-  id: string;
-  name: string;
-  code: string;
-  legalName: string | null;
-  organizationType: string | null;
-  country: string | null;
-  city: string | null;
-  baseCurrency: string;
-  status: StructureStatus;
+/** Mirrors Erp.Domain.Structure.StructureNodeType (serialized as numbers — keep order in sync). */
+export enum StructureNodeType {
+  Organization = 0,
+  Department = 1,
+  Branch = 2,
+  SubDepartment = 3,
+  Team = 4,
+  SubTeam = 5,
 }
 
-export interface ClusterDto {
+export interface StructureNodeDto {
   id: string;
-  organizationId: string;
-  parentClusterId: string | null;
+  parentId: string | null;
+  nodeType: StructureNodeType;
   name: string;
   code: string;
-  type: string;
-  location: string | null;
+  description: string | null;
   managerId: string | null;
-  dataIsolationEnabled: boolean;
-  permissionInheritanceEnabled: boolean;
+  sortOrder: number;
   status: StructureStatus;
-}
-
-export interface DepartmentDto {
-  id: string;
-  organizationId: string;
-  clusterId: string | null;
-  name: string;
-  code: string;
-  managerId: string | null;
-  status: StructureStatus;
-}
-
-export interface TeamDto {
-  id: string;
-  departmentId: string;
-  name: string;
-  code: string;
-  leadId: string | null;
-  status: StructureStatus;
+  memberCount: number;
 }
 
 export interface StructureTree {
-  organizations: OrganizationDto[];
-  clusters: ClusterDto[];
-  departments: DepartmentDto[];
-  teams: TeamDto[];
+  nodes: StructureNodeDto[];
+}
+
+/** A user placed directly on a node (mirrors StructureMemberDto). */
+export interface StructureMemberDto {
+  userId: string;
+  displayName: string;
+  email: string;
+  jobTitle: string | null;
+  mobile: string | null;
+  employeeNumber: string | null;
+  status: UserStatus;
+  isManager: boolean;
+}
+
+export interface CreateNodeBody {
+  parentId: string | null;
+  nodeType: StructureNodeType;
+  name: string;
+  code: string;
+  description?: string | null;
+  managerId?: string | null;
+  sortOrder?: number | null;
+}
+
+export interface UpdateNodeBody {
+  name: string;
+  description?: string | null;
+  managerId?: string | null;
+  sortOrder?: number | null;
 }
 
 export const structureApi = {
   tree: () => api.get<StructureTree>('/structure/tree'),
-
-  createOrganization: (body: { name: string; code: string; baseCurrency?: string | null; country?: string | null }) =>
-    api.post<{ id: string }>('/organizations', body),
-  archiveOrganization: (id: string) => api.delete<void>(`/organizations/${id}`),
-
-  createCluster: (body: {
-    organizationId: string;
-    name: string;
-    code: string;
-    type: string;
-    parentClusterId?: string | null;
-    dataIsolationEnabled?: boolean;
-    permissionInheritanceEnabled?: boolean;
-  }) => api.post<{ id: string }>('/clusters', body),
-  archiveCluster: (id: string) => api.delete<void>(`/clusters/${id}`),
-
-  createDepartment: (body: { organizationId: string; clusterId?: string | null; name: string; code: string }) =>
-    api.post<{ id: string }>('/departments', body),
-  archiveDepartment: (id: string) => api.delete<void>(`/departments/${id}`),
-
-  createTeam: (body: { departmentId: string; name: string; code: string }) =>
-    api.post<{ id: string }>('/teams', body),
-  archiveTeam: (id: string) => api.delete<void>(`/teams/${id}`),
+  members: (nodeId: string) => api.get<StructureMemberDto[]>(`/structure/nodes/${nodeId}/members`),
+  createNode: (body: CreateNodeBody) => api.post<{ id: string }>('/structure/nodes', body),
+  updateNode: (id: string, body: UpdateNodeBody) => api.put<void>(`/structure/nodes/${id}`, body),
+  moveNode: (id: string, parentId: string | null) =>
+    api.put<void>(`/structure/nodes/${id}/move`, { parentId }),
+  archiveNode: (id: string) => api.delete<void>(`/structure/nodes/${id}`),
 };
 
 export const structureKeys = {
   tree: ['structure', 'tree'] as const,
+  members: (nodeId: string) => ['structure', 'members', nodeId] as const,
+};
+
+/** Sensible child node types offered when adding under a given node type. */
+export const CHILD_TYPES: Record<StructureNodeType, StructureNodeType[]> = {
+  [StructureNodeType.Organization]: [StructureNodeType.Department, StructureNodeType.Branch],
+  [StructureNodeType.Department]: [
+    StructureNodeType.Branch,
+    StructureNodeType.SubDepartment,
+    StructureNodeType.Team,
+  ],
+  [StructureNodeType.Branch]: [
+    StructureNodeType.Department,
+    StructureNodeType.SubDepartment,
+    StructureNodeType.Team,
+  ],
+  [StructureNodeType.SubDepartment]: [StructureNodeType.Team],
+  [StructureNodeType.Team]: [StructureNodeType.SubTeam],
+  [StructureNodeType.SubTeam]: [],
 };

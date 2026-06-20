@@ -8,6 +8,9 @@ import { NotFound } from './pages/NotFound';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
 import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage';
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
+import { VerifyEmailPage } from '@/features/auth/pages/VerifyEmailPage';
+import { SignupPage } from '@/features/auth/pages/SignupPage';
+import { LandingPage } from '@/features/marketing/LandingPage';
 
 // Admin feature pages are code-split so the initial (auth) bundle stays small.
 const DashboardPage = lazy(() =>
@@ -41,15 +44,24 @@ const ProfilePage = lazy(() =>
  * Identity spec §18 navigation summary.
  */
 export const router = createBrowserRouter([
+  // Public marketing landing — reachable by everyone (signed-in users see a
+  // "go to dashboard" CTA instead of sign-up).
+  { path: '/', element: <LandingPage /> },
   {
-    // Always accessible — a signed-in admin may click an invite/reset link, and
-    // invited users may still have a stale session. Must NOT be behind PublicOnly.
+    // Always accessible — a signed-in admin may click an invite/reset/verify
+    // link, and the recipient may still have a stale session. NOT behind PublicOnly.
     element: <AuthLayout />,
-    children: [{ path: '/reset-password', element: <ResetPasswordPage /> }],
+    children: [
+      { path: '/reset-password', element: <ResetPasswordPage /> },
+      { path: '/verify-email', element: <VerifyEmailPage /> },
+    ],
   },
   {
     element: <PublicOnly />,
     children: [
+      // Signup carries its own full-page chrome (nav + stepper), so it sits
+      // outside AuthLayout's centered card.
+      { path: '/signup', element: <SignupPage /> },
       {
         element: <AuthLayout />,
         children: [
@@ -62,7 +74,6 @@ export const router = createBrowserRouter([
   {
     element: <RequireAuth />,
     children: [
-      { path: '/', element: <Navigate to="/admin/overview" replace /> },
       {
         path: '/admin',
         element: <AdminLayout />,

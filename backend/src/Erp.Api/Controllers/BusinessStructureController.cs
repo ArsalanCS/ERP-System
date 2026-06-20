@@ -7,8 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace Erp.Api.Controllers;
 
 /// <summary>
-/// Business Structure (Identity spec §6 / §13.1): organizations, clusters,
-/// departments, teams. Reads require structure.view; writes require structure.manage.
+/// Business Structure (Identity spec §6 / §13.1): one unified node tree
+/// (organization → department → branch → sub-department → team → sub-team).
+/// Reads require structure.view; writes require structure.manage.
 /// </summary>
 [Authorize]
 [Route("api/v1")]
@@ -18,67 +19,28 @@ public sealed class BusinessStructureController(IStructureService structure) : A
     [RequirePermission(PermissionCatalog.StructureView)]
     public async Task<IActionResult> Tree(CancellationToken ct) => Ok(await structure.GetTreeAsync(ct));
 
-    // ---- Organizations ----
-    [HttpPost("organizations")]
-    [RequirePermission(PermissionCatalog.StructureManage)]
-    public async Task<IActionResult> CreateOrg([FromBody] CreateOrganizationRequest req, CancellationToken ct)
-        => FromResult(await structure.CreateOrganizationAsync(req, ct), id => Created($"/api/v1/organizations/{id}", new { id }));
+    [HttpGet("structure/nodes/{id:guid}/members")]
+    [RequirePermission(PermissionCatalog.StructureView)]
+    public async Task<IActionResult> Members(Guid id, CancellationToken ct)
+        => FromResult(await structure.ListMembersAsync(id, ct), Ok);
 
-    [HttpPut("organizations/{id:guid}")]
+    [HttpPost("structure/nodes")]
     [RequirePermission(PermissionCatalog.StructureManage)]
-    public async Task<IActionResult> UpdateOrg(Guid id, [FromBody] UpdateOrganizationRequest req, CancellationToken ct)
-        => FromResult(await structure.UpdateOrganizationAsync(id, req, ct), NoContent);
+    public async Task<IActionResult> Create([FromBody] CreateNodeRequest req, CancellationToken ct)
+        => FromResult(await structure.CreateNodeAsync(req, ct), id => Created($"/api/v1/structure/nodes/{id}", new { id }));
 
-    [HttpDelete("organizations/{id:guid}")]
+    [HttpPut("structure/nodes/{id:guid}")]
     [RequirePermission(PermissionCatalog.StructureManage)]
-    public async Task<IActionResult> ArchiveOrg(Guid id, CancellationToken ct)
-        => FromResult(await structure.ArchiveOrganizationAsync(id, ct), NoContent);
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateNodeRequest req, CancellationToken ct)
+        => FromResult(await structure.UpdateNodeAsync(id, req, ct), NoContent);
 
-    // ---- Clusters ----
-    [HttpPost("clusters")]
+    [HttpPut("structure/nodes/{id:guid}/move")]
     [RequirePermission(PermissionCatalog.StructureManage)]
-    public async Task<IActionResult> CreateCluster([FromBody] CreateClusterRequest req, CancellationToken ct)
-        => FromResult(await structure.CreateClusterAsync(req, ct), id => Created($"/api/v1/clusters/{id}", new { id }));
+    public async Task<IActionResult> Move(Guid id, [FromBody] MoveNodeRequest req, CancellationToken ct)
+        => FromResult(await structure.MoveNodeAsync(id, req, ct), NoContent);
 
-    [HttpPut("clusters/{id:guid}")]
+    [HttpDelete("structure/nodes/{id:guid}")]
     [RequirePermission(PermissionCatalog.StructureManage)]
-    public async Task<IActionResult> UpdateCluster(Guid id, [FromBody] UpdateClusterRequest req, CancellationToken ct)
-        => FromResult(await structure.UpdateClusterAsync(id, req, ct), NoContent);
-
-    [HttpDelete("clusters/{id:guid}")]
-    [RequirePermission(PermissionCatalog.StructureManage)]
-    public async Task<IActionResult> ArchiveCluster(Guid id, CancellationToken ct)
-        => FromResult(await structure.ArchiveClusterAsync(id, ct), NoContent);
-
-    // ---- Departments ----
-    [HttpPost("departments")]
-    [RequirePermission(PermissionCatalog.StructureManage)]
-    public async Task<IActionResult> CreateDept([FromBody] CreateDepartmentRequest req, CancellationToken ct)
-        => FromResult(await structure.CreateDepartmentAsync(req, ct), id => Created($"/api/v1/departments/{id}", new { id }));
-
-    [HttpPut("departments/{id:guid}")]
-    [RequirePermission(PermissionCatalog.StructureManage)]
-    public async Task<IActionResult> UpdateDept(Guid id, [FromBody] UpdateDepartmentRequest req, CancellationToken ct)
-        => FromResult(await structure.UpdateDepartmentAsync(id, req, ct), NoContent);
-
-    [HttpDelete("departments/{id:guid}")]
-    [RequirePermission(PermissionCatalog.StructureManage)]
-    public async Task<IActionResult> ArchiveDept(Guid id, CancellationToken ct)
-        => FromResult(await structure.ArchiveDepartmentAsync(id, ct), NoContent);
-
-    // ---- Teams ----
-    [HttpPost("teams")]
-    [RequirePermission(PermissionCatalog.StructureManage)]
-    public async Task<IActionResult> CreateTeam([FromBody] CreateTeamRequest req, CancellationToken ct)
-        => FromResult(await structure.CreateTeamAsync(req, ct), id => Created($"/api/v1/teams/{id}", new { id }));
-
-    [HttpPut("teams/{id:guid}")]
-    [RequirePermission(PermissionCatalog.StructureManage)]
-    public async Task<IActionResult> UpdateTeam(Guid id, [FromBody] UpdateTeamRequest req, CancellationToken ct)
-        => FromResult(await structure.UpdateTeamAsync(id, req, ct), NoContent);
-
-    [HttpDelete("teams/{id:guid}")]
-    [RequirePermission(PermissionCatalog.StructureManage)]
-    public async Task<IActionResult> ArchiveTeam(Guid id, CancellationToken ct)
-        => FromResult(await structure.ArchiveTeamAsync(id, ct), NoContent);
+    public async Task<IActionResult> Archive(Guid id, CancellationToken ct)
+        => FromResult(await structure.ArchiveNodeAsync(id, ct), NoContent);
 }

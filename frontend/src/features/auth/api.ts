@@ -48,4 +48,31 @@ export const authApi = {
 
   resetPassword: (token: string, newPassword: string) =>
     api.postAnon<void>('/auth/reset-password', { token, newPassword }),
+
+  /** Self-service signup: provisions a workspace + owner and emails a verification link. */
+  register: (body: RegisterWorkspaceRequest) =>
+    api.postAnon<RegisterWorkspaceResult>('/auth/register', body),
+
+  /** Confirms an email-verification link and activates the owner account. */
+  verifyEmail: (token: string) => api.postAnon<void>('/auth/verify-email', { token }),
+
+  /** Re-sends the verification link. Always resolves (no account enumeration). */
+  resendVerification: (workspaceSlug: string, email: string) =>
+    api.postAnon<void>('/auth/resend-verification', { workspaceSlug, email }),
 };
+
+/** Mirrors backend Erp.Application.Auth.RegisterWorkspaceRequest. */
+export interface RegisterWorkspaceRequest {
+  workspaceName: string;
+  slug: string;
+  baseCurrency: string;
+  language: string;
+  fullName: string;
+  email: string;
+  password: string;
+}
+
+export interface RegisterWorkspaceResult {
+  slug: string;
+  email: string;
+}

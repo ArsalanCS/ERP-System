@@ -39,11 +39,10 @@ public sealed class User : TenantEntity
     public string FirstName { get; private set; } = null!;
     public string LastName { get; private set; } = null!;
     public string DisplayName { get; private set; } = null!;
-    public string? Mobile { get; private set; }
     public string PreferredLanguage { get; private set; } = "en";
     public string TimeZone { get; private set; } = "Asia/Riyadh";
-    public string? JobTitle { get; private set; }
     public string? AvatarUrl { get; private set; }
+    // Mobile, job title and other HR details live on the separate Employee record.
 
     // ---- Status & access window -------------------------------------------
     public UserStatus Status { get; private set; }
@@ -85,15 +84,13 @@ public sealed class User : TenantEntity
     }
 
     public void UpdateProfile(string firstName, string lastName, string displayName,
-        string? mobile, string preferredLanguage, string timeZone, string? jobTitle)
+        string preferredLanguage, string timeZone)
     {
         FirstName = firstName;
         LastName = lastName;
         DisplayName = string.IsNullOrWhiteSpace(displayName) ? $"{firstName} {lastName}".Trim() : displayName;
-        Mobile = mobile;
         PreferredLanguage = preferredLanguage;
         TimeZone = timeZone;
-        JobTitle = jobTitle;
     }
 
     public void SetAccessWindow(DateTimeOffset? start, DateTimeOffset? expiry)

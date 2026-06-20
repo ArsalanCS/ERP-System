@@ -22,6 +22,7 @@ public sealed class AuthService(
     ITokenGenerator tokenGenerator,
     ITotpService totp,
     IEmailSender emailSender,
+    IWorkspaceProvisioner provisioner,
     IJwtTokenService jwt,
     IPermissionResolver permissionResolver,
     IAuditLogger audit,
@@ -263,7 +264,147 @@ public sealed class AuthService(
         return Result.Success();
     }
 
+    public async Task<Result<RegisterWorkspaceResult>> RegisterWorkspaceAsync(
+        RegisterWorkspaceRequest request, CancellationToken cancellationToken = default)
+    {
+        var now = clock.UtcNow;
+        var slug = request.Slug.Trim().ToLowerInvariant();
+        var email = request.Email.Trim();
+
+        // Slug uniqueness is the one signal we surface (it's a public address).
+        var existing = await workspaces.GetBySlugAsync(slug, cancellationToken);
+        if (existing is not null)
+        {
+            return Result.Failure<RegisterWorkspaceResult>(AuthErrors.SlugTaken());
+        }
+
+        var (firstName, lastName) = SplitName(request.FullName);
+        var passwordHash = passwordHasher.Hash(request.Password);
+
+        // Create the tenant + owner (PendingInvitation) + owner role in one unit.
+        var provisioned = await provisioner.ProvisionAsync(new WorkspaceProvisionRequest(
+            WorkspaceName: request.WorkspaceName.Trim(),
+            Slug: slug,
+            DefaultLanguage: request.Language.Trim().ToLowerInvariant(),
+            TimeZone: "Asia/Riyadh",
+            BaseCurrency: request.BaseCurrency.Trim().ToUpperInvariant(),
+            Email: email,
+            FirstName: firstName,
+            LastName: lastName,
+            PasswordHash: passwordHash,
+            ActivateImmediately: false), cancellationToken);
+
+        using var _ = tenant.BeginScope(provisioned.WorkspaceId, []);
+
+        // Email-verification token (reuses the single-use, hashed, expiring token store).
+        var secret = tokenGenerator.NewSecret();
+        var raw = ComposeToken(provisioned.WorkspaceId, secret);
+        resetTokens.Add(new PasswordResetToken(provisioned.WorkspaceId, provisioned.UserId,
+            tokenHasher.Hash(raw), now.AddHours(_options.EmailVerificationTokenHours)));
+
+        await audit.LogAsync(new AuditEntry
+        {
+            Action = AuditActions.Create,
+            Module = "Identity",
+            ResourceType = "Workspace",
+            ResourceId = provisioned.WorkspaceId.ToString(),
+            Result = AuditResult.Success,
+            WorkspaceId = provisioned.WorkspaceId,
+            ActorUserId = provisioned.UserId,
+            ActorDisplayName = email,
+            Reason = "Self-service workspace registration",
+        }, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        // Deliver the verification link (dev: written to the local outbox + logged).
+        await emailSender.SendEmailVerificationAsync(email, $"{firstName} {lastName}".Trim(), raw, cancellationToken);
+
+        return Result.Success(new RegisterWorkspaceResult(slug, email));
+    }
+
+    public async Task<Result> VerifyEmailAsync(VerifyEmailRequest request, CancellationToken cancellationToken = default)
+    {
+        var now = clock.UtcNow;
+
+        if (!TryGetWorkspace(request.Token, out var workspaceId))
+        {
+            return Result.Failure(AuthErrors.InvalidVerificationToken());
+        }
+
+        using var _ = tenant.BeginScope(workspaceId, []);
+
+        var token = await resetTokens.GetByHashAsync(tokenHasher.Hash(request.Token), cancellationToken);
+        if (token is null || !token.IsUsable(now))
+        {
+            return Result.Failure(AuthErrors.InvalidVerificationToken());
+        }
+
+        var user = await users.GetByIdAsync(token.UserId, cancellationToken);
+        if (user is null)
+        {
+            return Result.Failure(AuthErrors.InvalidVerificationToken());
+        }
+
+        if (user.Status == UserStatus.PendingInvitation)
+        {
+            user.Activate();
+        }
+        token.Consume(now);
+
+        await audit.LogAsync(new AuditEntry
+        {
+            Action = AuditActions.Update,
+            Module = "Identity",
+            ResourceType = "User",
+            ResourceId = user.Id.ToString(),
+            Result = AuditResult.Success,
+            WorkspaceId = workspaceId,
+            ActorUserId = user.Id,
+            ActorDisplayName = user.Email,
+            Reason = "Email verified — account activated",
+        }, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
+    }
+
+    public async Task<Result> ResendVerificationAsync(ResendVerificationRequest request, CancellationToken cancellationToken = default)
+    {
+        var now = clock.UtcNow;
+
+        var workspace = await workspaces.GetBySlugAsync(request.WorkspaceSlug.Trim().ToLowerInvariant(), cancellationToken);
+        if (workspace is null)
+        {
+            return Result.Success(); // no enumeration
+        }
+
+        using var _ = tenant.BeginScope(workspace.Id, []);
+
+        var user = await users.GetByEmailAsync(workspace.Id, request.Email.Trim(), cancellationToken);
+        if (user is null || user.Status != UserStatus.PendingInvitation)
+        {
+            return Result.Success(); // already verified / unknown — say nothing
+        }
+
+        var secret = tokenGenerator.NewSecret();
+        var raw = ComposeToken(workspace.Id, secret);
+        resetTokens.Add(new PasswordResetToken(workspace.Id, user.Id,
+            tokenHasher.Hash(raw), now.AddHours(_options.EmailVerificationTokenHours)));
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await emailSender.SendEmailVerificationAsync(user.Email, user.DisplayName, raw, cancellationToken);
+        return Result.Success();
+    }
+
     // ---- helpers -----------------------------------------------------------
+
+    /// <summary>Splits a free-text full name into first/last parts for the owner record.</summary>
+    private static (string First, string Last) SplitName(string fullName)
+    {
+        var parts = fullName.Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length == 0) return ("Owner", "");
+        return parts.Length == 1 ? (parts[0], "") : (parts[0], parts[1]);
+    }
 
     private async Task<(AuthTokens Tokens, RefreshToken RefreshToken)> IssueTokensAsync(
         Guid workspaceId, User user, string? ip, DateTimeOffset now, CancellationToken cancellationToken)
