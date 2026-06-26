@@ -77,6 +77,8 @@ public static class DependencyInjection
 
         // Repositories + unit of work.
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        // Generic repository for modules that don't need hand-written queries (Refactor Guide §7.1).
+        services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
         services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();

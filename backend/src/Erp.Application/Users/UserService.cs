@@ -29,7 +29,7 @@ public sealed class UserService(
 {
     private const string OwnerRoleCode = "workspace-owner";
 
-    public async Task<PagedResult<UserListItem>> ListAsync(UserListQuery query, CancellationToken cancellationToken = default)
+    public async Task<Result<PagedResult<UserListItem>>> ListAsync(UserListQuery query, CancellationToken cancellationToken = default)
     {
         var (items, total) = await users.ListAsync(query.Search, query.Status, query.Sort, query.Page, query.PageSize, cancellationToken);
         var emps = await employees.GetByUserIdsAsync(items.Select(u => u.Id).ToList(), cancellationToken);
@@ -39,7 +39,7 @@ public sealed class UserService(
             return new UserListItem(u.Id, u.Email, u.DisplayName, emp?.Mobile, emp?.JobTitle,
                 u.Status, u.TwoFactorEnabled, u.LastLoginAt, u.CreatedAt);
         }).ToList();
-        return new PagedResult<UserListItem>(mapped, query.Page, query.PageSize, total);
+        return Result.Success(new PagedResult<UserListItem>(mapped, query.Page, query.PageSize, total));
     }
 
     public async Task<Result<UserDetail>> GetAsync(Guid id, CancellationToken cancellationToken = default)

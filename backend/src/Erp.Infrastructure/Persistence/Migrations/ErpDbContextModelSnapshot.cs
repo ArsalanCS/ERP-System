@@ -1123,6 +1123,825 @@ namespace Erp.Infrastructure.Persistence.Migrations
                     b.ToTable("structure_nodes", (string)null);
                 });
 
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskActivity", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("ActorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("actor_id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<Guid?>("FromStatusId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("from_status_id");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("message");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_id");
+
+                    b.Property<Guid?>("ToStatusId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("to_status_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_task_activities");
+
+                    b.HasIndex("TaskId")
+                        .HasDatabaseName("ix_task_activities_task_id");
+
+                    b.HasIndex("WorkspaceId", "TaskId")
+                        .HasDatabaseName("ix_task_activities_workspace_id_task_id");
+
+                    b.ToTable("task_activities", (string)null);
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskChecklistItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<bool>("IsDone")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_done");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_id");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("text");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_task_checklist_items");
+
+                    b.HasIndex("TaskId")
+                        .HasDatabaseName("ix_task_checklist_items_task_id");
+
+                    b.HasIndex("WorkspaceId", "TaskId")
+                        .HasDatabaseName("ix_task_checklist_items_workspace_id_task_id");
+
+                    b.ToTable("task_checklist_items", (string)null);
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskDependency", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("DependencyType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("dependency_type");
+
+                    b.Property<Guid>("DependsOnTaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("depends_on_task_id");
+
+                    b.Property<bool>("IsBlocking")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_blocking");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_task_dependencies");
+
+                    b.HasIndex("DependsOnTaskId")
+                        .HasDatabaseName("ix_task_dependencies_depends_on_task_id");
+
+                    b.HasIndex("TaskId", "DependsOnTaskId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_task_dependencies_task_id_depends_on_task_id")
+                        .HasFilter("is_deleted = false");
+
+                    b.HasIndex("WorkspaceId", "TaskId")
+                        .HasDatabaseName("ix_task_dependencies_workspace_id_task_id");
+
+                    b.ToTable("task_dependencies", (string)null);
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("file_name");
+
+                    b.Property<string>("FileType")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("file_type");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("note");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<Guid?>("UploadedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("uploaded_by");
+
+                    b.Property<string>("Url")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("url");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_task_documents");
+
+                    b.HasIndex("TaskId")
+                        .HasDatabaseName("ix_task_documents_task_id");
+
+                    b.HasIndex("WorkspaceId", "TaskId")
+                        .HasDatabaseName("ix_task_documents_workspace_id_task_id");
+
+                    b.ToTable("task_documents", (string)null);
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal?>("ActualHours")
+                        .HasPrecision(9, 2)
+                        .HasColumnType("numeric(9,2)")
+                        .HasColumnName("actual_hours");
+
+                    b.Property<Guid?>("AssigneeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("assignee_id");
+
+                    b.Property<int>("CompletionPercent")
+                        .HasColumnType("integer")
+                        .HasColumnName("completion_percent");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("description");
+
+                    b.Property<DateTimeOffset?>("DueDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("due_date");
+
+                    b.Property<decimal?>("EstimatedHours")
+                        .HasPrecision(9, 2)
+                        .HasColumnType("numeric(9,2)")
+                        .HasColumnName("estimated_hours");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("event_type");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<Guid?>("ParentTaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("parent_task_id");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("priority");
+
+                    b.Property<DateTimeOffset?>("ReminderAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reminder_at");
+
+                    b.Property<Guid?>("ReporterId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reporter_id");
+
+                    b.Property<Guid?>("SourceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_id");
+
+                    b.Property<string>("SourceType")
+                        .HasColumnType("text")
+                        .HasColumnName("source_type");
+
+                    b.Property<DateTimeOffset?>("StartDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("start_date");
+
+                    b.Property<Guid>("StatusId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("status_id");
+
+                    b.Property<Guid>("StatusTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("status_type_id");
+
+                    b.Property<string>("TaskNumber")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("task_number");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tasks");
+
+                    b.HasIndex("ParentTaskId")
+                        .HasDatabaseName("ix_tasks_parent_task_id");
+
+                    b.HasIndex("StatusId")
+                        .HasDatabaseName("ix_tasks_status_id");
+
+                    b.HasIndex("StatusTypeId")
+                        .HasDatabaseName("ix_tasks_status_type_id");
+
+                    b.HasIndex("WorkspaceId", "AssigneeId")
+                        .HasDatabaseName("ix_tasks_workspace_id_assignee_id");
+
+                    b.HasIndex("WorkspaceId", "DueDate")
+                        .HasDatabaseName("ix_tasks_workspace_id_due_date");
+
+                    b.HasIndex("WorkspaceId", "StatusId")
+                        .HasDatabaseName("ix_tasks_workspace_id_status_id");
+
+                    b.HasIndex("WorkspaceId", "TaskNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ix_tasks_workspace_id_task_number")
+                        .HasFilter("is_deleted = false");
+
+                    b.ToTable("tasks", (string)null);
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskNote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("AuthorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("author_id");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("body");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<bool>("IsInternal")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_internal");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_pinned");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_task_notes");
+
+                    b.HasIndex("TaskId")
+                        .HasDatabaseName("ix_task_notes_task_id");
+
+                    b.HasIndex("WorkspaceId", "TaskId")
+                        .HasDatabaseName("ix_task_notes_workspace_id_task_id");
+
+                    b.ToTable("task_notes", (string)null);
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskRelation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<Guid>("RelatedEntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("related_entity_id");
+
+                    b.Property<string>("RelatedEntityType")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("related_entity_type");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("role");
+
+                    b.Property<Guid>("TaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("task_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_task_relations");
+
+                    b.HasIndex("WorkspaceId", "TaskId")
+                        .HasDatabaseName("ix_task_relations_workspace_id_task_id");
+
+                    b.HasIndex("TaskId", "RelatedEntityType", "RelatedEntityId", "Role")
+                        .IsUnique()
+                        .HasDatabaseName("ix_task_relations_task_id_related_entity_type_related_entity_i")
+                        .HasFilter("is_deleted = false");
+
+                    b.ToTable("task_relations", (string)null);
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskStatus", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("category");
+
+                    b.Property<string>("Color")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("color");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<bool>("IsFinal")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_final");
+
+                    b.Property<bool>("IsInitial")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_initial");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<Guid>("StatusTypeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("status_type_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_task_statuses");
+
+                    b.HasIndex("StatusTypeId")
+                        .HasDatabaseName("ix_task_statuses_status_type_id");
+
+                    b.HasIndex("WorkspaceId", "StatusTypeId")
+                        .HasDatabaseName("ix_task_statuses_workspace_id_status_type_id");
+
+                    b.ToTable("task_statuses", (string)null);
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskStatusType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("deleted_by");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_default");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("updated_by");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_task_status_types");
+
+                    b.HasIndex("WorkspaceId", "Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_task_status_types_workspace_id_name")
+                        .HasFilter("is_deleted = false");
+
+                    b.ToTable("task_status_types", (string)null);
+                });
+
             modelBuilder.Entity("Erp.Domain.Tenancy.Workspace", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1313,6 +2132,106 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasForeignKey("ParentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_structure_nodes_structure_nodes_parent_id");
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskActivity", b =>
+                {
+                    b.HasOne("Erp.Domain.Tasks.TaskItem", null)
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_task_activities_tasks_task_id");
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskChecklistItem", b =>
+                {
+                    b.HasOne("Erp.Domain.Tasks.TaskItem", null)
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_task_checklist_items_tasks_task_id");
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskDependency", b =>
+                {
+                    b.HasOne("Erp.Domain.Tasks.TaskItem", null)
+                        .WithMany()
+                        .HasForeignKey("DependsOnTaskId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_task_dependencies_tasks_depends_on_task_id");
+
+                    b.HasOne("Erp.Domain.Tasks.TaskItem", null)
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_task_dependencies_tasks_task_id");
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskDocument", b =>
+                {
+                    b.HasOne("Erp.Domain.Tasks.TaskItem", null)
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_task_documents_tasks_task_id");
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskItem", b =>
+                {
+                    b.HasOne("Erp.Domain.Tasks.TaskItem", null)
+                        .WithMany()
+                        .HasForeignKey("ParentTaskId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_tasks_tasks_parent_task_id");
+
+                    b.HasOne("Erp.Domain.Tasks.TaskStatus", null)
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_tasks_task_statuses_status_id");
+
+                    b.HasOne("Erp.Domain.Tasks.TaskStatusType", null)
+                        .WithMany()
+                        .HasForeignKey("StatusTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_tasks_task_status_types_status_type_id");
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskNote", b =>
+                {
+                    b.HasOne("Erp.Domain.Tasks.TaskItem", null)
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_task_notes_tasks_task_id");
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskRelation", b =>
+                {
+                    b.HasOne("Erp.Domain.Tasks.TaskItem", null)
+                        .WithMany()
+                        .HasForeignKey("TaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_task_relations_tasks_task_id");
+                });
+
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskStatus", b =>
+                {
+                    b.HasOne("Erp.Domain.Tasks.TaskStatusType", null)
+                        .WithMany()
+                        .HasForeignKey("StatusTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_task_statuses_task_status_types_status_type_id");
                 });
 
             modelBuilder.Entity("Erp.Domain.Authorization.Role", b =>

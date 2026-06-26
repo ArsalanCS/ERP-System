@@ -32,6 +32,17 @@ public static class PermissionCatalog
     public const string SettingsView = "settings.view";
     public const string SettingsManage = "settings.manage";
 
+    public const string TaskView = "task.view";
+    public const string TaskCreate = "task.create";
+    public const string TaskUpdate = "task.update";
+    public const string TaskAssign = "task.assign";
+    public const string TaskChangeStatus = "task.change-status";
+    public const string TaskArchive = "task.archive";
+    public const string TaskWorkflowManage = "task.workflow.manage";
+    public const string TaskAuditView = "task.audit.view";
+    public const string TaskNoteManage = "task.note.manage";
+    public const string TaskDocumentManage = "task.document.manage";
+
     public static readonly IReadOnlyList<Definition> All =
     [
         new(AdminOverviewView, "Admin", "Dashboard", "View"),
@@ -55,5 +66,16 @@ public static class PermissionCatalog
 
         new(SettingsView, "Settings", "Setting", "View"),
         new(SettingsManage, "Settings", "Setting", "Manage", IsHighRisk: true),
+
+        new(TaskView, "Tasks", "Task", "View"),
+        new(TaskCreate, "Tasks", "Task", "Create"),
+        new(TaskUpdate, "Tasks", "Task", "Update"),
+        new(TaskAssign, "Tasks", "Task", "Assign"),
+        new(TaskChangeStatus, "Tasks", "Task", "ChangeStatus"),
+        new(TaskArchive, "Tasks", "Task", "Archive", IsHighRisk: true),
+        new(TaskWorkflowManage, "Tasks", "Workflow", "Manage", IsHighRisk: true),
+        new(TaskAuditView, "Tasks", "AuditLog", "View"),
+        new(TaskNoteManage, "Tasks", "Note", "Manage"),
+        new(TaskDocumentManage, "Tasks", "Document", "Manage"),
     ];
 }

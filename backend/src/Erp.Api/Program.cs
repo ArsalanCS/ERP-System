@@ -104,6 +104,8 @@ using (var scope = app.Services.CreateScope())
         await db.Database.MigrateAsync();
         var seeder = scope.ServiceProvider.GetRequiredService<Erp.Infrastructure.Persistence.Seeding.IIdentitySeeder>();
         await seeder.SeedPermissionCatalogAsync();
+        // Bring existing workspaces up to date (grant new permissions, seed default task workflow).
+        await seeder.SyncExistingWorkspacesAsync();
 
         // Development convenience: bootstrap a demo workspace + owner so the SPA is
         // immediately usable. Gated to Development and a config flag; never in prod.

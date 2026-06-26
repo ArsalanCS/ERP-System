@@ -11,12 +11,14 @@
   "nav": {
     "groups": {
       "administration": "Administration",
+      "work": "Work",
       "account": "Account"
     },
     "overview": "Administration Dashboard",
     "users": "Users",
     "accessControl": "Access Control",
     "businessStructure": "Business Structure",
+    "tasks": "Tasks",
     "security": "Security",
     "audit": "Audit & Activity",
     "settings": "Settings",
@@ -39,6 +41,7 @@
     "loading": "Loading…",
     "signOut": "Sign out",
     "close": "Close",
+    "add": "Add",
     "cancel": "Cancel",
     "save": "Save",
     "saving": "Saving…",
@@ -239,6 +242,180 @@
       "workspace": "Workspace roles",
       "organization": "Organization roles",
       "custom": "Custom roles"
+    }
+  },
+  "tasks": {
+    "title": "Tasks",
+    "subtitle": "Track work items, assignments, and progress.",
+    "newTask": "New task",
+    "editTask": "Edit task",
+    "manageWorkflows": "Manage workflows",
+    "searchPlaceholder": "Search tasks…",
+    "archive": "Archive",
+    "archiveConfirm": "Archive “{{title}}”?",
+    "overdue": "Overdue",
+    "columns": {
+      "task": "Task",
+      "status": "Status",
+      "priority": "Priority",
+      "assignee": "Assignee",
+      "due": "Due",
+      "actions": "Actions"
+    },
+    "filters": {
+      "allStatuses": "All statuses",
+      "allPriorities": "All priorities",
+      "overdue": "Overdue only"
+    },
+    "priority": {
+      "0": "Low",
+      "1": "Normal",
+      "2": "High",
+      "3": "Urgent"
+    },
+    "category": {
+      "0": "Open",
+      "1": "In Progress",
+      "2": "Waiting",
+      "3": "Review",
+      "4": "Completed",
+      "5": "Cancelled",
+      "6": "Rejected"
+    },
+    "fields": {
+      "title": "Title",
+      "description": "Description",
+      "priority": "Priority",
+      "workflow": "Workflow",
+      "defaultWorkflow": "Default workflow",
+      "assignee": "Assignee",
+      "unassigned": "Unassigned",
+      "reporter": "Reporter",
+      "startDate": "Start date",
+      "dueDate": "Due date",
+      "estimatedHours": "Estimated hours",
+      "actualHours": "Actual hours",
+      "reminder": "Reminder",
+      "completion": "Completion %",
+      "source": "Source",
+      "manual": "Manual"
+    },
+    "myTasks": "My tasks",
+    "allTasks": "All tasks",
+    "my": {
+      "overdue": "Overdue",
+      "today": "Today",
+      "upcoming": "Upcoming",
+      "waiting": "Waiting",
+      "none": "Nothing here."
+    },
+    "tabs": {
+      "general": "General",
+      "planning": "Planning",
+      "subtasks": "Subtasks",
+      "checklist": "Checklist",
+      "notes": "Notes",
+      "documents": "Documents",
+      "relations": "Relations",
+      "gantt": "Gantt",
+      "logs": "Logs",
+      "audit": "Audit"
+    },
+    "logs": {
+      "empty": "No activity yet"
+    },
+    "subtasks": {
+      "empty": "No subtasks yet",
+      "addPlaceholder": "New subtask title…"
+    },
+    "checklist": {
+      "progress": "{{done}} of {{total}} done",
+      "addPlaceholder": "Add a checklist item…"
+    },
+    "notes": {
+      "empty": "No notes yet",
+      "add": "Add note",
+      "addPlaceholder": "Write a note…",
+      "pin": "Pin",
+      "internal": "Internal only",
+      "pinned": "Pinned",
+      "internalBadge": "Internal"
+    },
+    "documents": {
+      "hint": "Link documents by reference (file storage upload arrives later).",
+      "empty": "No documents linked",
+      "fileName": "File name",
+      "link": "Link (URL)"
+    },
+    "relations": {
+      "dependencies": "Dependencies",
+      "noDependencies": "No dependencies",
+      "dependsOn": "Depends on",
+      "blocking": "Blocking",
+      "linkedRecords": "Linked records",
+      "noRecords": "No linked records",
+      "refresh": "Refresh relations",
+      "refreshed": "Relations refreshed.",
+      "selectTask": "Select a task…",
+      "entityType": "Type",
+      "entityId": "Record ID",
+      "role": "Role",
+      "roles": { "0": "Primary source", "1": "Supporting", "2": "Reference" }
+    },
+    "gantt": {
+      "noDates": "No dates to chart",
+      "noDatesBody": "Add start/due dates to the task or its subtasks.",
+      "noDate": "No dates",
+      "legend": "Bars span start → due; the filled portion is progress. Red = overdue."
+    },
+    "audit": {
+      "hint": "Protected compliance history — recorded automatically and never edited.",
+      "empty": "No audit entries"
+    },
+    "empty": {
+      "title": "No tasks yet",
+      "body": "Create your first task to get started."
+    },
+    "validation": {
+      "required": "This field is required."
+    },
+    "feedback": {
+      "created": "Task created.",
+      "updated": "Task updated.",
+      "archived": "Task archived.",
+      "statusChanged": "Status updated.",
+      "assigned": "Assignment updated."
+    },
+    "workflow": {
+      "title": "Task Workflows",
+      "subtitle": "Define status types and the statuses inside them.",
+      "newType": "New workflow",
+      "editType": "Edit workflow",
+      "archiveType": "Archive workflow",
+      "addStatus": "Add status",
+      "editStatus": "Edit status",
+      "archiveStatus": "Archive status",
+      "default": "Default",
+      "inactive": "Inactive",
+      "initial": "Start",
+      "final": "Closed",
+      "makeDefault": "Make default",
+      "archiveConfirm": "Archive “{{name}}”?",
+      "fields": {
+        "name": "Name",
+        "description": "Description",
+        "category": "Reporting category",
+        "isInitial": "Starting status",
+        "isFinal": "Closed (final) status"
+      },
+      "empty": {
+        "title": "No workflows yet",
+        "body": "Create a workflow to start adding tasks."
+      },
+      "feedback": {
+        "saved": "Workflow saved.",
+        "archived": "Archived."
+      }
     }
   },
   "security": {

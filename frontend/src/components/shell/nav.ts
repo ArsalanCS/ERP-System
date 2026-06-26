@@ -37,6 +37,12 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
+    labelKey: 'nav.groups.work',
+    items: [
+      { id: 'tasks', labelKey: 'nav.tasks', to: '/admin/tasks', icon: 'check', action: Actions.TasksView },
+    ],
+  },
+  {
     labelKey: 'nav.groups.account',
     items: [
       // Personal account is always visible — every authenticated user has it (spec §10).

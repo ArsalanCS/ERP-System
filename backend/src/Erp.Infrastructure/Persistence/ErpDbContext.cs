@@ -5,8 +5,10 @@ using Erp.Domain.Authorization;
 using Erp.Domain.Common;
 using Erp.Domain.Identity;
 using Erp.Domain.Structure;
+using Erp.Domain.Tasks;
 using Erp.Domain.Tenancy;
 using Microsoft.EntityFrameworkCore;
+using TaskStatus = Erp.Domain.Tasks.TaskStatus; // disambiguate from System.Threading.Tasks.TaskStatus
 
 namespace Erp.Infrastructure.Persistence;
 
@@ -37,6 +39,15 @@ public sealed class ErpDbContext(DbContextOptions<ErpDbContext> options, ITenant
     public DbSet<WorkspaceSecurityPolicy> WorkspaceSecurityPolicies => Set<WorkspaceSecurityPolicy>();
     public DbSet<StructureNode> StructureNodes => Set<StructureNode>();
     public DbSet<Employee> Employees => Set<Employee>();
+    public DbSet<TaskItem> Tasks => Set<TaskItem>();
+    public DbSet<TaskStatusType> TaskStatusTypes => Set<TaskStatusType>();
+    public DbSet<TaskStatus> TaskStatuses => Set<TaskStatus>();
+    public DbSet<TaskActivity> TaskActivities => Set<TaskActivity>();
+    public DbSet<TaskChecklistItem> TaskChecklistItems => Set<TaskChecklistItem>();
+    public DbSet<TaskNote> TaskNotes => Set<TaskNote>();
+    public DbSet<TaskDocument> TaskDocuments => Set<TaskDocument>();
+    public DbSet<TaskDependency> TaskDependencies => Set<TaskDependency>();
+    public DbSet<TaskRelation> TaskRelations => Set<TaskRelation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

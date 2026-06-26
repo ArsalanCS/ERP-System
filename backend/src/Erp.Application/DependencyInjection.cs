@@ -18,6 +18,10 @@ public static class DependencyInjection
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IStructureService, StructureService>();
+        services.AddScoped<Tasks.ITaskService, Tasks.TaskService>();
+        services.AddScoped<Tasks.ITaskWorkflowService, Tasks.TaskWorkflowService>();
+        services.AddScoped<Tasks.ITaskNoteService, Tasks.TaskNoteService>();
+        services.AddScoped<Tasks.ITaskDocumentService, Tasks.TaskDocumentService>();
         services.AddScoped<Auditing.IAuditQueryService, Auditing.AuditQueryService>();
         services.AddScoped<Account.IAccountService, Account.AccountService>();
         services.AddScoped<Dashboard.IDashboardService, Dashboard.DashboardService>();

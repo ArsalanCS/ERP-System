@@ -28,6 +28,16 @@ export const Actions = {
   AuditExport: 'audit.export',
   SettingsView: 'settings.view',
   SettingsManage: 'settings.manage',
+  TasksView: 'task.view',
+  TasksCreate: 'task.create',
+  TasksUpdate: 'task.update',
+  TasksAssign: 'task.assign',
+  TasksChangeStatus: 'task.change-status',
+  TasksArchive: 'task.archive',
+  TaskWorkflowManage: 'task.workflow.manage',
+  TaskAuditView: 'task.audit.view',
+  TaskNoteManage: 'task.note.manage',
+  TaskDocumentManage: 'task.document.manage',
 } as const;
 
 export type ActionKey = (typeof Actions)[keyof typeof Actions];

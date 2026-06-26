@@ -37,7 +37,8 @@ export type IconName =
   | 'key'
   | 'building'
   | 'chevron-left'
-  | 'arrow-right';
+  | 'arrow-right'
+  | 'link';
 
 const PATHS: Record<IconName, string> = {
   home: 'M3 10.5 12 3l9 7.5M5 9.5V21h14V9.5',
@@ -73,6 +74,7 @@ const PATHS: Record<IconName, string> = {
   building: 'M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 7h2m-2 4h2m4-4h2m-2 4h2m-7 10v-4h6v4',
   'chevron-left': 'M15 6l-6 6 6 6',
   'arrow-right': 'M5 12h14m-6-6 6 6-6 6',
+  link: 'M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1m1 6a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1',
 };
 
 interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {

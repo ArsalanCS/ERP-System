@@ -11,12 +11,14 @@
   "nav": {
     "groups": {
       "administration": "الإدارة",
+      "work": "العمل",
       "account": "الحساب"
     },
     "overview": "لوحة الإدارة",
     "users": "المستخدمون",
     "accessControl": "التحكم في الصلاحيات",
     "businessStructure": "الهيكل التنظيمي",
+    "tasks": "المهام",
     "security": "الأمان",
     "audit": "السجل والنشاط",
     "settings": "الإعدادات",
@@ -39,6 +41,7 @@
     "loading": "جارٍ التحميل…",
     "signOut": "تسجيل الخروج",
     "close": "إغلاق",
+    "add": "إضافة",
     "cancel": "إلغاء",
     "save": "حفظ",
     "saving": "جارٍ الحفظ…",
@@ -239,6 +242,180 @@
       "workspace": "أدوار مساحة العمل",
       "organization": "أدوار المنظمة",
       "custom": "أدوار مخصصة"
+    }
+  },
+  "tasks": {
+    "title": "المهام",
+    "subtitle": "تتبّع عناصر العمل والإسناد والتقدّم.",
+    "newTask": "مهمة جديدة",
+    "editTask": "تعديل المهمة",
+    "manageWorkflows": "إدارة سير العمل",
+    "searchPlaceholder": "ابحث في المهام…",
+    "archive": "أرشفة",
+    "archiveConfirm": "أرشفة ‹{{title}}›؟",
+    "overdue": "متأخرة",
+    "columns": {
+      "task": "المهمة",
+      "status": "الحالة",
+      "priority": "الأولوية",
+      "assignee": "المسؤول",
+      "due": "الاستحقاق",
+      "actions": "إجراءات"
+    },
+    "filters": {
+      "allStatuses": "كل الحالات",
+      "allPriorities": "كل الأولويات",
+      "overdue": "المتأخرة فقط"
+    },
+    "priority": {
+      "0": "منخفضة",
+      "1": "عادية",
+      "2": "عالية",
+      "3": "عاجلة"
+    },
+    "category": {
+      "0": "مفتوحة",
+      "1": "قيد التنفيذ",
+      "2": "بالانتظار",
+      "3": "مراجعة",
+      "4": "مكتملة",
+      "5": "ملغاة",
+      "6": "مرفوضة"
+    },
+    "fields": {
+      "title": "العنوان",
+      "description": "الوصف",
+      "priority": "الأولوية",
+      "workflow": "سير العمل",
+      "defaultWorkflow": "سير العمل الافتراضي",
+      "assignee": "المسؤول",
+      "unassigned": "غير مُسند",
+      "reporter": "المُبلِّغ",
+      "startDate": "تاريخ البدء",
+      "dueDate": "تاريخ الاستحقاق",
+      "estimatedHours": "الساعات المقدّرة",
+      "actualHours": "الساعات الفعلية",
+      "reminder": "تذكير",
+      "completion": "نسبة الإنجاز %",
+      "source": "المصدر",
+      "manual": "يدوي"
+    },
+    "myTasks": "مهامي",
+    "allTasks": "كل المهام",
+    "my": {
+      "overdue": "متأخرة",
+      "today": "اليوم",
+      "upcoming": "قادمة",
+      "waiting": "بالانتظار",
+      "none": "لا شيء هنا."
+    },
+    "tabs": {
+      "general": "عام",
+      "planning": "التخطيط",
+      "subtasks": "المهام الفرعية",
+      "checklist": "قائمة التحقق",
+      "notes": "الملاحظات",
+      "documents": "المستندات",
+      "relations": "العلاقات",
+      "gantt": "جانت",
+      "logs": "السجل",
+      "audit": "التدقيق"
+    },
+    "logs": {
+      "empty": "لا يوجد نشاط بعد"
+    },
+    "subtasks": {
+      "empty": "لا توجد مهام فرعية بعد",
+      "addPlaceholder": "عنوان مهمة فرعية جديدة…"
+    },
+    "checklist": {
+      "progress": "{{done}} من {{total}} منجزة",
+      "addPlaceholder": "أضف عنصر تحقق…"
+    },
+    "notes": {
+      "empty": "لا توجد ملاحظات بعد",
+      "add": "إضافة ملاحظة",
+      "addPlaceholder": "اكتب ملاحظة…",
+      "pin": "تثبيت",
+      "internal": "داخلية فقط",
+      "pinned": "مثبتة",
+      "internalBadge": "داخلية"
+    },
+    "documents": {
+      "hint": "اربط المستندات عبر مرجع (رفع الملفات يأتي لاحقًا).",
+      "empty": "لا توجد مستندات مرتبطة",
+      "fileName": "اسم الملف",
+      "link": "الرابط (URL)"
+    },
+    "relations": {
+      "dependencies": "التبعيات",
+      "noDependencies": "لا توجد تبعيات",
+      "dependsOn": "يعتمد على",
+      "blocking": "حاجبة",
+      "linkedRecords": "السجلات المرتبطة",
+      "noRecords": "لا توجد سجلات مرتبطة",
+      "refresh": "تحديث العلاقات",
+      "refreshed": "تم تحديث العلاقات.",
+      "selectTask": "اختر مهمة…",
+      "entityType": "النوع",
+      "entityId": "معرّف السجل",
+      "role": "الدور",
+      "roles": { "0": "المصدر الأساسي", "1": "داعم", "2": "مرجع" }
+    },
+    "gantt": {
+      "noDates": "لا توجد تواريخ للعرض",
+      "noDatesBody": "أضف تواريخ بدء/استحقاق للمهمة أو مهامها الفرعية.",
+      "noDate": "لا تواريخ",
+      "legend": "تمتد الأشرطة من البدء إلى الاستحقاق؛ الجزء المملوء يمثل التقدم. الأحمر = متأخر."
+    },
+    "audit": {
+      "hint": "سجل امتثال محمي — يُسجّل تلقائيًا ولا يُعدّل.",
+      "empty": "لا توجد إدخالات تدقيق"
+    },
+    "empty": {
+      "title": "لا توجد مهام بعد",
+      "body": "أنشئ أول مهمة للبدء."
+    },
+    "validation": {
+      "required": "هذا الحقل مطلوب."
+    },
+    "feedback": {
+      "created": "تم إنشاء المهمة.",
+      "updated": "تم تحديث المهمة.",
+      "archived": "تمت أرشفة المهمة.",
+      "statusChanged": "تم تحديث الحالة.",
+      "assigned": "تم تحديث الإسناد."
+    },
+    "workflow": {
+      "title": "سير عمل المهام",
+      "subtitle": "عرّف أنواع الحالات والحالات داخلها.",
+      "newType": "سير عمل جديد",
+      "editType": "تعديل سير العمل",
+      "archiveType": "أرشفة سير العمل",
+      "addStatus": "إضافة حالة",
+      "editStatus": "تعديل الحالة",
+      "archiveStatus": "أرشفة الحالة",
+      "default": "افتراضي",
+      "inactive": "غير نشط",
+      "initial": "البداية",
+      "final": "مغلقة",
+      "makeDefault": "تعيين كافتراضي",
+      "archiveConfirm": "أرشفة ‹{{name}}›؟",
+      "fields": {
+        "name": "الاسم",
+        "description": "الوصف",
+        "category": "فئة التقارير",
+        "isInitial": "حالة البداية",
+        "isFinal": "حالة مغلقة (نهائية)"
+      },
+      "empty": {
+        "title": "لا يوجد سير عمل بعد",
+        "body": "أنشئ سير عمل لبدء إضافة المهام."
+      },
+      "feedback": {
+        "saved": "تم حفظ سير العمل.",
+        "archived": "تمت الأرشفة."
+      }
     }
   },
   "security": {

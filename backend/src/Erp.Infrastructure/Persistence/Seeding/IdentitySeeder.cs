@@ -1,8 +1,10 @@
 using Erp.Application.Abstractions;
 using Erp.Domain.Authorization;
 using Erp.Domain.Identity;
+using Erp.Domain.Tasks;
 using Erp.Domain.Tenancy;
 using Microsoft.EntityFrameworkCore;
+using TaskStatus = Erp.Domain.Tasks.TaskStatus; // disambiguate from System.Threading.Tasks.TaskStatus
 
 namespace Erp.Infrastructure.Persistence.Seeding;
 
@@ -24,6 +26,15 @@ public interface IIdentitySeeder
     /// Never call this in production — owners are provisioned through onboarding.
     /// </summary>
     Task EnsureDemoWorkspaceAsync(string slug, string email, string password, CancellationToken cancellationToken = default);
+
+    /// <summary>Seeds a workspace's "Default Task Workflow" (New/In Progress/Done/Cancelled) if it has none.</summary>
+    Task SeedDefaultTaskWorkflowAsync(Guid workspaceId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Brings existing workspaces up to date at startup: re-grants the owner role any
+    /// newly added catalog permissions and seeds a default task workflow. Idempotent.
+    /// </summary>
+    Task SyncExistingWorkspacesAsync(CancellationToken cancellationToken = default);
 }
 
 public sealed class IdentitySeeder(ErpDbContext context, ITenantContext tenant, IPasswordHasher passwordHasher) : IIdentitySeeder
@@ -105,5 +116,60 @@ public sealed class IdentitySeeder(ErpDbContext context, ITenantContext tenant, 
             context.UserRoles.Add(new UserRole(workspace.Id, user.Id, role.Id));
             await context.SaveChangesAsync(cancellationToken);
         }
+
+        await SeedDefaultTaskWorkflowAsync(
+            (await GetWorkspaceIdAsync(slug, cancellationToken))!.Value, cancellationToken);
+    }
+
+    public async Task SeedDefaultTaskWorkflowAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+    {
+        using var _ = tenant.BeginScope(workspaceId, [], isPlatformAdmin: true);
+
+        if (await context.TaskStatusTypes.AnyAsync(t => t.WorkspaceId == workspaceId, cancellationToken))
+        {
+            return;
+        }
+
+        var type = new TaskStatusType(workspaceId, "Default Task Workflow");
+        type.SetDefault(true);
+        context.TaskStatusTypes.Add(type);
+
+        void AddStatus(string name, TaskStatusCategory category, int sort, bool initial, bool final)
+        {
+            var status = new TaskStatus(workspaceId, type.Id, name, category);
+            status.Update(name, category, null, sort);
+            status.SetInitial(initial);
+            status.SetFinal(final);
+            context.TaskStatuses.Add(status);
+        }
+
+        AddStatus("New", TaskStatusCategory.Open, 0, initial: true, final: false);
+        AddStatus("In Progress", TaskStatusCategory.InProgress, 1, initial: false, final: false);
+        AddStatus("Done", TaskStatusCategory.Completed, 2, initial: false, final: true);
+        AddStatus("Cancelled", TaskStatusCategory.Cancelled, 3, initial: false, final: true);
+
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task SyncExistingWorkspacesAsync(CancellationToken cancellationToken = default)
+    {
+        List<Guid> ids;
+        using (tenant.BeginScope(Guid.Empty, [], isPlatformAdmin: true))
+        {
+            ids = await context.Workspaces.Select(w => w.Id).ToListAsync(cancellationToken);
+        }
+
+        foreach (var id in ids)
+        {
+            await EnsureWorkspaceOwnerRoleAsync(id, cancellationToken); // grants any new catalog permissions
+            await SeedDefaultTaskWorkflowAsync(id, cancellationToken);
+        }
+    }
+
+    private async Task<Guid?> GetWorkspaceIdAsync(string slug, CancellationToken cancellationToken)
+    {
+        using var _ = tenant.BeginScope(Guid.Empty, [], isPlatformAdmin: true);
+        return await context.Workspaces.Where(w => w.Slug == slug).Select(w => (Guid?)w.Id)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 }

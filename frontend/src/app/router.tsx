@@ -25,6 +25,13 @@ const AccessControlPage = lazy(() =>
 const BusinessStructurePage = lazy(() =>
   import('@/features/structure/BusinessStructurePage').then((m) => ({ default: m.BusinessStructurePage })),
 );
+const TasksPage = lazy(() => import('@/features/tasks/TasksPage').then((m) => ({ default: m.TasksPage })));
+const TaskDetailsPage = lazy(() =>
+  import('@/features/tasks/TaskDetailsPage').then((m) => ({ default: m.TaskDetailsPage })),
+);
+const TaskWorkflowsPage = lazy(() =>
+  import('@/features/tasks/TaskWorkflowsPage').then((m) => ({ default: m.TaskWorkflowsPage })),
+);
 const SecurityPage = lazy(() =>
   import('@/features/security/SecurityPage').then((m) => ({ default: m.SecurityPage })),
 );
@@ -91,6 +98,9 @@ export const router = createBrowserRouter([
             element: <BusinessStructurePage />,
             handle: { crumbKey: 'nav.businessStructure' },
           },
+          { path: 'tasks', element: <TasksPage />, handle: { crumbKey: 'nav.tasks' } },
+          { path: 'tasks/workflows', element: <TaskWorkflowsPage />, handle: { crumbKey: 'tasks.workflow.title' } },
+          { path: 'tasks/:id', element: <TaskDetailsPage />, handle: { crumbKey: 'nav.tasks' } },
           { path: 'security', element: <SecurityPage />, handle: { crumbKey: 'nav.security' } },
           { path: 'audit', element: <AuditPage />, handle: { crumbKey: 'nav.audit' } },
           { path: 'settings', element: <SettingsPage />, handle: { crumbKey: 'nav.settings' } },

@@ -22,7 +22,7 @@ public sealed class UsersController(
     [HttpGet]
     [RequirePermission(PermissionCatalog.UserView)]
     public async Task<IActionResult> List([FromQuery] UserListQuery query, CancellationToken ct)
-        => Ok(await users.ListAsync(query, ct));
+        => FromResult(await users.ListAsync(query, ct), Ok);
 
     [HttpGet("{id:guid}")]
     [RequirePermission(PermissionCatalog.UserView)]

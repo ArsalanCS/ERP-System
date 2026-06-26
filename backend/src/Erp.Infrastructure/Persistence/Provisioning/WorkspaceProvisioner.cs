@@ -47,6 +47,9 @@ public sealed class WorkspaceProvisioner(ErpDbContext context, ITenantContext te
             context.UserRoles.Add(new UserRole(workspace.Id, user.Id, role.Id));
             await context.SaveChangesAsync(cancellationToken);
 
+            // New workspaces start with the default task workflow so tasks work immediately.
+            await seeder.SeedDefaultTaskWorkflowAsync(workspace.Id, cancellationToken);
+
             return new WorkspaceProvisionResult(workspace.Id, user.Id);
         }
     }
