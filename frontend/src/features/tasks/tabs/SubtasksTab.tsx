@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, Button, Input, Spinner, EmptyState } from '@/shared/ui';
 import { tasksApi, taskKeys } from '../api';
-import { TaskPriority } from '../types';
 import { TaskStatusBadge } from '../TaskStatusBadge';
 
 export function SubtasksTab({ taskId, canCreate }: { taskId: string; canCreate: boolean }) {
@@ -15,7 +14,10 @@ export function SubtasksTab({ taskId, canCreate }: { taskId: string; canCreate: 
 
   const query = useQuery({ queryKey: taskKeys.subtasks(taskId), queryFn: () => tasksApi.subtasks(taskId) });
   const add = useMutation({
-    mutationFn: () => tasksApi.createSubtask(taskId, { title: title.trim(), priority: TaskPriority.Normal }),
+    mutationFn: () => tasksApi.createSubtask(taskId, {
+      title: title.trim(), description: null, assigneeId: null, priorityStatusId: null,
+      startAt: null, dueAt: null, estimatedTime: null,
+    }),
     onSuccess: () => {
       setTitle('');
       void queryClient.invalidateQueries({ queryKey: taskKeys.subtasks(taskId) });
@@ -34,14 +36,14 @@ export function SubtasksTab({ taskId, canCreate }: { taskId: string; canCreate: 
       ) : (
         <ul className="flex flex-col divide-y divide-stone-100 rounded-md border border-stone-150">
           {items.map((s) => (
-            <li key={s.id}>
-              <button type="button" onClick={() => navigate(`/admin/tasks/${s.id}`)}
+            <li key={s.eventId}>
+              <button type="button" onClick={() => navigate(`/admin/tasks/${s.eventId}`)}
                 className="flex w-full items-center gap-3 px-3 py-2.5 text-start hover:bg-stone-50">
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-[13.5px] font-medium text-ink">{s.title}</div>
-                  <div className="font-mono text-[11px] text-ink-4">{s.taskNumber}</div>
+                  <div className="font-mono text-[11px] text-ink-4">{s.referenceNo}</div>
                 </div>
-                <TaskStatusBadge name={s.statusName} category={s.statusCategory} />
+                <TaskStatusBadge name={s.statusName} color={s.statusColor} />
               </button>
             </li>
           ))}

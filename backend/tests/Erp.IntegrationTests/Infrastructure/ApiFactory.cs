@@ -37,6 +37,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         // Tests share one client IP; raise the auth rate limit so parallel tests
         // don't trip it (the limit itself is covered by its own dedicated test).
         builder.UseSetting("RateLimit:Auth:PermitLimit", "100000");
+        // Drive the mail dispatcher deterministically from tests (DispatchMailAsync)
+        // instead of letting the timer fire mid-test.
+        builder.UseSetting("Mail:Dispatcher:Enabled", "false");
 
         // Swap the real email sender for a capturing double — raw tokens are never
         // returned by the API, so this is the only way tests can read them.
@@ -93,7 +96,37 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         db.UserRoles.Add(new Erp.Domain.Authorization.UserRole(workspaceId, userId, role.Id));
         await db.SaveChangesAsync();
 
+        // Make the workspace task-ready (global catalogs + default statuses), mirroring provisioning.
+        await seeder.SeedEventAssetCatalogAsync();
+        await seeder.SeedMailTemplatesCatalogAsync();
+        await seeder.SeedDefaultStatusesAsync(workspaceId);
+
         return (workspaceId, userId);
+    }
+
+    /// <summary>Seeds an additional active user (with an email) into an existing workspace.</summary>
+    public async Task<Guid> SeedExtraUserAsync(Guid workspaceId, string email, string displayFirst = "Extra")
+    {
+        using var scope = Services.CreateScope();
+        var tenant = scope.ServiceProvider.GetRequiredService<TenantContext>();
+        tenant.SetScope(workspaceId, [], isPlatformAdmin: true);
+
+        var db = scope.ServiceProvider.GetRequiredService<ErpDbContext>();
+        var user = new User(workspaceId, email, displayFirst, "User");
+        user.Activate();
+        db.Users.Add(user);
+        await db.SaveChangesAsync();
+        return user.Id;
+    }
+
+    /// <summary>Deterministically drains the mail outbox (the timer worker is disabled in tests).</summary>
+    public async Task<int> DispatchMailAsync()
+    {
+        using var scope = Services.CreateScope();
+        var tenant = scope.ServiceProvider.GetRequiredService<TenantContext>();
+        tenant.SetScope(Guid.Empty, [], isPlatformAdmin: true);
+        var dispatcher = scope.ServiceProvider.GetRequiredService<Erp.Application.Abstractions.IMailDispatcher>();
+        return await dispatcher.DispatchDueAsync(ct: default);
     }
 }
 

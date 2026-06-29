@@ -1,97 +1,77 @@
-/**
- * Frontend mirrors of the Task module contracts. Enums are serialized as numbers
- * by the API, so the order here MUST match the backend enums (Erp.Domain.Tasks).
- */
+// Mirrors the backend Event/Asset Task Management DTOs. A task is identified by its
+// event id. Status & priority are generic statuses (status_types/statuses).
+// Enums are serialized as numbers by the API; order MUST match Erp.Domain.Events.
 
-export enum TaskPriority {
-  Low = 0,
-  Normal = 1,
-  High = 2,
-  Urgent = 3,
-}
-
-export enum TaskStatusCategory {
-  Open = 0,
-  InProgress = 1,
-  Waiting = 2,
-  Review = 3,
-  Completed = 4,
-  Cancelled = 5,
-  Rejected = 6,
-}
-
-export enum TaskEventType {
-  Task = 1,
-}
-
-export enum TaskActivityKind {
+export enum EventActivityKind {
   Created = 0,
   Updated = 1,
   Assigned = 2,
   StatusChanged = 3,
-  Scheduled = 4,
-  Archived = 5,
-  SubtaskAdded = 6,
-  NoteAdded = 7,
-  DocumentAdded = 8,
-  RelationChanged = 9,
+  PriorityChanged = 4,
+  Scheduled = 5,
+  Archived = 6,
+  SubtaskAdded = 7,
+  NoteAdded = 8,
+  DocumentAdded = 9,
+  RelationChanged = 10,
+  DailyReportAdded = 11,
 }
 
-export enum TaskRelationRole {
-  PrimarySource = 0,
-  Supporting = 1,
-  Reference = 2,
-}
+/** Status type codes (for the status/priority dropdowns). */
+export const TASK_STATUS = 'TASK_STATUS';
+export const TASK_PRIORITY = 'TASK_PRIORITY';
 
-export enum TaskDependencyType {
-  FinishToStart = 0,
-  StartToStart = 1,
-  FinishToFinish = 2,
-  StartToFinish = 3,
+export interface StatusOption {
+  id: string;
+  code: string;
+  name: string;
+  color: string | null;
+  sortOrder: number;
+  isInitial: boolean;
+  isClosed: boolean;
+  isActive: boolean;
 }
 
 export interface TaskListItem {
-  id: string;
-  taskNumber: string;
+  eventId: string;
+  referenceNo: string;
   title: string;
-  priority: TaskPriority;
-  statusId: string;
-  statusName: string;
-  statusCategory: TaskStatusCategory;
+  statusId: string | null;
+  statusName: string | null;
   statusColor: string | null;
+  statusIsClosed: boolean;
+  priorityStatusId: string | null;
+  priorityName: string | null;
+  priorityColor: string | null;
   assigneeId: string | null;
   assigneeName: string | null;
-  dueDate: string | null;
+  dueAt: string | null;
   isOverdue: boolean;
   completionPercent: number;
   createdAt: string;
 }
 
 export interface TaskDetails {
-  id: string;
-  taskNumber: string;
-  eventType: TaskEventType;
+  eventId: string;
+  referenceNo: string;
   title: string;
   description: string | null;
-  statusTypeId: string;
-  statusId: string;
-  statusName: string;
-  statusCategory: TaskStatusCategory;
+  statusId: string | null;
+  statusName: string | null;
   statusColor: string | null;
-  statusIsFinal: boolean;
-  priority: TaskPriority;
+  statusIsClosed: boolean;
+  priorityStatusId: string | null;
+  priorityName: string | null;
+  priorityColor: string | null;
   assigneeId: string | null;
   assigneeName: string | null;
   reporterId: string | null;
   reporterName: string | null;
-  parentTaskId: string | null;
-  sourceType: string | null;
-  sourceId: string | null;
-  startDate: string | null;
-  dueDate: string | null;
-  estimatedHours: number | null;
-  actualHours: number | null;
-  reminderAt: string | null;
+  parentEventId: string | null;
+  startAt: string | null;
+  dueAt: string | null;
+  estimatedTime: number | null;
+  actualTime: number | null;
   completionPercent: number;
   isOverdue: boolean;
   createdAt: string;
@@ -100,113 +80,11 @@ export interface TaskDetails {
 
 export interface TaskActivity {
   id: string;
-  kind: TaskActivityKind;
+  kind: EventActivityKind;
   message: string;
   actorId: string | null;
   actorName: string | null;
   occurredAt: string;
-}
-
-export interface TaskStatusDto {
-  id: string;
-  statusTypeId: string;
-  name: string;
-  category: TaskStatusCategory;
-  color: string | null;
-  sortOrder: number;
-  isInitial: boolean;
-  isFinal: boolean;
-}
-
-export interface TaskStatusTypeDto {
-  id: string;
-  name: string;
-  description: string | null;
-  isDefault: boolean;
-  isActive: boolean;
-  sortOrder: number;
-}
-
-export interface TaskWorkflowDto {
-  type: TaskStatusTypeDto;
-  statuses: TaskStatusDto[];
-}
-
-// ---- request bodies ----
-export interface CreateTaskBody {
-  title: string;
-  description?: string | null;
-  priority: TaskPriority;
-  statusTypeId?: string | null;
-  assigneeId?: string | null;
-  startDate?: string | null;
-  dueDate?: string | null;
-  estimatedHours?: number | null;
-  reminderAt?: string | null;
-}
-
-export interface UpdateTaskBody {
-  title: string;
-  description?: string | null;
-  priority: TaskPriority;
-  startDate?: string | null;
-  dueDate?: string | null;
-  estimatedHours?: number | null;
-  actualHours?: number | null;
-  reminderAt?: string | null;
-  completionPercent: number;
-}
-
-export interface ChangeStatusBody {
-  statusId: string;
-}
-
-export interface AssignBody {
-  assigneeId: string | null;
-}
-
-export interface CreateStatusTypeBody {
-  name: string;
-  description?: string | null;
-}
-
-export interface UpdateStatusTypeBody {
-  name: string;
-  description?: string | null;
-  sortOrder: number;
-  isActive: boolean;
-  isDefault: boolean;
-}
-
-export interface CreateStatusBody {
-  statusTypeId: string;
-  name: string;
-  category: TaskStatusCategory;
-  color?: string | null;
-  isInitial: boolean;
-  isFinal: boolean;
-}
-
-export interface UpdateStatusBody {
-  name: string;
-  category: TaskStatusCategory;
-  color?: string | null;
-  sortOrder: number;
-  isInitial: boolean;
-  isFinal: boolean;
-}
-
-export interface CreateTaskResult {
-  id: string;
-  taskNumber: string;
-}
-
-// ---- Subtasks / collaboration ----
-export interface ChecklistItem {
-  id: string;
-  text: string;
-  isDone: boolean;
-  sortOrder: number;
 }
 
 export interface TaskNote {
@@ -217,43 +95,53 @@ export interface TaskNote {
   authorId: string | null;
   authorName: string | null;
   createdAt: string;
-  updatedAt: string | null;
 }
 
 export interface TaskDocument {
   id: string;
   fileName: string;
-  fileType: string | null;
-  url: string | null;
-  note: string | null;
-  uploadedBy: string | null;
+  filePath: string;
+  mimeType: string | null;
+  uploadedById: string | null;
   uploadedByName: string | null;
   createdAt: string;
 }
 
 export interface TaskDependency {
   id: string;
-  dependsOnTaskId: string;
-  dependsOnNumber: string;
+  dependsOnEventId: string;
+  dependsOnReferenceNo: string;
   dependsOnTitle: string;
-  dependencyType: TaskDependencyType;
   isBlocking: boolean;
 }
 
-export interface TaskRelation {
+export interface TaskDailyReport {
   id: string;
-  relatedEntityType: string;
-  relatedEntityId: string;
-  role: TaskRelationRole;
-  reason: string | null;
+  reportDate: string;
+  description: string;
+  estimatedTime: number | null;
+  actualTime: number | null;
+  remainingTime: number | null;
+  statusId: string | null;
+  statusName: string | null;
+  statusColor: string | null;
+  authorId: string | null;
+  authorName: string | null;
+  createdAt: string;
+}
+
+export interface TaskDailyReportRow extends TaskDailyReport {
+  eventId: string;
+  referenceNo: string;
+  taskTitle: string;
 }
 
 export interface TaskAudit {
   id: string;
   action: string;
+  createdAt: string;
+  actorUserId: string | null;
   actorName: string | null;
-  occurredAt: string;
-  reason: string | null;
 }
 
 export interface MyTasksGroups {
@@ -263,9 +151,184 @@ export interface MyTasksGroups {
   waiting: TaskListItem[];
 }
 
-export interface CreateChecklistItemBody { text: string }
-export interface UpdateChecklistItemBody { text: string; isDone: boolean; sortOrder: number }
-export interface CreateNoteBody { body: string; isPinned: boolean; isInternal: boolean }
-export interface CreateDocumentBody { fileName: string; fileType?: string | null; url?: string | null; note?: string | null }
-export interface CreateDependencyBody { dependsOnTaskId: string; dependencyType: TaskDependencyType; isBlocking: boolean }
-export interface CreateRelationBody { relatedEntityType: string; relatedEntityId: string; role: TaskRelationRole; reason?: string | null }
+export interface CreateTaskResult {
+  eventId: string;
+  referenceNo: string;
+}
+
+export interface TaskBucket {
+  id: string | null;
+  name: string | null;
+  color: string | null;
+  count: number;
+}
+
+export interface TaskAssigneeLoad {
+  assigneeId: string | null;
+  assigneeName: string | null;
+  open: number;
+  overdue: number;
+}
+
+export interface TaskTrendPoint {
+  date: string;
+  created: number;
+  completed: number;
+}
+
+export interface TaskRecentActivity {
+  id: string;
+  eventId: string;
+  referenceNo: string;
+  message: string;
+  actorId: string | null;
+  actorName: string | null;
+  occurredAt: string;
+}
+
+export interface TaskGanttItem {
+  eventId: string;
+  referenceNo: string;
+  title: string;
+  startAt: string | null;
+  dueAt: string | null;
+  completionPercent: number;
+  statusColor: string | null;
+  isClosed: boolean;
+}
+
+export interface TaskDashboard {
+  total: number;
+  open: number;
+  inProgress: number;
+  overdue: number;
+  dueToday: number;
+  dueThisWeek: number;
+  highPriority: number;
+  completed: number;
+  unassigned: number;
+  completedLast7Days: number;
+  reportsToday: number;
+  avgCompletionPercent: number;
+  estimatedTotal: number;
+  actualTotal: number;
+  byStatus: TaskBucket[];
+  byPriority: TaskBucket[];
+  byAssignee: TaskAssigneeLoad[];
+  trend: TaskTrendPoint[];
+  recentActivity: TaskRecentActivity[];
+  gantt: TaskGanttItem[];
+}
+
+export interface TaskReport {
+  total: number;
+  open: number;
+  completed: number;
+  overdue: number;
+  estimatedTotal: number;
+  actualTotal: number;
+  byStatus: TaskBucket[];
+  byPriority: TaskBucket[];
+  byAssignee: TaskAssigneeLoad[];
+}
+
+// ---- request bodies ----
+export interface CreateTaskBody {
+  title: string;
+  description: string | null;
+  assigneeId: string | null;
+  priorityStatusId: string | null;
+  startAt: string | null;
+  dueAt: string | null;
+  estimatedTime: number | null;
+}
+
+export interface UpdateTaskBody {
+  title: string;
+  description: string | null;
+  startAt: string | null;
+  dueAt: string | null;
+  estimatedTime: number | null;
+  actualTime: number | null;
+  completionPercent: number;
+}
+
+export interface ChangeStatusBody {
+  statusId: string;
+  note: string | null;
+}
+export interface AssignBody {
+  assigneeId: string | null;
+}
+export interface SetPriorityBody {
+  priorityStatusId: string | null;
+}
+export interface CreateNoteBody {
+  body: string;
+  isPinned: boolean;
+  isInternal: boolean;
+}
+export interface UpdateNoteBody {
+  body: string;
+  isPinned: boolean;
+  isInternal: boolean;
+}
+export interface CreateDocumentBody {
+  fileName: string;
+  filePath: string;
+  mimeType: string | null;
+}
+export interface CreateDependencyBody {
+  dependsOnEventId: string;
+  isBlocking: boolean;
+}
+export interface CreateStatusBody {
+  statusTypeCode: string;
+  name: string;
+  color: string | null;
+  isClosed: boolean;
+  isInitial: boolean;
+}
+export interface UpdateStatusBody {
+  name: string;
+  color: string | null;
+  isClosed: boolean;
+  isInitial: boolean;
+  isActive: boolean;
+}
+export interface ReorderStatusesBody {
+  statusTypeCode: string;
+  orderedIds: string[];
+}
+export interface CreateDailyReportBody {
+  reportDate: string | null;
+  description: string;
+  estimatedTime: number | null;
+  actualTime: number | null;
+  remainingTime: number | null;
+  statusId: string | null;
+}
+export interface UpdateDailyReportBody {
+  reportDate: string | null;
+  description: string;
+  estimatedTime: number | null;
+  actualTime: number | null;
+  remainingTime: number | null;
+  statusId: string | null;
+}
+
+// ---- task settings (workspace config) ----
+export interface TaskSettings {
+  dailyReportRequired: boolean;
+  allowStatusChangeFromReport: boolean;
+  requireActualTime: boolean;
+  requireEstimatedTime: boolean;
+  allowMultipleReportsPerDay: boolean;
+  notifyOnTaskCreated: boolean;
+  notifyOnTaskAssigned: boolean;
+  notifyOnStatusChange: boolean;
+  notifyOnDailyReport: boolean;
+  dashboardDefaultRangeDays: number;
+}
+
+export type UpdateTaskSettingsBody = TaskSettings;

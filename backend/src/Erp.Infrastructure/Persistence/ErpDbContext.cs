@@ -1,14 +1,16 @@
 using System.Linq.Expressions;
 using Erp.Application.Abstractions;
 using Erp.Domain.Auditing;
+using Erp.Domain.Assets;
 using Erp.Domain.Authorization;
 using Erp.Domain.Common;
+using Erp.Domain.Events;
 using Erp.Domain.Identity;
+using Erp.Domain.Mail;
 using Erp.Domain.Structure;
-using Erp.Domain.Tasks;
 using Erp.Domain.Tenancy;
+using Erp.Domain.Workflow;
 using Microsoft.EntityFrameworkCore;
-using TaskStatus = Erp.Domain.Tasks.TaskStatus; // disambiguate from System.Threading.Tasks.TaskStatus
 
 namespace Erp.Infrastructure.Persistence;
 
@@ -39,15 +41,28 @@ public sealed class ErpDbContext(DbContextOptions<ErpDbContext> options, ITenant
     public DbSet<WorkspaceSecurityPolicy> WorkspaceSecurityPolicies => Set<WorkspaceSecurityPolicy>();
     public DbSet<StructureNode> StructureNodes => Set<StructureNode>();
     public DbSet<Employee> Employees => Set<Employee>();
-    public DbSet<TaskItem> Tasks => Set<TaskItem>();
-    public DbSet<TaskStatusType> TaskStatusTypes => Set<TaskStatusType>();
-    public DbSet<TaskStatus> TaskStatuses => Set<TaskStatus>();
-    public DbSet<TaskActivity> TaskActivities => Set<TaskActivity>();
-    public DbSet<TaskChecklistItem> TaskChecklistItems => Set<TaskChecklistItem>();
-    public DbSet<TaskNote> TaskNotes => Set<TaskNote>();
-    public DbSet<TaskDocument> TaskDocuments => Set<TaskDocument>();
-    public DbSet<TaskDependency> TaskDependencies => Set<TaskDependency>();
-    public DbSet<TaskRelation> TaskRelations => Set<TaskRelation>();
+
+    // Event / Asset / Task architecture (bpm schema).
+    public DbSet<EventType> EventTypes => Set<EventType>();
+    public DbSet<Event> Events => Set<Event>();
+    public DbSet<TaskEvent> TaskEvents => Set<TaskEvent>();
+    public DbSet<EventActivity> EventActivities => Set<EventActivity>();
+    public DbSet<EventDependency> EventDependencies => Set<EventDependency>();
+    public DbSet<EventDailyReport> EventDailyReports => Set<EventDailyReport>();
+    public DbSet<TaskSettings> TaskSettings => Set<TaskSettings>();
+    public DbSet<StatusType> StatusTypes => Set<StatusType>();
+    public DbSet<Status> Statuses => Set<Status>();
+    public DbSet<EventStatus> EventStatuses => Set<EventStatus>();
+    public DbSet<AssetType> AssetTypes => Set<AssetType>();
+    public DbSet<Asset> Assets => Set<Asset>();
+    public DbSet<Note> Notes => Set<Note>();
+    public DbSet<Document> Documents => Set<Document>();
+    public DbSet<EventAsset> EventAssets => Set<EventAsset>();
+
+    public DbSet<MailTemplate> MailTemplates => Set<MailTemplate>();
+    public DbSet<SendMail> SendMails => Set<SendMail>();
+    public DbSet<SendMailRecipient> SendMailRecipients => Set<SendMailRecipient>();
+    public DbSet<SendMailAttempt> SendMailAttempts => Set<SendMailAttempt>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

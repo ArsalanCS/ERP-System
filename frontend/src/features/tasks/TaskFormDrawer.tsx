@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -7,8 +7,8 @@ import { usePermissions } from '@/shared/rbac/usePermissions';
 import { Actions } from '@/shared/rbac/permissions';
 import { ApiError } from '@/shared/api/client';
 import { usersApi, userKeys } from '@/features/users/api';
-import { tasksApi, workflowsApi, taskKeys } from './api';
-import { TaskPriority, type CreateTaskBody, type UpdateTaskBody } from './types';
+import { tasksApi, taskKeys } from './api';
+import { TASK_PRIORITY, type CreateTaskBody, type UpdateTaskBody } from './types';
 
 type Mode = 'create' | 'edit';
 
@@ -23,19 +23,18 @@ interface Props {
 interface FormShape {
   title: string;
   description: string;
-  priority: string;
-  statusTypeId: string;
+  priorityStatusId: string;
   assigneeId: string;
-  startDate: string;
-  dueDate: string;
-  estimatedHours: string;
-  actualHours: string;
+  startAt: string;
+  dueAt: string;
+  estimatedTime: string;
+  actualTime: string;
   completionPercent: string;
 }
 
 const DEFAULTS: FormShape = {
-  title: '', description: '', priority: String(TaskPriority.Normal), statusTypeId: '',
-  assigneeId: '', startDate: '', dueDate: '', estimatedHours: '', actualHours: '', completionPercent: '0',
+  title: '', description: '', priorityStatusId: '', assigneeId: '',
+  startAt: '', dueAt: '', estimatedTime: '', actualTime: '', completionPercent: '0',
 };
 
 const toIso = (v: string): string | null => (v ? new Date(v).toISOString() : null);
@@ -51,7 +50,7 @@ export function TaskFormDrawer({ open, mode, taskId, onClose, onSaved }: Props) 
   const [formError, setFormError] = useState<string | null>(null);
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormShape>({ defaultValues: DEFAULTS });
 
-  const workflowsQuery = useQuery({ queryKey: taskKeys.workflows, queryFn: workflowsApi.list, enabled: open && mode === 'create' });
+  const prioritiesQuery = useQuery({ queryKey: taskKeys.statuses(TASK_PRIORITY), queryFn: () => tasksApi.statuses(TASK_PRIORITY), enabled: open });
   const usersQuery = useQuery({
     queryKey: userKeys.list({ page: 1, pageSize: 100 }),
     queryFn: () => usersApi.list({ page: 1, pageSize: 100 }),
@@ -62,12 +61,6 @@ export function TaskFormDrawer({ open, mode, taskId, onClose, onSaved }: Props) 
     queryFn: () => tasksApi.get(taskId!),
     enabled: open && mode === 'edit' && !!taskId,
   });
-
-  const priorityOptions = useMemo(
-    () => [TaskPriority.Low, TaskPriority.Normal, TaskPriority.High, TaskPriority.Urgent]
-      .map((p) => ({ value: String(p), label: t(`tasks.priority.${p}`) })),
-    [t],
-  );
 
   useEffect(() => {
     if (!open) return;
@@ -81,13 +74,12 @@ export function TaskFormDrawer({ open, mode, taskId, onClose, onSaved }: Props) 
       reset({
         title: d.title,
         description: d.description ?? '',
-        priority: String(d.priority),
-        statusTypeId: d.statusTypeId,
+        priorityStatusId: d.priorityStatusId ?? '',
         assigneeId: d.assigneeId ?? '',
-        startDate: toDateInput(d.startDate),
-        dueDate: toDateInput(d.dueDate),
-        estimatedHours: d.estimatedHours?.toString() ?? '',
-        actualHours: d.actualHours?.toString() ?? '',
+        startAt: toDateInput(d.startAt),
+        dueAt: toDateInput(d.dueAt),
+        estimatedTime: d.estimatedTime?.toString() ?? '',
+        actualTime: d.actualTime?.toString() ?? '',
         completionPercent: String(d.completionPercent),
       });
     }
@@ -99,12 +91,11 @@ export function TaskFormDrawer({ open, mode, taskId, onClose, onSaved }: Props) 
         const body: CreateTaskBody = {
           title: v.title.trim(),
           description: v.description.trim() || null,
-          priority: Number(v.priority),
-          statusTypeId: v.statusTypeId || null,
           assigneeId: v.assigneeId || null,
-          startDate: toIso(v.startDate),
-          dueDate: toIso(v.dueDate),
-          estimatedHours: toNum(v.estimatedHours),
+          priorityStatusId: v.priorityStatusId || null,
+          startAt: toIso(v.startAt),
+          dueAt: toIso(v.dueAt),
+          estimatedTime: toNum(v.estimatedTime),
         };
         await tasksApi.create(body);
         return 'created' as const;
@@ -112,11 +103,10 @@ export function TaskFormDrawer({ open, mode, taskId, onClose, onSaved }: Props) 
       const body: UpdateTaskBody = {
         title: v.title.trim(),
         description: v.description.trim() || null,
-        priority: Number(v.priority),
-        startDate: toIso(v.startDate),
-        dueDate: toIso(v.dueDate),
-        estimatedHours: toNum(v.estimatedHours),
-        actualHours: toNum(v.actualHours),
+        startAt: toIso(v.startAt),
+        dueAt: toIso(v.dueAt),
+        estimatedTime: toNum(v.estimatedTime),
+        actualTime: toNum(v.actualTime),
         completionPercent: Number(v.completionPercent) || 0,
       };
       await tasksApi.update(taskId!, body);
@@ -134,9 +124,10 @@ export function TaskFormDrawer({ open, mode, taskId, onClose, onSaved }: Props) 
 
   const req = { required: t('tasks.validation.required') };
   const loadingDetail = mode === 'edit' && detailQuery.isLoading;
-  const workflowOptions = (workflowsQuery.data ?? [])
-    .filter((w) => w.type.isActive)
-    .map((w) => ({ value: w.type.id, label: w.type.name }));
+  const priorityOptions = [
+    { value: '', label: t('tasks.fields.noPriority') },
+    ...(prioritiesQuery.data ?? []).map((p) => ({ value: p.id, label: p.name })),
+  ];
   const userOptions = [
     { value: '', label: t('tasks.fields.unassigned') },
     ...(usersQuery.data?.items ?? []).map((u) => ({ value: u.id, label: u.displayName })),
@@ -170,27 +161,19 @@ export function TaskFormDrawer({ open, mode, taskId, onClose, onSaved }: Props) 
             <textarea className="input min-h-[80px] resize-y" {...register('description')} />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Select label={t('tasks.fields.priority')} options={priorityOptions} {...register('priority')} />
-            {mode === 'create' && (
-              <Select
-                label={t('tasks.fields.workflow')}
-                placeholder={t('tasks.fields.defaultWorkflow')}
-                options={workflowOptions}
-                {...register('statusTypeId')}
-              />
+            <Select label={t('tasks.fields.priority')} options={priorityOptions} {...register('priorityStatusId')} />
+            {mode === 'create' && canViewUsers && (
+              <Select label={t('tasks.fields.assignee')} options={userOptions} {...register('assigneeId')} />
             )}
           </div>
-          {mode === 'create' && canViewUsers && (
-            <Select label={t('tasks.fields.assignee')} options={userOptions} {...register('assigneeId')} />
-          )}
           <div className="grid grid-cols-2 gap-3">
-            <Input type="date" label={t('tasks.fields.startDate')} {...register('startDate')} />
-            <Input type="date" label={t('tasks.fields.dueDate')} {...register('dueDate')} />
+            <Input type="date" label={t('tasks.fields.startDate')} {...register('startAt')} />
+            <Input type="date" label={t('tasks.fields.dueDate')} {...register('dueAt')} />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <Input type="number" step="0.5" label={t('tasks.fields.estimatedHours')} {...register('estimatedHours')} />
+            <Input type="number" step="0.5" label={t('tasks.fields.estimatedHours')} {...register('estimatedTime')} />
             {mode === 'edit' && (
-              <Input type="number" step="0.5" label={t('tasks.fields.actualHours')} {...register('actualHours')} />
+              <Input type="number" step="0.5" label={t('tasks.fields.actualHours')} {...register('actualTime')} />
             )}
           </div>
           {mode === 'edit' && (

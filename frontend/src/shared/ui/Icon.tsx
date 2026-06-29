@@ -38,6 +38,8 @@ export type IconName =
   | 'building'
   | 'chevron-left'
   | 'arrow-right'
+  | 'chart'
+  | 'calendar'
   | 'link';
 
 const PATHS: Record<IconName, string> = {
@@ -74,6 +76,8 @@ const PATHS: Record<IconName, string> = {
   building: 'M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 7h2m-2 4h2m4-4h2m-2 4h2m-7 10v-4h6v4',
   'chevron-left': 'M15 6l-6 6 6 6',
   'arrow-right': 'M5 12h14m-6-6 6 6-6 6',
+  chart: 'M4 20V4m0 16h16M8 16v-4m4 4V8m4 8v-6',
+  calendar: 'M4 6h16v15H4zM4 9h16M8 3v4m8-4v4',
   link: 'M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1m1 6a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1',
 };
 

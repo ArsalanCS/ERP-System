@@ -14,6 +14,13 @@ public sealed class TestEmailSender : IEmailSender
     private readonly ConcurrentDictionary<string, string> _verification = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, string> _reset = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, string> _invitation = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentBag<(string To, string Subject)> _messages = [];
+
+    /// <summary>When set, <see cref="SendMessageAsync"/> throws — to drive outbox retry tests.</summary>
+    public bool FailMessages { get; set; }
+
+    /// <summary>All generic notification messages delivered via the outbox dispatcher.</summary>
+    public IReadOnlyCollection<(string To, string Subject)> Messages => _messages;
 
     public Task SendInvitationAsync(string toEmail, string displayName, string token, CancellationToken ct = default)
     {
@@ -30,6 +37,13 @@ public sealed class TestEmailSender : IEmailSender
     public Task SendEmailVerificationAsync(string toEmail, string displayName, string token, CancellationToken ct = default)
     {
         _verification[toEmail] = token;
+        return Task.CompletedTask;
+    }
+
+    public Task SendMessageAsync(string toEmail, string subject, string htmlBody, CancellationToken ct = default)
+    {
+        if (FailMessages) throw new InvalidOperationException("Simulated mail transport failure.");
+        _messages.Add((toEmail, subject));
         return Task.CompletedTask;
     }
 

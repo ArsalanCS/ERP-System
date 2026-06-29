@@ -38,6 +38,9 @@ export const Actions = {
   TaskAuditView: 'task.audit.view',
   TaskNoteManage: 'task.note.manage',
   TaskDocumentManage: 'task.document.manage',
+  TaskDailyReportManage: 'task.daily-report.manage',
+  MailView: 'mail.view',
+  MailManage: 'mail.manage',
 } as const;
 
 export type ActionKey = (typeof Actions)[keyof typeof Actions];

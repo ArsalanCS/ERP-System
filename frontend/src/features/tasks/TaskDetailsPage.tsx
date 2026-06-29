@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -10,18 +10,19 @@ import { useToast } from '@/shared/ui/toast-context';
 import { formatDate, formatDateTime } from '@/shared/lib/format';
 import { initialsOf } from '@/shared/rbac/session';
 import { usersApi, userKeys } from '@/features/users/api';
-import { tasksApi, workflowsApi, taskKeys } from './api';
+import { tasksApi, taskKeys } from './api';
+import { TASK_PRIORITY, TASK_STATUS } from './types';
 import { TaskStatusBadge } from './TaskStatusBadge';
 import { TaskFormDrawer } from './TaskFormDrawer';
 import { SubtasksTab } from './tabs/SubtasksTab';
-import { ChecklistTab } from './tabs/ChecklistTab';
 import { NotesTab } from './tabs/NotesTab';
+import { DailyReportsTab } from './tabs/DailyReportsTab';
 import { DocumentsTab } from './tabs/DocumentsTab';
 import { RelationsTab } from './tabs/RelationsTab';
 import { GanttTab } from './tabs/GanttTab';
 import { AuditTab } from './tabs/AuditTab';
 
-type Tab = 'general' | 'planning' | 'subtasks' | 'checklist' | 'notes' | 'documents' | 'relations' | 'gantt' | 'logs' | 'audit';
+type Tab = 'general' | 'planning' | 'subtasks' | 'dailyReports' | 'notes' | 'documents' | 'relations' | 'gantt' | 'logs' | 'audit';
 
 export function TaskDetailsPage() {
   const { id = '' } = useParams();
@@ -41,12 +42,14 @@ export function TaskDetailsPage() {
   const canCreate = can(Actions.TasksCreate);
   const canViewUsers = can(Actions.UsersView);
   const canNoteManage = can(Actions.TaskNoteManage);
+  const canDailyReportManage = can(Actions.TaskDailyReportManage);
   const canDocManage = can(Actions.TaskDocumentManage);
   const canAuditView = can(Actions.TaskAuditView);
 
   const detailQuery = useQuery({ queryKey: taskKeys.detail(id), queryFn: () => tasksApi.get(id), enabled: !!id });
   const activityQuery = useQuery({ queryKey: taskKeys.activity(id), queryFn: () => tasksApi.activity(id), enabled: !!id && tab === 'logs' });
-  const workflowsQuery = useQuery({ queryKey: taskKeys.workflows, queryFn: workflowsApi.list, enabled: !!id && canChangeStatus });
+  const statusesQuery = useQuery({ queryKey: taskKeys.statuses(TASK_STATUS), queryFn: () => tasksApi.statuses(TASK_STATUS), enabled: !!id && canChangeStatus });
+  const prioritiesQuery = useQuery({ queryKey: taskKeys.statuses(TASK_PRIORITY), queryFn: () => tasksApi.statuses(TASK_PRIORITY), enabled: !!id && canUpdate });
   const usersQuery = useQuery({
     queryKey: userKeys.list({ page: 1, pageSize: 100 }),
     queryFn: () => usersApi.list({ page: 1, pageSize: 100 }),
@@ -55,11 +58,6 @@ export function TaskDetailsPage() {
 
   const task = detailQuery.data;
 
-  const statusOptions = useMemo(() => {
-    const wf = workflowsQuery.data?.find((w) => w.type.id === task?.statusTypeId);
-    return (wf?.statuses ?? []).map((s) => ({ value: s.id, label: s.name }));
-  }, [workflowsQuery.data, task?.statusTypeId]);
-
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: taskKeys.detail(id) });
     void queryClient.invalidateQueries({ queryKey: taskKeys.activity(id) });
@@ -67,13 +65,18 @@ export function TaskDetailsPage() {
   };
 
   const statusMutation = useMutation({
-    mutationFn: (statusId: string) => tasksApi.changeStatus(id, { statusId }),
+    mutationFn: (statusId: string) => tasksApi.changeStatus(id, { statusId, note: null }),
     onSuccess: () => { invalidate(); toast.success(t('tasks.feedback.statusChanged')); },
     onError: (err) => toast.error(err instanceof Error ? err.message : t('common.loadError')),
   });
   const assignMutation = useMutation({
     mutationFn: (assigneeId: string) => tasksApi.assign(id, { assigneeId: assigneeId || null }),
     onSuccess: () => { invalidate(); toast.success(t('tasks.feedback.assigned')); },
+    onError: (err) => toast.error(err instanceof Error ? err.message : t('common.loadError')),
+  });
+  const priorityMutation = useMutation({
+    mutationFn: (priorityStatusId: string) => tasksApi.setPriority(id, { priorityStatusId: priorityStatusId || null }),
+    onSuccess: () => { invalidate(); toast.success(t('tasks.feedback.updated')); },
     onError: (err) => toast.error(err instanceof Error ? err.message : t('common.loadError')),
   });
 
@@ -85,6 +88,11 @@ export function TaskDetailsPage() {
     );
   }
 
+  const statusOptions = (statusesQuery.data ?? []).map((s) => ({ value: s.id, label: s.name }));
+  const priorityOptions = [
+    { value: '', label: t('tasks.fields.noPriority') },
+    ...(prioritiesQuery.data ?? []).map((p) => ({ value: p.id, label: p.name })),
+  ];
   const userOptions = [
     { value: '', label: t('tasks.fields.unassigned') },
     ...(usersQuery.data?.items ?? []).map((u) => ({ value: u.id, label: u.displayName })),
@@ -94,7 +102,7 @@ export function TaskDetailsPage() {
     { id: 'general', label: t('tasks.tabs.general') },
     { id: 'planning', label: t('tasks.tabs.planning') },
     { id: 'subtasks', label: t('tasks.tabs.subtasks') },
-    { id: 'checklist', label: t('tasks.tabs.checklist') },
+    { id: 'dailyReports', label: t('tasks.tabs.dailyReports') },
     { id: 'notes', label: t('tasks.tabs.notes') },
     { id: 'documents', label: t('tasks.tabs.documents') },
     { id: 'relations', label: t('tasks.tabs.relations') },
@@ -113,18 +121,13 @@ export function TaskDetailsPage() {
           </button>
           <div className="flex items-center gap-3">
             <h1 className="truncate text-[22px] font-semibold tracking-[-0.01em] text-ink">{task.title}</h1>
-            <TaskStatusBadge name={task.statusName} category={task.statusCategory} />
+            <TaskStatusBadge name={task.statusName} color={task.statusColor} />
           </div>
-          <div className="mt-1 font-mono text-[12px] text-ink-4">{task.taskNumber}</div>
+          <div className="mt-1 font-mono text-[12px] text-ink-4">{task.referenceNo}</div>
         </div>
         <div className="flex flex-none items-center gap-2">
           {canChangeStatus && statusOptions.length > 0 && (
-            <Select
-              value={task.statusId}
-              onChange={(e) => statusMutation.mutate(e.target.value)}
-              options={statusOptions}
-              disabled={statusMutation.isPending}
-            />
+            <Select value={task.statusId ?? ''} onChange={(e) => statusMutation.mutate(e.target.value)} options={statusOptions} disabled={statusMutation.isPending} />
           )}
           {canUpdate && (
             <Button variant="outline" leadingIcon={<Icon name="edit" size={15} />} onClick={() => setEditOpen(true)}>
@@ -147,7 +150,14 @@ export function TaskDetailsPage() {
       {tab === 'general' && (
         <Card className="card-pad">
           <dl className="grid grid-cols-2 gap-x-8 gap-y-4 text-[13.5px]">
-            <Field label={t('tasks.fields.priority')}>{t(`tasks.priority.${task.priority}`)}</Field>
+            <Field label={t('tasks.fields.priority')}>
+              {canUpdate ? (
+                <Select value={task.priorityStatusId ?? ''} options={priorityOptions}
+                  onChange={(e) => priorityMutation.mutate(e.target.value)} disabled={priorityMutation.isPending} />
+              ) : (
+                <TaskStatusBadge name={task.priorityName} color={task.priorityColor} />
+              )}
+            </Field>
             <Field label={t('tasks.fields.completion')}>
               <div className="flex items-center gap-2">
                 <div className="h-1.5 w-32 overflow-hidden rounded-full bg-stone-150">
@@ -157,11 +167,6 @@ export function TaskDetailsPage() {
               </div>
             </Field>
             <Field label={t('tasks.fields.reporter')}>{task.reporterName ?? '—'}</Field>
-            <Field label={t('tasks.fields.source')}>
-              {task.sourceType
-                ? <><span className="capitalize">{task.sourceType}</span>{task.sourceId ? <span className="ms-1 font-mono text-[12px] text-ink-4">{task.sourceId.slice(0, 8)}</span> : null}</>
-                : t('tasks.fields.manual')}
-            </Field>
             <Field label={t('tasks.fields.assignee')}>
               {canAssign && canViewUsers ? (
                 <Select value={task.assigneeId ?? ''} options={userOptions}
@@ -181,16 +186,15 @@ export function TaskDetailsPage() {
       {tab === 'planning' && (
         <Card className="card-pad">
           <dl className="grid grid-cols-2 gap-x-8 gap-y-4 text-[13.5px]">
-            <Field label={t('tasks.fields.startDate')}>{task.startDate ? formatDate(task.startDate, locale) : '—'}</Field>
+            <Field label={t('tasks.fields.startDate')}>{task.startAt ? formatDate(task.startAt, locale) : '—'}</Field>
             <Field label={t('tasks.fields.dueDate')}>
               <span className={task.isOverdue ? 'font-semibold text-red' : ''}>
-                {task.dueDate ? formatDate(task.dueDate, locale) : '—'}
+                {task.dueAt ? formatDate(task.dueAt, locale) : '—'}
                 {task.isOverdue ? ` · ${t('tasks.overdue')}` : ''}
               </span>
             </Field>
-            <Field label={t('tasks.fields.estimatedHours')}>{task.estimatedHours ?? '—'}</Field>
-            <Field label={t('tasks.fields.actualHours')}>{task.actualHours ?? '—'}</Field>
-            <Field label={t('tasks.fields.reminder')}>{task.reminderAt ? formatDateTime(task.reminderAt, locale) : '—'}</Field>
+            <Field label={t('tasks.fields.estimatedHours')}>{task.estimatedTime ?? '—'}</Field>
+            <Field label={t('tasks.fields.actualHours')}>{task.actualTime ?? '—'}</Field>
           </dl>
         </Card>
       )}
@@ -222,7 +226,7 @@ export function TaskDetailsPage() {
       )}
 
       {tab === 'subtasks' && <SubtasksTab taskId={id} canCreate={canCreate} />}
-      {tab === 'checklist' && <ChecklistTab taskId={id} canEdit={canUpdate} />}
+      {tab === 'dailyReports' && <DailyReportsTab taskId={id} canManage={canDailyReportManage} />}
       {tab === 'notes' && <NotesTab taskId={id} canManage={canNoteManage} />}
       {tab === 'documents' && <DocumentsTab taskId={id} canManage={canDocManage} />}
       {tab === 'relations' && <RelationsTab taskId={id} canEdit={canUpdate} />}

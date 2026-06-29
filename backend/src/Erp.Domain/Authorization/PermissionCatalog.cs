@@ -42,6 +42,10 @@ public static class PermissionCatalog
     public const string TaskAuditView = "task.audit.view";
     public const string TaskNoteManage = "task.note.manage";
     public const string TaskDocumentManage = "task.document.manage";
+    public const string TaskDailyReportManage = "task.daily-report.manage";
+
+    public const string MailView = "mail.view";
+    public const string MailManage = "mail.manage";
 
     public static readonly IReadOnlyList<Definition> All =
     [
@@ -77,5 +81,9 @@ public static class PermissionCatalog
         new(TaskAuditView, "Tasks", "AuditLog", "View"),
         new(TaskNoteManage, "Tasks", "Note", "Manage"),
         new(TaskDocumentManage, "Tasks", "Document", "Manage"),
+        new(TaskDailyReportManage, "Tasks", "DailyReport", "Manage"),
+
+        new(MailView, "Mail", "Outbox", "View"),
+        new(MailManage, "Mail", "Outbox", "Manage", IsHighRisk: true),
     ];
 }

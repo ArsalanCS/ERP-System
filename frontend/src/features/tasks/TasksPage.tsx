@@ -13,7 +13,7 @@ import { useToast } from '@/shared/ui/toast-context';
 import { formatDate } from '@/shared/lib/format';
 import type { ListParams } from '@/shared/api/types';
 import { tasksApi, taskKeys } from './api';
-import { TaskPriority, TaskStatusCategory, type MyTasksGroups, type TaskListItem } from './types';
+import { TASK_PRIORITY, TASK_STATUS, type MyTasksGroups, type TaskListItem } from './types';
 import { TaskStatusBadge } from './TaskStatusBadge';
 import { TaskFormDrawer } from './TaskFormDrawer';
 
@@ -30,8 +30,8 @@ export function TasksPage() {
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('');
-  const [priority, setPriority] = useState('');
+  const [statusId, setStatusId] = useState('');
+  const [priorityStatusId, setPriorityStatusId] = useState('');
   const [overdue, setOverdue] = useState(false);
 
   const [drawer, setDrawer] = useState<{ open: boolean; mode: 'create' | 'edit'; taskId?: string }>({ open: false, mode: 'create' });
@@ -39,6 +39,8 @@ export function TasksPage() {
   const [mine, setMine] = useState(false);
 
   const myQuery = useQuery({ queryKey: taskKeys.my, queryFn: tasksApi.my, enabled: mine });
+  const statusesQuery = useQuery({ queryKey: taskKeys.statuses(TASK_STATUS), queryFn: () => tasksApi.statuses(TASK_STATUS) });
+  const prioritiesQuery = useQuery({ queryKey: taskKeys.statuses(TASK_PRIORITY), queryFn: () => tasksApi.statuses(TASK_PRIORITY) });
 
   useEffect(() => {
     const id = window.setTimeout(() => { setSearch(searchInput.trim()); setPage(1); }, 350);
@@ -48,15 +50,15 @@ export function TasksPage() {
   const params = useMemo<ListParams>(() => ({
     page, pageSize: PAGE_SIZE,
     search: search || undefined,
-    category: category === '' ? undefined : Number(category),
-    priority: priority === '' ? undefined : Number(priority),
+    statusId: statusId || undefined,
+    priorityStatusId: priorityStatusId || undefined,
     overdue: overdue ? true : undefined,
-  }), [page, search, category, priority, overdue]);
+  }), [page, search, statusId, priorityStatusId, overdue]);
 
   const listQuery = useQuery({ queryKey: taskKeys.list(params), queryFn: () => tasksApi.list(params) });
 
   const archiveMutation = useMutation({
-    mutationFn: (task: TaskListItem) => tasksApi.archive(task.id),
+    mutationFn: (task: TaskListItem) => tasksApi.archive(task.eventId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: taskKeys.all });
       toast.success(t('tasks.feedback.archived'));
@@ -65,16 +67,13 @@ export function TasksPage() {
     onError: (err) => { toast.error(err instanceof Error ? err.message : t('common.loadError')); setArchiveTarget(null); },
   });
 
-  const categoryOptions = [
+  const statusOptions = [
     { value: '', label: t('tasks.filters.allStatuses') },
-    ...[TaskStatusCategory.Open, TaskStatusCategory.InProgress, TaskStatusCategory.Waiting,
-      TaskStatusCategory.Review, TaskStatusCategory.Completed, TaskStatusCategory.Cancelled, TaskStatusCategory.Rejected]
-      .map((c) => ({ value: String(c), label: t(`tasks.category.${c}`) })),
+    ...(statusesQuery.data ?? []).map((s) => ({ value: s.id, label: s.name })),
   ];
   const priorityOptions = [
     { value: '', label: t('tasks.filters.allPriorities') },
-    ...[TaskPriority.Low, TaskPriority.Normal, TaskPriority.High, TaskPriority.Urgent]
-      .map((p) => ({ value: String(p), label: t(`tasks.priority.${p}`) })),
+    ...(prioritiesQuery.data ?? []).map((p) => ({ value: p.id, label: p.name })),
   ];
 
   const canManage = can(Actions.TasksUpdate);
@@ -86,17 +85,17 @@ export function TasksPage() {
       render: (x) => (
         <div className="min-w-0">
           <div className="truncate font-semibold text-ink">{x.title}</div>
-          <div className="font-mono text-[11.5px] text-ink-4">{x.taskNumber}</div>
+          <div className="font-mono text-[11.5px] text-ink-4">{x.referenceNo}</div>
         </div>
       ),
     },
-    { key: 'status', header: t('tasks.columns.status'), render: (x) => <TaskStatusBadge name={x.statusName} category={x.statusCategory} /> },
-    { key: 'priority', header: t('tasks.columns.priority'), render: (x) => <span className="text-[13px] text-ink-2">{t(`tasks.priority.${x.priority}`)}</span> },
+    { key: 'status', header: t('tasks.columns.status'), render: (x) => <TaskStatusBadge name={x.statusName} color={x.statusColor} /> },
+    { key: 'priority', header: t('tasks.columns.priority'), render: (x) => <TaskStatusBadge name={x.priorityName} color={x.priorityColor} /> },
     { key: 'assignee', header: t('tasks.columns.assignee'), render: (x) => <span className="text-[13px] text-ink-3">{x.assigneeName ?? '—'}</span> },
     {
       key: 'due', header: t('tasks.columns.due'),
-      render: (x) => x.dueDate
-        ? <span className={`text-[13px] ${x.isOverdue ? 'font-semibold text-red' : 'text-ink-3'}`}>{formatDate(x.dueDate, locale)}</span>
+      render: (x) => x.dueAt
+        ? <span className={`text-[13px] ${x.isOverdue ? 'font-semibold text-red' : 'text-ink-3'}`}>{formatDate(x.dueAt, locale)}</span>
         : <span className="text-ink-4">—</span>,
     },
   ];
@@ -107,7 +106,7 @@ export function TasksPage() {
       render: (x) => (
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
           {canManage && (
-            <button type="button" title={t('common.edit')} onClick={() => setDrawer({ open: true, mode: 'edit', taskId: x.id })}
+            <button type="button" title={t('common.edit')} onClick={() => setDrawer({ open: true, mode: 'edit', taskId: x.eventId })}
               className="flex h-8 w-8 items-center justify-center rounded-sm text-ink-4 hover:bg-stone-100 hover:text-ink">
               <Icon name="edit" size={16} />
             </button>
@@ -132,12 +131,20 @@ export function TasksPage() {
         subtitle={t('tasks.subtitle')}
         actions={
           <div className="flex items-center gap-2">
+            <Button variant="outline" leadingIcon={<Icon name="gauge" size={16} />} onClick={() => navigate('/admin/tasks/dashboard')}>
+              {t('tasks.dashboard.link')}
+            </Button>
+            <Button variant="outline" leadingIcon={<Icon name="chart" size={16} />} onClick={() => navigate('/admin/tasks/reports')}>
+              {t('tasks.reports.link')}
+            </Button>
+            <Can action={Actions.TaskWorkflowManage}>
+              <Button variant="outline" leadingIcon={<Icon name="settings" size={16} />} onClick={() => navigate('/admin/tasks/settings')}>
+                {t('tasks.settings.link')}
+              </Button>
+            </Can>
             <Button variant={mine ? 'primary' : 'outline'} onClick={() => setMine((v) => !v)}>
               {mine ? t('tasks.allTasks') : t('tasks.myTasks')}
             </Button>
-            <Can action={Actions.TaskWorkflowManage}>
-              <Button variant="outline" onClick={() => navigate('/admin/tasks/workflows')}>{t('tasks.manageWorkflows')}</Button>
-            </Can>
             <Can action={Actions.TasksCreate}>
               <Button leadingIcon={<Icon name="plus" size={16} />} onClick={() => setDrawer({ open: true, mode: 'create' })}>
                 {t('tasks.newTask')}
@@ -148,17 +155,15 @@ export function TasksPage() {
       />
 
       {mine ? (
-        <MyTasksView groups={myQuery.data} loading={myQuery.isLoading} onOpen={(taskId) => navigate(`/admin/tasks/${taskId}`)} />
+        <MyTasksView groups={myQuery.data} loading={myQuery.isLoading} onOpen={(eventId) => navigate(`/admin/tasks/${eventId}`)} />
       ) : (
       <>
-      {/* all-tasks view */}
-
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <div className="min-w-[220px] flex-1">
           <Input placeholder={t('tasks.searchPlaceholder')} value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
         </div>
-        <div className="w-[180px]"><Select options={categoryOptions} value={category} onChange={(e) => { setCategory(e.target.value); setPage(1); }} /></div>
-        <div className="w-[160px]"><Select options={priorityOptions} value={priority} onChange={(e) => { setPriority(e.target.value); setPage(1); }} /></div>
+        <div className="w-[180px]"><Select options={statusOptions} value={statusId} onChange={(e) => { setStatusId(e.target.value); setPage(1); }} /></div>
+        <div className="w-[160px]"><Select options={priorityOptions} value={priorityStatusId} onChange={(e) => { setPriorityStatusId(e.target.value); setPage(1); }} /></div>
         <label className="flex h-9 cursor-pointer items-center gap-2 text-sm text-ink-2">
           <input type="checkbox" className="h-4 w-4 accent-clay" checked={overdue} onChange={(e) => { setOverdue(e.target.checked); setPage(1); }} />
           {t('tasks.filters.overdue')}
@@ -173,10 +178,10 @@ export function TasksPage() {
           <DataTable
             columns={columns}
             rows={data?.items ?? []}
-            rowKey={(x) => x.id}
+            rowKey={(x) => x.eventId}
             loading={listQuery.isLoading}
             loadingLabel={t('common.loading')}
-            onRowClick={(x) => navigate(`/admin/tasks/${x.id}`)}
+            onRowClick={(x) => navigate(`/admin/tasks/${x.eventId}`)}
             empty={<EmptyState icon="check" title={t('tasks.empty.title')} body={t('tasks.empty.body')} />}
           />
           {data && data.total > PAGE_SIZE && (
@@ -210,7 +215,7 @@ export function TasksPage() {
 }
 
 function MyTasksView({ groups, loading, onOpen }: {
-  groups: MyTasksGroups | undefined; loading: boolean; onOpen: (taskId: string) => void;
+  groups: MyTasksGroups | undefined; loading: boolean; onOpen: (eventId: string) => void;
 }) {
   const { t } = useTranslation();
   const { locale } = useDirection();
@@ -236,13 +241,13 @@ function MyTasksView({ groups, loading, onOpen }: {
           ) : (
             <ul className="flex flex-col gap-1.5">
               {groups[s.key].map((x) => (
-                <li key={x.id}>
-                  <button type="button" onClick={() => onOpen(x.id)}
+                <li key={x.eventId}>
+                  <button type="button" onClick={() => onOpen(x.eventId)}
                     className="w-full rounded-md border border-stone-150 px-2.5 py-2 text-start hover:border-clay">
                     <div className="truncate text-[13px] font-medium text-ink">{x.title}</div>
                     <div className="flex items-center gap-2">
-                      <TaskStatusBadge name={x.statusName} category={x.statusCategory} />
-                      {x.dueDate && <span className={`text-[11px] ${x.isOverdue ? 'text-red' : 'text-ink-4'}`}>{formatDate(x.dueDate, locale)}</span>}
+                      <TaskStatusBadge name={x.statusName} color={x.statusColor} />
+                      {x.dueAt && <span className={`text-[11px] ${x.isOverdue ? 'text-red' : 'text-ink-4'}`}>{formatDate(x.dueAt, locale)}</span>}
                     </div>
                   </button>
                 </li>

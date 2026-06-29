@@ -43,6 +43,23 @@ public sealed class FileEmailSender(IConfiguration config, ILogger<FileEmailSend
             "Confirm email", url, cancellationToken);
     }
 
+    public async Task SendMessageAsync(string toEmail, string subject, string htmlBody, CancellationToken ct = default)
+    {
+        Directory.CreateDirectory(OutboxPath);
+        var file = Path.Combine(OutboxPath, $"{DateTime.UtcNow:yyyyMMdd-HHmmssfff}-{Sanitize(toEmail)}.html");
+        var html = $"""
+            <!doctype html><html><head><meta charset="utf-8"><title>{subject}</title></head>
+            <body style="font-family:system-ui,sans-serif;background:#f7f6f3;padding:32px;color:#1c1a17">
+              <div style="max-width:560px;margin:auto;background:#fff;border:1px solid #e4e0d8;border-radius:12px;padding:28px">
+                <p style="color:#6e675b;font-size:14px;line-height:1.5">To: {toEmail}</p>
+                {htmlBody}
+              </div>
+            </body></html>
+            """;
+        await File.WriteAllTextAsync(file, html, ct);
+        logger.LogInformation("📧 Notification '{Subject}' for {Email} written to {File}", subject, toEmail, file);
+    }
+
     private async Task WriteAsync(string toEmail, string subject, string body, string cta, string url, CancellationToken ct)
     {
         Directory.CreateDirectory(OutboxPath);

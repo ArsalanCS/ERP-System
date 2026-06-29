@@ -1,15 +1,23 @@
 using Erp.Application.Common;
-using Erp.Domain.Tasks;
 
 namespace Erp.Application.Tasks.Contracts;
 
-/// <summary>List/filter inputs for tasks (Refactor Guide §5.3). Bound from the query string.</summary>
+/// <summary>Filters for the task list (Event/Asset Task Management).</summary>
 public sealed record TaskListQuery : ListQuery
 {
     public Guid? StatusId { get; init; }
+    public Guid? PriorityStatusId { get; init; }
     public Guid? AssigneeId { get; init; }
-    public TaskPriority? Priority { get; init; }
-    public TaskStatusCategory? Category { get; init; }
     public bool? Overdue { get; init; }
-    public Guid? ParentTaskId { get; init; }
+    public bool? ClosedOnly { get; init; }
+    public Guid? ParentEventId { get; init; }
+}
+
+/// <summary>Filters for the workspace-wide daily-reports report (date range + people/status).</summary>
+public sealed record TaskDailyReportQuery : ListQuery
+{
+    public DateOnly? FromDate { get; init; }
+    public DateOnly? ToDate { get; init; }
+    public Guid? AuthorId { get; init; }
+    public Guid? StatusId { get; init; }
 }

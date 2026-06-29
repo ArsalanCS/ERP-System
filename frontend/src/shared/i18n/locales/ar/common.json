@@ -19,6 +19,7 @@
     "accessControl": "التحكم في الصلاحيات",
     "businessStructure": "الهيكل التنظيمي",
     "tasks": "المهام",
+    "mail": "البريد",
     "security": "الأمان",
     "audit": "السجل والنشاط",
     "settings": "الإعدادات",
@@ -265,7 +266,9 @@
     "filters": {
       "allStatuses": "كل الحالات",
       "allPriorities": "كل الأولويات",
-      "overdue": "المتأخرة فقط"
+      "overdue": "المتأخرة فقط",
+      "status": "الحالة",
+      "priority": "الأولوية"
     },
     "priority": {
       "0": "منخفضة",
@@ -298,7 +301,80 @@
       "reminder": "تذكير",
       "completion": "نسبة الإنجاز %",
       "source": "المصدر",
-      "manual": "يدوي"
+      "manual": "يدوي",
+      "noPriority": "بدون أولوية",
+      "noStatus": "بدون حالة"
+    },
+    "dashboard": {
+      "link": "لوحة المعلومات",
+      "title": "لوحة معلومات المهام",
+      "total": "الإجمالي",
+      "open": "مفتوحة",
+      "overdue": "متأخرة",
+      "dueToday": "مستحقة اليوم",
+      "completed": "مكتملة",
+      "unassigned": "غير مُسندة",
+      "completed7": "مكتملة (٧ أيام)",
+      "avgCompletion": "متوسط الإنجاز",
+      "byStatus": "حسب الحالة",
+      "byPriority": "حسب الأولوية",
+      "byAssignee": "العبء حسب المسؤول",
+      "trend": "النشاط (آخر ١٤ يومًا)",
+      "created": "منشأة",
+      "completedLegend": "مكتملة",
+      "openCount": "{{count}} مفتوحة",
+      "overdueCount": "{{count}} متأخرة",
+      "noData": "لا توجد بيانات بعد",
+      "inProgress": "قيد التنفيذ",
+      "dueThisWeek": "مستحقة هذا الأسبوع",
+      "highPriority": "عالية / حرجة",
+      "reportsToday": "تقارير اليوم",
+      "timeAnalysis": "تحليل الوقت",
+      "estimatedTotal": "المقدّر",
+      "actualTotal": "الفعلي",
+      "variance": "الفرق",
+      "gantt": "الجدول الزمني",
+      "recentActivity": "النشاط الأخير"
+    },
+    "settings": {
+      "link": "الإعدادات",
+      "title": "إعدادات المهام",
+      "subtitle": "إدارة الحالات والأولويات المستخدمة في مهام مساحة العمل هذه.",
+      "statuses": "الحالات",
+      "priorities": "الأولويات",
+      "empty": "لم يتم الإعداد بعد",
+      "initial": "البداية",
+      "closed": "مغلقة",
+      "inactive": "غير نشطة",
+      "newStatus": "قيمة جديدة",
+      "editStatus": "تعديل القيمة",
+      "name": "الاسم",
+      "color": "اللون",
+      "initialHint": "الحالة الابتدائية للمهام الجديدة",
+      "closedHint": "تُحتسب كمكتملة/مغلقة",
+      "activeHint": "نشطة (متاحة للاختيار)",
+      "saved": "تم الحفظ.",
+      "deleted": "تم الحذف.",
+      "deleteTitle": "حذف القيمة",
+      "deleteConfirm": "حذف \"{{name}}\"؟ لا يمكن التراجع عن ذلك.",
+      "deleteHint": "لا يمكن حذف القيم المستخدمة — قم بتعطيلها بدلاً من ذلك.",
+      "config": {
+        "title": "إعدادات مساحة العمل",
+        "dailyRules": "قواعد التقرير اليومي",
+        "notifications": "الإشعارات",
+        "dashboard": "لوحة المعلومات",
+        "dailyReportRequired": "التقرير اليومي مطلوب",
+        "allowStatusChangeFromReport": "السماح بتغيير الحالة من التقرير",
+        "allowStatusChangeFromReportHint": "اختيار حالة في التقرير اليومي يُحدّث حالة المهمة.",
+        "requireEstimatedTime": "إلزام الوقت المقدّر",
+        "requireActualTime": "إلزام الوقت الفعلي",
+        "allowMultipleReportsPerDay": "السماح بعدة تقارير في اليوم",
+        "notifyOnTaskCreated": "عند إنشاء مهمة",
+        "notifyOnTaskAssigned": "عند إسناد مهمة",
+        "notifyOnStatusChange": "عند تغيير الحالة",
+        "notifyOnDailyReport": "عند تقرير يومي",
+        "dashboardDefaultRangeDays": "النطاق الافتراضي (أيام)"
+      }
     },
     "myTasks": "مهامي",
     "allTasks": "كل المهام",
@@ -313,6 +389,7 @@
       "general": "عام",
       "planning": "التخطيط",
       "subtasks": "المهام الفرعية",
+      "dailyReports": "التقارير اليومية",
       "checklist": "قائمة التحقق",
       "notes": "الملاحظات",
       "documents": "المستندات",
@@ -323,6 +400,28 @@
     },
     "logs": {
       "empty": "لا يوجد نشاط بعد"
+    },
+    "dailyReports": {
+      "empty": "لا توجد تقارير يومية بعد",
+      "file": "إرسال تقرير",
+      "filed": "تم إرسال التقرير اليومي",
+      "date": "التاريخ",
+      "hours": "الساعات",
+      "hoursValue": "{{value}} س",
+      "completion": "نسبة التقدم",
+      "summaryPlaceholder": "ما الذي عملت عليه اليوم؟",
+      "blockersPlaceholder": "هل توجد معوقات؟ (اختياري)",
+      "blockers": "المعوقات",
+      "description": "الوصف",
+      "descriptionPlaceholder": "ما تم إنجازه اليوم…",
+      "estimated": "المقدّر (س)",
+      "actual": "الفعلي (س)",
+      "remaining": "المتبقي (س)",
+      "estimatedShort": "مقدّر",
+      "actualShort": "فعلي",
+      "remainingShort": "متبقٍ",
+      "statusChange": "تغيير حالة المهمة",
+      "noStatusChange": "دون تغيير الحالة"
     },
     "subtasks": {
       "empty": "لا توجد مهام فرعية بعد",
@@ -353,6 +452,7 @@
       "dependsOn": "يعتمد على",
       "blocking": "حاجبة",
       "linkedRecords": "السجلات المرتبطة",
+      "linkedRecordsHint": "سيتوفر ربط العملاء والفواتير والأصول والسجلات الأخرى عند إضافة تلك الوحدات.",
       "noRecords": "لا توجد سجلات مرتبطة",
       "refresh": "تحديث العلاقات",
       "refreshed": "تم تحديث العلاقات.",
@@ -360,7 +460,11 @@
       "entityType": "النوع",
       "entityId": "معرّف السجل",
       "role": "الدور",
-      "roles": { "0": "المصدر الأساسي", "1": "داعم", "2": "مرجع" }
+      "roles": {
+        "0": "المصدر الأساسي",
+        "1": "داعم",
+        "2": "مرجع"
+      }
     },
     "gantt": {
       "noDates": "لا توجد تواريخ للعرض",
@@ -416,6 +520,24 @@
         "saved": "تم حفظ سير العمل.",
         "archived": "تمت الأرشفة."
       }
+    },
+    "reports": {
+      "link": "التقارير",
+      "title": "تقارير المهام",
+      "subtitle": "تحليلات المهام المُصفّاة وسجل التقارير اليومية.",
+      "tabs": {
+        "tasks": "المهام",
+        "dailyReports": "التقارير اليومية"
+      },
+      "scope": "النطاق",
+      "scopeAll": "الكل",
+      "scopeOverdue": "المتأخرة",
+      "scopeClosed": "المغلقة",
+      "task": "المهمة",
+      "author": "الكاتب",
+      "from": "من",
+      "to": "إلى",
+      "noReports": "لا توجد تقارير يومية مطابقة للمرشحات."
     }
   },
   "security": {
@@ -581,6 +703,68 @@
       "updated": "تم تحديث الدور.",
       "permissionsSaved": "تم حفظ الصلاحيات.",
       "deleted": "تم حذف الدور."
+    }
+  },
+  "mail": {
+    "title": "البريد",
+    "subtitle": "صندوق صادر الإشعارات وقوالب البريد الإلكتروني.",
+    "tabs": {
+      "outbox": "الصادر",
+      "templates": "القوالب"
+    },
+    "columns": {
+      "subject": "الموضوع",
+      "status": "الحالة",
+      "recipients": "المستلمون",
+      "attempts": "المحاولات",
+      "created": "تاريخ الإنشاء"
+    },
+    "filters": {
+      "allStatuses": "كل الحالات"
+    },
+    "status": {
+      "0": "قيد الانتظار",
+      "1": "قيد المعالجة",
+      "2": "تم الإرسال",
+      "3": "فشل",
+      "4": "ملغى"
+    },
+    "empty": {
+      "title": "لا توجد رسائل",
+      "body": "تظهر الإشعارات هنا عند إنشاء المهام وإسنادها وتحديثها."
+    },
+    "detail": {
+      "title": "رسالة",
+      "recipients": "المستلمون",
+      "body": "المحتوى",
+      "lastError": "آخر خطأ",
+      "attempts": "المحاولات",
+      "noAttempts": "لا توجد محاولات تسليم بعد."
+    },
+    "attempt": {
+      "ok": "تم التسليم",
+      "fail": "فشل"
+    },
+    "actions": {
+      "retry": "إعادة الإرسال",
+      "cancel": "إلغاء"
+    },
+    "templates": {
+      "name": "الاسم",
+      "subject": "الموضوع",
+      "body": "المحتوى (HTML)",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "editHint": "خصّص الموضوع والمحتوى لمساحة العمل هذه.",
+      "placeholdersHint": "العناصر النائبة: {{TaskRef}}، {{TaskTitle}}، {{Status}}، {{Actor}}، {{Date}}.",
+      "global": "عام",
+      "bodyText": "النص العادي",
+      "overrideHint": "هذا قالب افتراضي عام. الحفظ يُنشئ نسخة خاصة بمساحة العمل."
+    },
+    "feedback": {
+      "requeued": "تمت إعادة جدولة الرسالة للإرسال.",
+      "cancelled": "تم إلغاء الرسالة.",
+      "templateSaved": "تم حفظ القالب."
     }
   },
   "audit": {

@@ -40,6 +40,7 @@ export const NAV: NavGroup[] = [
     labelKey: 'nav.groups.work',
     items: [
       { id: 'tasks', labelKey: 'nav.tasks', to: '/admin/tasks', icon: 'check', action: Actions.TasksView },
+      { id: 'mail', labelKey: 'nav.mail', to: '/admin/mail', icon: 'mail', action: Actions.MailView },
     ],
   },
   {

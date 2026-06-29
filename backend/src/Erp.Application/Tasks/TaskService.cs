@@ -1,461 +1,996 @@
 using Erp.Application.Abstractions;
 using Erp.Application.Common;
 using Erp.Application.Tasks.Contracts;
+using Erp.Domain.Assets;
 using Erp.Domain.Auditing;
 using Erp.Domain.Authorization;
+using Erp.Domain.Events;
 using Erp.Domain.Identity;
+using Erp.Domain.Mail;
 using Erp.Domain.Structure;
-using Erp.Domain.Tasks;
+using Erp.Domain.Workflow;
 using Erp.Shared.Results;
 using Microsoft.EntityFrameworkCore;
-using TaskStatus = Erp.Domain.Tasks.TaskStatus; // disambiguate from System.Threading.Tasks.TaskStatus
 
 namespace Erp.Application.Tasks;
 
 /// <summary>
-/// Task Management (Task Model spec). Tasks are the only Event; subtasks are child
-/// tasks; checklist/notes/documents/relations/dependencies are supporting records.
-/// List/detail reads respect the caller's task.view <see cref="DataScope"/>
-/// (own/team/department/broader). All writes are audited; status changes + key
-/// edits are recorded as activity (Logs tab). Built on generic repositories.
+/// Task Management on the Event/Asset architecture. A task = Event(TASK_MANAGEMENT) +
+/// TaskEvent; status history in EventStatus; priority a Status under TASK_PRIORITY;
+/// notes/documents are Assets linked via EventAsset; dependencies are EventDependency.
+/// Reads respect the caller's task.view DataScope; writes are audited + logged.
 /// </summary>
 public sealed class TaskService(
-    IRepository<TaskItem> tasks,
-    IRepository<TaskStatus> statuses,
-    IRepository<TaskStatusType> statusTypes,
-    IRepository<TaskActivity> activities,
-    IRepository<TaskChecklistItem> checklist,
-    IRepository<TaskDependency> dependencies,
-    IRepository<TaskRelation> relations,
+    IRepository<Event> events,
+    IRepository<TaskEvent> tasks,
+    IRepository<EventStatus> eventStatuses,
+    IRepository<EventActivity> activities,
+    IRepository<EventDependency> dependencies,
+    IRepository<EventDailyReport> dailyReports,
+    IRepository<TaskSettings> taskSettings,
+    IRepository<Status> statuses,
+    IRepository<StatusType> statusTypes,
+    IRepository<EventType> eventTypes,
+    IRepository<Asset> assets,
+    IRepository<AssetType> assetTypes,
+    IRepository<Note> notes,
+    IRepository<Document> documents,
+    IRepository<EventAsset> eventAssets,
     IRepository<User> users,
     IRepository<Employee> employees,
-    IRepository<StructureNode> nodes,
+    IRepository<StructureNode> structureNodes,
     IRepository<AuditLog> auditLogs,
     IPermissionResolver permissions,
     ICurrentUser currentUser,
     IAuditLogger audit,
+    IMailOutbox mailOutbox,
     IClock clock,
     IUnitOfWork unitOfWork) : ITaskService
 {
+    // ---- Reads ------------------------------------------------------------
+
     public async Task<Result<PagedResult<TaskListItemDto>>> ListAsync(TaskListQuery query, CancellationToken ct = default)
     {
-        var me = currentUser.UserId;
-        var visible = await VisibleAssigneeFilterAsync(ct);
         var now = clock.UtcNow;
+        var q = ApplyFilters(await VisibleRowsAsync(ct), query, now);
+        var dto = q.OrderByDescending(x => x.te.CreatedAt).Select(Projection(now));
+        var page = await dto.ToPagedResultAsync(query.Page, query.PageSize, ct);
+        return Result.Success(page);
+    }
 
-        var q = tasks.Query();
-        if (query.ParentTaskId is { } parentId) q = q.Where(t => t.ParentTaskId == parentId);
-        else q = q.Where(t => t.ParentTaskId == null); // top-level tasks only in the main list
-        q = ApplyVisibility(q, visible, me);
-        if (query.StatusId is { } statusId) q = q.Where(t => t.StatusId == statusId);
-        if (query.AssigneeId is { } assigneeId) q = q.Where(t => t.AssigneeId == assigneeId);
-        if (query.Priority is { } priority) q = q.Where(t => t.Priority == priority);
-        if (query.Overdue == true) q = q.Where(t => t.DueDate != null && t.DueDate < now);
+    /// <summary>Tasks visible to the caller under their task.view DataScope (own/team/department/broader).</summary>
+    private async Task<IQueryable<TaskRow>> VisibleRowsAsync(CancellationToken ct)
+    {
+        var visible = await VisibleAssigneeFilterAsync(ct);
+        var me = currentUser.UserId;
+        var q = BaseQuery();
+        if (visible is not null)
+            q = q.Where(x => (x.te.AssigneeId != null && visible.Contains(x.te.AssigneeId.Value)) || x.te.ReporterId == me);
+        return q;
+    }
 
+    private static IQueryable<TaskRow> ApplyFilters(IQueryable<TaskRow> q, TaskListQuery query, DateTimeOffset now)
+    {
+        if (query.StatusId is { } sid) q = q.Where(x => x.st != null && x.st.Id == sid);
+        if (query.PriorityStatusId is { } pid) q = q.Where(x => x.te.PriorityStatusId == pid);
+        if (query.AssigneeId is { } aid) q = q.Where(x => x.te.AssigneeId == aid);
+        if (query.ParentEventId is { } parent) q = q.Where(x => x.te.ParentEventId == parent);
+        if (query.Overdue == true) q = q.Where(x => x.te.DueAt != null && x.te.DueAt < now && (x.st == null || !x.st.IsClosed));
+        if (query.ClosedOnly == true) q = q.Where(x => x.st != null && x.st.IsClosed);
         if (!string.IsNullOrWhiteSpace(query.Search))
         {
-            var term = query.Search.Trim().ToLower();
-            q = q.Where(t => t.Title.ToLower().Contains(term) || t.TaskNumber.ToLower().Contains(term));
+            var term = query.Search.Trim();
+            q = q.Where(x => x.te.Title.Contains(term) || x.te.ReferenceNo.Contains(term));
         }
-
-        // Join into an anonymous shape so filter/sort run on real columns (EF can't
-        // sort by a member of a constructed DTO). Project to the DTO last.
-        var joined = from t in q
-                     join s in statuses.Query() on t.StatusId equals s.Id
-                     join au in users.Query() on t.AssigneeId equals au.Id into ag
-                     from au in ag.DefaultIfEmpty()
-                     select new { t, s, AssigneeName = au != null ? au.DisplayName : null };
-
-        if (query.Category is { } category) joined = joined.Where(x => x.s.Category == category);
-
-        joined = (query.Sort?.ToLowerInvariant()) switch
-        {
-            "title" => joined.OrderBy(x => x.t.Title),
-            "-title" => joined.OrderByDescending(x => x.t.Title),
-            "duedate" => joined.OrderBy(x => x.t.DueDate),
-            "-duedate" => joined.OrderByDescending(x => x.t.DueDate),
-            "priority" => joined.OrderByDescending(x => x.t.Priority),
-            _ => joined.OrderByDescending(x => x.t.CreatedAt),
-        };
-
-        var projected = joined.Select(x => new TaskListItemDto(
-            x.t.Id, x.t.TaskNumber, x.t.Title, x.t.Priority,
-            x.s.Id, x.s.Name, x.s.Category, x.s.Color,
-            x.t.AssigneeId, x.AssigneeName,
-            x.t.DueDate, x.t.DueDate != null && x.t.DueDate < now && !x.s.IsFinal,
-            x.t.CompletionPercent, x.t.CreatedAt));
-
-        return Result.Success(await projected.ToPagedResultAsync(query.Page, query.PageSize, ct));
+        return q;
     }
 
-    public async Task<Result<TaskDetailsDto>> GetAsync(Guid id, CancellationToken ct = default)
+    public async Task<Result<TaskDetailsDto>> GetAsync(Guid eventId, CancellationToken ct = default)
     {
+        if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<TaskDetailsDto>(TaskErrors.NotFound("Task"));
         var now = clock.UtcNow;
+
         var dto = await (
-            from t in await VisibleTasksAsync(ct)
-            where t.Id == id
-            join s in statuses.Query() on t.StatusId equals s.Id
-            join asg in users.Query() on t.AssigneeId equals asg.Id into ag
-            from asg in ag.DefaultIfEmpty()
-            join rep in users.Query() on t.ReporterId equals rep.Id into rg
-            from rep in rg.DefaultIfEmpty()
+            from te in tasks.Query()
+            where te.EventId == eventId
+            join esCur in eventStatuses.Query().Where(es => es.IsCurrent) on te.EventId equals esCur.EventId into esg
+            from esCur in esg.DefaultIfEmpty()
+            join st in statuses.Query() on esCur.StatusId equals st.Id into stg
+            from st in stg.DefaultIfEmpty()
+            join pr in statuses.Query() on te.PriorityStatusId equals pr.Id into prg
+            from pr in prg.DefaultIfEmpty()
+            join au in users.Query() on te.AssigneeId equals au.Id into aug
+            from au in aug.DefaultIfEmpty()
+            join rp in users.Query() on te.ReporterId equals rp.Id into rpg
+            from rp in rpg.DefaultIfEmpty()
             select new TaskDetailsDto(
-                t.Id, t.TaskNumber, t.EventType, t.Title, t.Description,
-                t.StatusTypeId, s.Id, s.Name, s.Category, s.Color, s.IsFinal,
-                t.Priority,
-                t.AssigneeId, asg != null ? asg.DisplayName : null,
-                t.ReporterId, rep != null ? rep.DisplayName : null,
-                t.ParentTaskId, t.SourceType, t.SourceId,
-                t.StartDate, t.DueDate, t.EstimatedHours, t.ActualHours, t.ReminderAt,
-                t.CompletionPercent,
-                t.DueDate != null && t.DueDate < now && !s.IsFinal,
-                t.CreatedAt, t.UpdatedAt))
+                te.EventId, te.ReferenceNo, te.Title, te.Description,
+                st != null ? st.Id : (Guid?)null, st != null ? st.Name : null, st != null ? st.Color : null, st != null && st.IsClosed,
+                te.PriorityStatusId, pr != null ? pr.Name : null, pr != null ? pr.Color : null,
+                te.AssigneeId, au != null ? au.DisplayName : null,
+                te.ReporterId, rp != null ? rp.DisplayName : null,
+                te.ParentEventId,
+                te.StartAt, te.DueAt, te.EstimatedTime, te.ActualTime,
+                te.CompletionPercent, te.DueAt != null && te.DueAt < now && (st == null || !st.IsClosed),
+                te.CreatedAt, te.UpdatedAt))
             .FirstOrDefaultAsync(ct);
 
-        return dto is null ? TaskErrors.NotFound("Task") : Result.Success(dto);
+        return dto is null ? Result.Failure<TaskDetailsDto>(TaskErrors.NotFound("Task")) : Result.Success(dto);
     }
 
-    public async Task<Result<CreateTaskResult>> CreateAsync(CreateTaskRequest request, CancellationToken ct = default)
-        => await CreateInternalAsync(request, parentId: null, ct);
-
-    public async Task<Result<CreateTaskResult>> CreateSubtaskAsync(Guid parentId, CreateTaskRequest request, CancellationToken ct = default)
+    public async Task<Result<IReadOnlyList<TaskListItemDto>>> ListSubtasksAsync(Guid eventId, CancellationToken ct = default)
     {
-        var parent = await GetVisibleAsync(parentId, ct);
-        if (parent is null) return Result.Failure<CreateTaskResult>(TaskErrors.NotFound("Parent task"));
-        if (await IsClosedAsync(parent.StatusId, ct)) return Result.Failure<CreateTaskResult>(TaskErrors.Closed());
-
-        // A subtask inherits the parent's source by default (spec §6); an explicit source on the request overrides.
-        if (string.IsNullOrWhiteSpace(request.SourceType) && parent.SourceType is not null)
-            request = request with { SourceType = parent.SourceType, SourceId = parent.SourceId };
-
-        return await CreateInternalAsync(request, parentId, ct);
+        if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<IReadOnlyList<TaskListItemDto>>(TaskErrors.NotFound("Task"));
+        var now = clock.UtcNow;
+        var list = await BaseQuery().Where(x => x.te.ParentEventId == eventId)
+            .OrderBy(x => x.te.CreatedAt).Select(Projection(now)).ToListAsync(ct);
+        return Result.Success<IReadOnlyList<TaskListItemDto>>(list);
     }
 
-    private async Task<Result<CreateTaskResult>> CreateInternalAsync(CreateTaskRequest request, Guid? parentId, CancellationToken ct)
+    public async Task<Result<MyTasksGroups>> GetMyTasksAsync(CancellationToken ct = default)
     {
-        if (currentUser.WorkspaceId is not { } ws) return Result.Failure<CreateTaskResult>(TaskErrors.NoScope());
+        if (currentUser.UserId is not { } me) return Result.Failure<MyTasksGroups>(TaskErrors.NoScope());
+        var now = clock.UtcNow;
+        var today = now.Date;
 
-        var type = request.StatusTypeId is { } typeId
-            ? await statusTypes.Query().FirstOrDefaultAsync(x => x.Id == typeId, ct)
-            : await statusTypes.Query().Where(x => x.IsDefault && x.IsActive).OrderBy(x => x.SortOrder).FirstOrDefaultAsync(ct);
-        if (type is null) return Result.Failure<CreateTaskResult>(TaskErrors.NoWorkflow());
+        var mine = await BaseQuery().Where(x => x.te.AssigneeId == me && (x.st == null || !x.st.IsClosed))
+            .OrderBy(x => x.te.DueAt).Select(Projection(now)).ToListAsync(ct);
 
-        var initial = await statuses.Query().Where(x => x.StatusTypeId == type.Id)
-            .OrderByDescending(x => x.IsInitial).ThenBy(x => x.SortOrder).FirstOrDefaultAsync(ct);
-        if (initial is null) return Result.Failure<CreateTaskResult>(TaskErrors.NoInitialStatus());
-
-        var number = await NextTaskNumberAsync(ws, ct);
-        var task = new TaskItem(ws, number, request.Title, type.Id, initial.Id, currentUser.UserId);
-        task.UpdateDetails(request.Title, request.Description, request.Priority);
-        task.SetSchedule(request.StartDate, request.DueDate, request.EstimatedHours, request.ReminderAt);
-        task.Assign(request.AssigneeId);
-        task.SetSource(request.SourceType, request.SourceId);
-        if (parentId is { } pid) task.PlaceUnderParent(pid);
-        tasks.Add(task);
-
-        AddActivity(ws, task.Id, parentId is null ? TaskActivityKind.Created : TaskActivityKind.SubtaskAdded, $"Task {number} created.");
-        if (parentId is { } p) AddActivity(ws, p, TaskActivityKind.SubtaskAdded, $"Subtask {number} added.");
-        await audit.LogAsync(Entry(AuditActions.Create, task.Id, ws, $"{{\"number\":\"{number}\"}}"), ct);
-        await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success(new CreateTaskResult(task.Id, number));
+        List<TaskListItemDto> overdue = [], dueToday = [], upcoming = [], waiting = [];
+        foreach (var t in mine)
+        {
+            if (t.DueAt is not { } due) { waiting.Add(t); continue; }
+            var d = due.Date;
+            if (d < today) overdue.Add(t);
+            else if (d == today) dueToday.Add(t);
+            else upcoming.Add(t);
+        }
+        return Result.Success(new MyTasksGroups(overdue, dueToday, upcoming, waiting));
     }
 
-    public async Task<Result> UpdateAsync(Guid id, UpdateTaskRequest request, CancellationToken ct = default)
+    public async Task<Result<TaskDashboardDto>> GetDashboardAsync(CancellationToken ct = default)
     {
-        var task = await GetVisibleAsync(id, ct);
-        if (task is null) return Result.Failure(TaskErrors.NotFound("Task"));
-        if (await IsClosedAsync(task.StatusId, ct)) return Result.Failure(TaskErrors.Closed());
+        var now = clock.UtcNow;
+        var rows = await SlimRowsAsync(await VisibleRowsAsync(ct), ct);
 
-        task.UpdateDetails(request.Title, request.Description, request.Priority);
-        task.SetSchedule(request.StartDate, request.DueDate, request.EstimatedHours, request.ReminderAt);
-        task.SetCompletion(request.CompletionPercent, request.ActualHours);
+        var today = DateOnly.FromDateTime(now.UtcDateTime);
+        var weekAgo = now.AddDays(-7);
+        bool Open(SlimRow r) => !r.IsClosed;
 
-        AddActivity(task.WorkspaceId, task.Id, TaskActivityKind.Updated, "Task details updated.");
-        await audit.LogAsync(Entry(AuditActions.Update, task.Id, task.WorkspaceId), ct);
-        await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success();
+        var weekEnd = now.AddDays(7);
+        var highPriorityCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "HIGH", "CRITICAL" };
+
+        var total = rows.Count;
+        var completed = rows.Count(r => r.IsClosed);
+        var open = total - completed;
+        var inProgress = rows.Count(r => Open(r) && !r.IsInitial);
+        var overdue = rows.Count(r => Open(r) && r.DueAt is { } d && d < now);
+        var dueToday = rows.Count(r => Open(r) && r.DueAt is { } d && DateOnly.FromDateTime(d.UtcDateTime) == today);
+        var dueThisWeek = rows.Count(r => Open(r) && r.DueAt is { } d && d >= now && d <= weekEnd);
+        var highPriority = rows.Count(r => Open(r) && r.PriorityCode is { } c && highPriorityCodes.Contains(c));
+        var unassigned = rows.Count(r => Open(r) && r.AssigneeId is null);
+        var completedLast7 = rows.Count(r => r.IsClosed && r.StatusSince is { } s && s >= weekAgo);
+        var avg = rows.Count == 0 ? 0 : (int)Math.Round(rows.Average(r => r.CompletionPercent));
+        var estimatedTotal = rows.Sum(r => r.Estimated ?? 0m);
+        var actualTotal = rows.Sum(r => r.Actual ?? 0m);
+
+        var byStatus = rows.GroupBy(r => new { r.StatusId, r.StatusName, r.StatusColor })
+            .Select(g => new TaskBucketDto(g.Key.StatusId, g.Key.StatusName, g.Key.StatusColor, g.Count()))
+            .OrderByDescending(b => b.Count).ToList();
+        var byPriority = rows.GroupBy(r => new { r.PriorityId, r.PriorityName, r.PriorityColor })
+            .Select(g => new TaskBucketDto(g.Key.PriorityId, g.Key.PriorityName, g.Key.PriorityColor, g.Count()))
+            .OrderByDescending(b => b.Count).ToList();
+        var byAssignee = rows.GroupBy(r => new { r.AssigneeId, r.AssigneeName })
+            .Select(g => new TaskAssigneeLoadDto(g.Key.AssigneeId, g.Key.AssigneeName,
+                g.Count(Open), g.Count(r => Open(r) && r.DueAt is { } d && d < now)))
+            .OrderByDescending(a => a.Open).Take(10).ToList();
+
+        var trend = new List<TaskTrendPointDto>();
+        for (var i = 13; i >= 0; i--)
+        {
+            var day = today.AddDays(-i);
+            var created = rows.Count(r => DateOnly.FromDateTime(r.CreatedAt.UtcDateTime) == day);
+            var done = rows.Count(r => r.IsClosed && r.StatusSince is { } s && DateOnly.FromDateTime(s.UtcDateTime) == day);
+            trend.Add(new TaskTrendPointDto(day, created, done));
+        }
+
+        // Restrict the dependent feeds (reports/activity) to the same visible event set.
+        var visibleEventIds = rows.Select(r => r.EventId).ToList();
+        var reportsToday = visibleEventIds.Count == 0 ? 0 : await dailyReports.Query()
+            .CountAsync(dr => visibleEventIds.Contains(dr.EventId) && dr.ReportDate == today, ct);
+
+        var recentActivity = visibleEventIds.Count == 0
+            ? new List<TaskRecentActivityDto>()
+            : await (from a in activities.Query()
+                     where visibleEventIds.Contains(a.EventId)
+                     join te in tasks.Query() on a.EventId equals te.EventId
+                     join u in users.Query() on a.ActorId equals u.Id into ug
+                     from u in ug.DefaultIfEmpty()
+                     orderby a.OccurredAt descending
+                     select new TaskRecentActivityDto(a.Id, a.EventId, te.ReferenceNo, a.Message,
+                         a.ActorId, u != null ? u.DisplayName : null, a.OccurredAt))
+                .Take(15).ToListAsync(ct);
+
+        var gantt = rows
+            .Where(r => Open(r) && (r.StartAt is not null || r.DueAt is not null))
+            .OrderBy(r => r.StartAt ?? r.DueAt)
+            .Take(25)
+            .Select(r => new TaskGanttItemDto(r.EventId, r.ReferenceNo, r.Title, r.StartAt, r.DueAt,
+                r.CompletionPercent, r.StatusColor, r.IsClosed))
+            .ToList();
+
+        return Result.Success(new TaskDashboardDto(total, open, inProgress, overdue, dueToday, dueThisWeek,
+            highPriority, completed, unassigned, completedLast7, reportsToday, avg, estimatedTotal, actualTotal,
+            byStatus, byPriority, byAssignee, trend, recentActivity, gantt));
     }
 
-    public async Task<Result> ChangeStatusAsync(Guid id, ChangeTaskStatusRequest request, CancellationToken ct = default)
+    public async Task<Result<TaskReportDto>> GetReportAsync(TaskListQuery query, CancellationToken ct = default)
     {
-        var task = await GetVisibleAsync(id, ct);
-        if (task is null) return Result.Failure(TaskErrors.NotFound("Task"));
+        var now = clock.UtcNow;
+        var rows = await SlimRowsAsync(ApplyFilters(await VisibleRowsAsync(ct), query, now), ct);
 
-        var status = await statuses.Query().FirstOrDefaultAsync(s => s.Id == request.StatusId, ct);
-        if (status is null || status.StatusTypeId != task.StatusTypeId) return Result.Failure(TaskErrors.StatusNotInWorkflow());
+        bool Open(SlimRow r) => !r.IsClosed;
+        var completed = rows.Count(r => r.IsClosed);
+        var overdue = rows.Count(r => Open(r) && r.DueAt is { } d && d < now);
 
-        var fromStatusId = task.StatusId;
-        task.ChangeStatus(status.Id);
-        if (status.IsFinal && status.Category == TaskStatusCategory.Completed) task.SetCompletion(100, task.ActualHours);
+        var byStatus = rows.GroupBy(r => new { r.StatusId, r.StatusName, r.StatusColor })
+            .Select(g => new TaskBucketDto(g.Key.StatusId, g.Key.StatusName, g.Key.StatusColor, g.Count()))
+            .OrderByDescending(b => b.Count).ToList();
+        var byPriority = rows.GroupBy(r => new { r.PriorityId, r.PriorityName, r.PriorityColor })
+            .Select(g => new TaskBucketDto(g.Key.PriorityId, g.Key.PriorityName, g.Key.PriorityColor, g.Count()))
+            .OrderByDescending(b => b.Count).ToList();
+        var byAssignee = rows.GroupBy(r => new { r.AssigneeId, r.AssigneeName })
+            .Select(g => new TaskAssigneeLoadDto(g.Key.AssigneeId, g.Key.AssigneeName,
+                g.Count(Open), g.Count(r => Open(r) && r.DueAt is { } d && d < now)))
+            .OrderByDescending(a => a.Open).ToList();
 
-        AddActivity(task.WorkspaceId, task.Id, TaskActivityKind.StatusChanged, $"Status changed to {status.Name}.", fromStatusId, status.Id);
-        await audit.LogAsync(Entry(AuditActions.Update, task.Id, task.WorkspaceId, $"{{\"status\":\"{Escape(status.Name)}\"}}"), ct);
-        await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success();
+        return Result.Success(new TaskReportDto(rows.Count, rows.Count - completed, completed, overdue,
+            rows.Sum(r => r.Estimated ?? 0m), rows.Sum(r => r.Actual ?? 0m), byStatus, byPriority, byAssignee));
     }
 
-    public async Task<Result> AssignAsync(Guid id, AssignTaskRequest request, CancellationToken ct = default)
+    public async Task<Result<PagedResult<TaskDailyReportRowDto>>> GetDailyReportsReportAsync(TaskDailyReportQuery query, CancellationToken ct = default)
     {
-        var task = await GetVisibleAsync(id, ct);
-        if (task is null) return Result.Failure(TaskErrors.NotFound("Task"));
-        if (request.AssigneeId is { } assigneeId && !await users.Query().AnyAsync(u => u.Id == assigneeId, ct))
-            return Result.Failure(TaskErrors.NotFound("Assignee"));
+        // Restrict to the daily reports of tasks the caller may see (DataScope), then filter.
+        var visibleTasks = (await VisibleRowsAsync(ct)).Select(x => x.te.EventId);
+        var q = from dr in dailyReports.Query()
+                where visibleTasks.Contains(dr.EventId)
+                join te in tasks.Query() on dr.EventId equals te.EventId
+                join st in statuses.Query() on dr.StatusId equals st.Id into stg
+                from st in stg.DefaultIfEmpty()
+                join au in users.Query() on dr.UserId equals au.Id into aug
+                from au in aug.DefaultIfEmpty()
+                select new { dr, te, st, au };
 
-        task.Assign(request.AssigneeId);
-        AddActivity(task.WorkspaceId, task.Id, TaskActivityKind.Assigned, request.AssigneeId is null ? "Task unassigned." : "Task assigned.");
-        await audit.LogAsync(Entry(AuditActions.Update, task.Id, task.WorkspaceId), ct);
-        await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success();
+        if (query.FromDate is { } from) q = q.Where(x => x.dr.ReportDate >= from);
+        if (query.ToDate is { } to) q = q.Where(x => x.dr.ReportDate <= to);
+        if (query.AuthorId is { } author) q = q.Where(x => x.dr.UserId == author);
+        if (query.StatusId is { } sid) q = q.Where(x => x.dr.StatusId == sid);
+
+        var page = await q
+            .OrderByDescending(x => x.dr.ReportDate).ThenByDescending(x => x.dr.CreatedAt)
+            .Select(x => new TaskDailyReportRowDto(
+                x.dr.Id, x.dr.EventId, x.te.ReferenceNo, x.te.Title, x.dr.ReportDate, x.dr.Description,
+                x.dr.EstimatedTime, x.dr.ActualTime, x.dr.RemainingTime,
+                x.st != null ? x.st.Id : (Guid?)null, x.st != null ? x.st.Name : null, x.st != null ? x.st.Color : null,
+                x.dr.UserId, x.au != null ? x.au.DisplayName : null, x.dr.CreatedAt))
+            .ToPagedResultAsync(query.Page, query.PageSize, ct);
+        return Result.Success(page);
     }
 
-    public async Task<Result> ArchiveAsync(Guid id, CancellationToken ct = default)
-    {
-        var task = await GetVisibleAsync(id, ct);
-        if (task is null) return Result.Failure(TaskErrors.NotFound("Task"));
+    private static Task<List<SlimRow>> SlimRowsAsync(IQueryable<TaskRow> q, CancellationToken ct) =>
+        q.Select(x => new SlimRow
+        {
+            EventId = x.te.EventId,
+            ReferenceNo = x.te.ReferenceNo,
+            Title = x.te.Title,
+            AssigneeId = x.te.AssigneeId,
+            AssigneeName = x.au != null ? x.au.DisplayName : null,
+            StatusId = x.st != null ? x.st.Id : (Guid?)null,
+            StatusName = x.st != null ? x.st.Name : null,
+            StatusColor = x.st != null ? x.st.Color : null,
+            IsClosed = x.st != null && x.st.IsClosed,
+            IsInitial = x.st != null && x.st.IsInitial,
+            PriorityId = x.te.PriorityStatusId,
+            PriorityCode = x.pr != null ? x.pr.Code : null,
+            PriorityName = x.pr != null ? x.pr.Name : null,
+            PriorityColor = x.pr != null ? x.pr.Color : null,
+            StartAt = x.te.StartAt,
+            DueAt = x.te.DueAt,
+            CreatedAt = x.te.CreatedAt,
+            CompletionPercent = x.te.CompletionPercent,
+            StatusSince = x.statusSince,
+            Estimated = x.te.EstimatedTime,
+            Actual = x.te.ActualTime,
+        }).ToListAsync(ct);
 
-        task.SoftDelete(currentUser.UserId, clock.UtcNow);
-        AddActivity(task.WorkspaceId, task.Id, TaskActivityKind.Archived, "Task archived.");
-        await audit.LogAsync(Entry(AuditActions.Delete, task.Id, task.WorkspaceId), ct);
-        await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success();
+    private sealed class SlimRow
+    {
+        public Guid EventId { get; set; }
+        public string ReferenceNo { get; set; } = "";
+        public string Title { get; set; } = "";
+        public Guid? AssigneeId { get; set; }
+        public string? AssigneeName { get; set; }
+        public Guid? StatusId { get; set; }
+        public string? StatusName { get; set; }
+        public string? StatusColor { get; set; }
+        public bool IsClosed { get; set; }
+        public bool IsInitial { get; set; }
+        public Guid? PriorityId { get; set; }
+        public string? PriorityCode { get; set; }
+        public string? PriorityName { get; set; }
+        public string? PriorityColor { get; set; }
+        public DateTimeOffset? StartAt { get; set; }
+        public DateTimeOffset? DueAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public int CompletionPercent { get; set; }
+        public DateTimeOffset? StatusSince { get; set; }
+        public decimal? Estimated { get; set; }
+        public decimal? Actual { get; set; }
     }
 
-    public async Task<Result<IReadOnlyList<TaskActivityDto>>> GetActivityAsync(Guid id, CancellationToken ct = default)
+    public async Task<Result<IReadOnlyList<TaskActivityDto>>> GetActivityAsync(Guid eventId, CancellationToken ct = default)
     {
-        if (await GetVisibleAsync(id, ct) is null) return Result.Failure<IReadOnlyList<TaskActivityDto>>(TaskErrors.NotFound("Task"));
-        var items = await (
+        if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<IReadOnlyList<TaskActivityDto>>(TaskErrors.NotFound("Task"));
+        var list = await (
             from a in activities.Query()
-            where a.TaskId == id
+            where a.EventId == eventId
             join u in users.Query() on a.ActorId equals u.Id into ug
             from u in ug.DefaultIfEmpty()
             orderby a.OccurredAt descending
             select new TaskActivityDto(a.Id, a.Kind, a.Message, a.ActorId, u != null ? u.DisplayName : null, a.OccurredAt))
             .ToListAsync(ct);
-        return Result.Success<IReadOnlyList<TaskActivityDto>>(items);
+        return Result.Success<IReadOnlyList<TaskActivityDto>>(list);
     }
 
-    public async Task<Result<IReadOnlyList<TaskAuditDto>>> GetAuditAsync(Guid id, CancellationToken ct = default)
+    public async Task<Result<IReadOnlyList<TaskAuditDto>>> GetAuditAsync(Guid eventId, CancellationToken ct = default)
     {
-        if (await GetVisibleAsync(id, ct) is null) return Result.Failure<IReadOnlyList<TaskAuditDto>>(TaskErrors.NotFound("Task"));
-        var key = id.ToString();
-        var items = await auditLogs.Query()
-            .Where(a => a.ResourceType == "Task" && a.ResourceId == key)
+        if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<IReadOnlyList<TaskAuditDto>>(TaskErrors.NotFound("Task"));
+        var id = eventId.ToString();
+        var list = await auditLogs.Query()
+            .Where(a => a.ResourceType == "Task" && a.ResourceId == id)
             .OrderByDescending(a => a.OccurredAt)
-            .Select(a => new TaskAuditDto(a.Id, a.Action, a.ActorDisplayName, a.OccurredAt, a.Reason))
+            .Select(a => new TaskAuditDto(a.Id, a.Action, a.OccurredAt, a.ActorUserId, a.ActorDisplayName))
             .ToListAsync(ct);
-        return Result.Success<IReadOnlyList<TaskAuditDto>>(items);
+        return Result.Success<IReadOnlyList<TaskAuditDto>>(list);
     }
 
-    public async Task<Result<MyTasksGroups>> GetMyTasksAsync(CancellationToken ct = default)
+    public async Task<Result<IReadOnlyList<StatusDto>>> ListStatusesAsync(string statusTypeCode, CancellationToken ct = default)
     {
-        var me = currentUser.UserId;
-        var now = clock.UtcNow;
-        var today = now.Date;
-        var mine = Project(tasks.Query().Where(t => t.AssigneeId == me), now);
-        var list = await mine.ToListAsync(ct);
-
-        List<TaskListItemDto> Where(Func<TaskListItemDto, bool> p) => list.Where(p).ToList();
-        var groups = new MyTasksGroups(
-            Overdue: Where(x => x.DueDate != null && x.DueDate.Value.UtcDateTime.Date < today && x.StatusCategory is not (TaskStatusCategory.Completed or TaskStatusCategory.Cancelled or TaskStatusCategory.Rejected)),
-            Today: Where(x => x.DueDate != null && x.DueDate.Value.UtcDateTime.Date == today),
-            Upcoming: Where(x => x.DueDate != null && x.DueDate.Value.UtcDateTime.Date > today),
-            Waiting: Where(x => x.StatusCategory == TaskStatusCategory.Waiting));
-        return Result.Success(groups);
+        var list = await (
+            from s in statuses.Query()
+            join t in statusTypes.Query() on s.StatusTypeId equals t.Id
+            where t.Code == statusTypeCode
+            orderby s.SortOrder
+            select new StatusDto(s.Id, s.Code, s.Name, s.Color, s.SortOrder, s.IsInitial, s.IsClosed, s.IsActive))
+            .ToListAsync(ct);
+        return Result.Success<IReadOnlyList<StatusDto>>(list);
     }
 
-    // ---- Subtasks ----------------------------------------------------------
-    public async Task<Result<IReadOnlyList<TaskListItemDto>>> ListSubtasksAsync(Guid id, CancellationToken ct = default)
+    // ---- Writes -----------------------------------------------------------
+
+    public Task<Result<CreateTaskResult>> CreateAsync(CreateTaskRequest request, CancellationToken ct = default)
+        => CreateInternalAsync(request, parentEventId: null, ct);
+
+    public async Task<Result<CreateTaskResult>> CreateSubtaskAsync(Guid parentEventId, CreateTaskRequest request, CancellationToken ct = default)
     {
-        if (await GetVisibleAsync(id, ct) is null) return Result.Failure<IReadOnlyList<TaskListItemDto>>(TaskErrors.NotFound("Task"));
-        var items = await Project(tasks.Query().Where(t => t.ParentTaskId == id), clock.UtcNow).ToListAsync(ct);
-        return Result.Success<IReadOnlyList<TaskListItemDto>>(items.OrderBy(x => x.CreatedAt).ToList());
+        var parent = await GetVisibleTaskAsync(parentEventId, ct);
+        if (parent is null) return Result.Failure<CreateTaskResult>(TaskErrors.NotFound("Parent task"));
+        if (await IsClosedAsync(parentEventId, ct)) return Result.Failure<CreateTaskResult>(TaskErrors.Closed());
+        return await CreateInternalAsync(request, parentEventId, ct);
     }
 
-    // ---- Checklist ---------------------------------------------------------
-    public async Task<Result<IReadOnlyList<ChecklistItemDto>>> ListChecklistAsync(Guid id, CancellationToken ct = default)
+    private async Task<Result<CreateTaskResult>> CreateInternalAsync(CreateTaskRequest request, Guid? parentEventId, CancellationToken ct)
     {
-        if (await GetVisibleAsync(id, ct) is null) return Result.Failure<IReadOnlyList<ChecklistItemDto>>(TaskErrors.NotFound("Task"));
-        var items = await checklist.Query().Where(c => c.TaskId == id).OrderBy(c => c.SortOrder).ThenBy(c => c.CreatedAt)
-            .Select(c => new ChecklistItemDto(c.Id, c.Text, c.IsDone, c.SortOrder)).ToListAsync(ct);
-        return Result.Success<IReadOnlyList<ChecklistItemDto>>(items);
-    }
+        if (currentUser.WorkspaceId is not { } ws) return Result.Failure<CreateTaskResult>(TaskErrors.NoScope());
 
-    public async Task<Result<Guid>> AddChecklistItemAsync(Guid id, CreateChecklistItemRequest request, CancellationToken ct = default)
-    {
-        var task = await GetVisibleAsync(id, ct);
-        if (task is null) return Result.Failure<Guid>(TaskErrors.NotFound("Task"));
-        if (await IsClosedAsync(task.StatusId, ct)) return Result.Failure<Guid>(TaskErrors.Closed());
-        var count = await checklist.Query().CountAsync(c => c.TaskId == id, ct);
-        var item = new TaskChecklistItem(task.WorkspaceId, id, request.Text, count);
-        checklist.Add(item);
+        var eventTypeId = await eventTypes.Query()
+            .Where(t => t.Code == EventTypeCodes.TaskManagement).Select(t => (Guid?)t.Id).FirstOrDefaultAsync(ct);
+        if (eventTypeId is null) return Result.Failure<CreateTaskResult>(TaskErrors.NoStatuses());
+
+        var initial = await (from s in statuses.Query()
+                             join t in statusTypes.Query() on s.StatusTypeId equals t.Id
+                             where t.Code == StatusTypeCodes.TaskStatus && s.IsActive
+                             orderby s.IsInitial descending, s.SortOrder
+                             select s).FirstOrDefaultAsync(ct);
+        if (initial is null) return Result.Failure<CreateTaskResult>(TaskErrors.NoInitialStatus());
+
+        if (request.PriorityStatusId is { } pri && !await IsPriorityAsync(pri, ct))
+            return Result.Failure<CreateTaskResult>(TaskErrors.PriorityInvalid());
+
+        var ev = new Event(ws, eventTypeId.Value);
+        events.Add(ev);
+
+        var reference = await NextReferenceNoAsync(ct);
+        var te = new TaskEvent(ws, ev.Id, reference, request.Title, currentUser.UserId);
+        te.UpdateDetails(request.Title, request.Description);
+        te.SetSchedule(request.StartAt, request.DueAt, request.EstimatedTime);
+        te.Assign(request.AssigneeId);
+        te.SetPriority(request.PriorityStatusId);
+        if (parentEventId is { } p) te.PlaceUnderParent(p);
+        tasks.Add(te);
+
+        eventStatuses.Add(new EventStatus(ws, ev.Id, initial.Id, null));
+        AddActivity(ws, ev.Id, parentEventId is null ? EventActivityKind.Created : EventActivityKind.SubtaskAdded, $"Task {reference} created.");
+        if (parentEventId is { } pe) AddActivity(ws, pe, EventActivityKind.SubtaskAdded, $"Subtask {reference} added.");
+
+        await audit.LogAsync(Entry(AuditActions.Create, ev.Id, ws, $"{{\"reference\":\"{reference}\"}}"), ct);
+        if ((await GetSettingsAsync(ws, ct)).NotifyOnTaskCreated)
+            await NotifyAsync(te, MailTemplateCodes.TaskCreated, [request.AssigneeId], NoExtras, ct);
         await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success(item.Id);
+        return Result.Success(new CreateTaskResult(ev.Id, reference));
     }
 
-    public async Task<Result> UpdateChecklistItemAsync(Guid id, Guid itemId, UpdateChecklistItemRequest request, CancellationToken ct = default)
+    public async Task<Result> UpdateAsync(Guid eventId, UpdateTaskRequest request, CancellationToken ct = default)
     {
-        if (await GetVisibleAsync(id, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
-        var item = await checklist.Query().FirstOrDefaultAsync(c => c.Id == itemId && c.TaskId == id, ct);
-        if (item is null) return Result.Failure(TaskErrors.NotFound("Checklist item"));
-        item.Update(request.Text, request.SortOrder);
-        item.SetDone(request.IsDone);
+        var te = await GetVisibleTaskAsync(eventId, ct);
+        if (te is null) return Result.Failure(TaskErrors.NotFound("Task"));
+        if (await IsClosedAsync(eventId, ct)) return Result.Failure(TaskErrors.Closed());
+
+        te.UpdateDetails(request.Title, request.Description);
+        te.SetSchedule(request.StartAt, request.DueAt, request.EstimatedTime);
+        te.SetCompletion(request.CompletionPercent, request.ActualTime);
+        AddActivity(te.WorkspaceId, eventId, EventActivityKind.Updated, "Task details updated.");
+        await audit.LogAsync(Entry(AuditActions.Update, eventId, te.WorkspaceId), ct);
         await unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }
 
-    public async Task<Result> RemoveChecklistItemAsync(Guid id, Guid itemId, CancellationToken ct = default)
+    public async Task<Result> ChangeStatusAsync(Guid eventId, ChangeStatusRequest request, CancellationToken ct = default)
     {
-        if (await GetVisibleAsync(id, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
-        var item = await checklist.Query().FirstOrDefaultAsync(c => c.Id == itemId && c.TaskId == id, ct);
-        if (item is null) return Result.Failure(TaskErrors.NotFound("Checklist item"));
-        checklist.Remove(item);
+        var te = await GetVisibleTaskAsync(eventId, ct);
+        if (te is null) return Result.Failure(TaskErrors.NotFound("Task"));
+
+        var status = await (from s in statuses.Query()
+                            join t in statusTypes.Query() on s.StatusTypeId equals t.Id
+                            where s.Id == request.StatusId && t.Code == StatusTypeCodes.TaskStatus
+                            select s).FirstOrDefaultAsync(ct);
+        if (status is null) return Result.Failure(TaskErrors.StatusInvalid());
+
+        var from = await SupersedeStatusAsync(eventId, te.WorkspaceId, status.Id, request.Note, ct);
+        AddActivity(te.WorkspaceId, eventId, EventActivityKind.StatusChanged, $"Status changed to {status.Name}.", from?.Id, status.Id);
+        await audit.LogAsync(Entry(AuditActions.Update, eventId, te.WorkspaceId, $"{{\"status\":\"{Escape(status.Name)}\"}}"), ct);
+
+        if ((await GetSettingsAsync(te.WorkspaceId, ct)).NotifyOnStatusChange)
+        {
+            var (code, extras) = StatusMail(status, from);
+            await NotifyAsync(te, code, [te.AssigneeId, te.ReporterId], extras, ct);
+        }
         await unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }
 
-    // ---- Dependencies ------------------------------------------------------
-    public async Task<Result<IReadOnlyList<TaskDependencyDto>>> ListDependenciesAsync(Guid id, CancellationToken ct = default)
+    /// <summary>Effective task settings for the workspace (a transient default when none is saved yet).</summary>
+    private async Task<TaskSettings> GetSettingsAsync(Guid workspaceId, CancellationToken ct) =>
+        await taskSettings.Query().FirstOrDefaultAsync(s => s.WorkspaceId == workspaceId, ct)
+        ?? new TaskSettings(workspaceId);
+
+    /// <summary>Supersedes the current event status (if any) and inserts the new one as current. Returns the previous Status.</summary>
+    private async Task<Status?> SupersedeStatusAsync(Guid eventId, Guid ws, Guid newStatusId, string? note, CancellationToken ct)
     {
-        if (await GetVisibleAsync(id, ct) is null) return Result.Failure<IReadOnlyList<TaskDependencyDto>>(TaskErrors.NotFound("Task"));
-        var items = await (
+        var current = await eventStatuses.Query().FirstOrDefaultAsync(es => es.EventId == eventId && es.IsCurrent, ct);
+        Status? from = null;
+        if (current is not null)
+        {
+            from = await statuses.GetByIdAsync(current.StatusId, ct);
+            current.Supersede();
+        }
+        eventStatuses.Add(new EventStatus(ws, eventId, newStatusId, note));
+        return from;
+    }
+
+    /// <summary>Chooses the notification template for a status transition (opened/completed/changed) + placeholders.</summary>
+    private static (string code, IReadOnlyDictionary<string, string> extras) StatusMail(Status to, Status? from)
+    {
+        var extras = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Status"] = to.Name,
+            ["OldStatus"] = from?.Name ?? string.Empty,
+        };
+        var code = to.IsClosed ? MailTemplateCodes.TaskCompleted
+            : from is { IsInitial: true } && !to.IsInitial ? MailTemplateCodes.TaskOpened
+            : MailTemplateCodes.TaskStatusChanged;
+        return (code, extras);
+    }
+
+    public async Task<Result> AssignAsync(Guid eventId, AssignTaskRequest request, CancellationToken ct = default)
+    {
+        var te = await GetVisibleTaskAsync(eventId, ct);
+        if (te is null) return Result.Failure(TaskErrors.NotFound("Task"));
+        if (request.AssigneeId is { } aid && !await users.Query().AnyAsync(u => u.Id == aid, ct))
+            return Result.Failure(TaskErrors.NotFound("Assignee"));
+
+        te.Assign(request.AssigneeId);
+        AddActivity(te.WorkspaceId, eventId, EventActivityKind.Assigned, request.AssigneeId is null ? "Task unassigned." : "Task assigned.");
+        await audit.LogAsync(Entry(AuditActions.Update, eventId, te.WorkspaceId), ct);
+        if (request.AssigneeId is not null && (await GetSettingsAsync(te.WorkspaceId, ct)).NotifyOnTaskAssigned)
+            await NotifyAsync(te, MailTemplateCodes.TaskAssigned, [request.AssigneeId], NoExtras, ct);
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
+    public async Task<Result> SetPriorityAsync(Guid eventId, SetPriorityRequest request, CancellationToken ct = default)
+    {
+        var te = await GetVisibleTaskAsync(eventId, ct);
+        if (te is null) return Result.Failure(TaskErrors.NotFound("Task"));
+        if (request.PriorityStatusId is { } pri && !await IsPriorityAsync(pri, ct))
+            return Result.Failure(TaskErrors.PriorityInvalid());
+
+        te.SetPriority(request.PriorityStatusId);
+        AddActivity(te.WorkspaceId, eventId, EventActivityKind.PriorityChanged, "Priority changed.");
+        await audit.LogAsync(Entry(AuditActions.Update, eventId, te.WorkspaceId), ct);
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
+    public async Task<Result> ArchiveAsync(Guid eventId, CancellationToken ct = default)
+    {
+        var te = await GetVisibleTaskAsync(eventId, ct);
+        if (te is null) return Result.Failure(TaskErrors.NotFound("Task"));
+        var ev = await events.GetByIdAsync(eventId, ct);
+
+        var actor = currentUser.UserId;
+        var when = clock.UtcNow;
+        te.SoftDelete(actor, when);
+        ev?.SoftDelete(actor, when);
+        await audit.LogAsync(Entry(AuditActions.Delete, eventId, te.WorkspaceId), ct);
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
+    // ---- Notes (Asset pattern) -------------------------------------------
+
+    public async Task<Result<IReadOnlyList<TaskNoteDto>>> ListNotesAsync(Guid eventId, CancellationToken ct = default)
+    {
+        if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<IReadOnlyList<TaskNoteDto>>(TaskErrors.NotFound("Task"));
+        var list = await (
+            from ea in eventAssets.Query()
+            where ea.EventId == eventId && ea.RelationType == EventAssetRelationTypes.Note
+            join n in notes.Query() on ea.AssetId equals n.AssetId
+            join u in users.Query() on n.CreatedBy equals u.Id into ug
+            from u in ug.DefaultIfEmpty()
+            orderby n.IsPinned descending, n.CreatedAt descending
+            select new TaskNoteDto(n.Id, n.Body, n.IsPinned, n.IsInternal, n.CreatedBy, u != null ? u.DisplayName : null, n.CreatedAt))
+            .ToListAsync(ct);
+        return Result.Success<IReadOnlyList<TaskNoteDto>>(list);
+    }
+
+    public async Task<Result<Guid>> AddNoteAsync(Guid eventId, CreateNoteRequest request, CancellationToken ct = default)
+    {
+        var te = await GetVisibleTaskAsync(eventId, ct);
+        if (te is null) return Result.Failure<Guid>(TaskErrors.NotFound("Task"));
+        var assetTypeId = await AssetTypeIdAsync(AssetTypeCodes.Note, ct);
+        if (assetTypeId is null) return Result.Failure<Guid>(TaskErrors.NotFound("Asset type"));
+
+        var asset = new Asset(te.WorkspaceId, assetTypeId.Value, "Note", null);
+        assets.Add(asset);
+        var note = new Note(te.WorkspaceId, asset.Id, request.Body, request.IsPinned, request.IsInternal);
+        notes.Add(note);
+        eventAssets.Add(new EventAsset(te.WorkspaceId, eventId, asset.Id, EventAssetRelationTypes.Note, null));
+        AddActivity(te.WorkspaceId, eventId, EventActivityKind.NoteAdded, "Note added.");
+        await audit.LogAsync(Entry(AuditActions.Update, eventId, te.WorkspaceId), ct);
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result.Success(note.Id);
+    }
+
+    public async Task<Result> UpdateNoteAsync(Guid eventId, Guid noteId, UpdateNoteRequest request, CancellationToken ct = default)
+    {
+        if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
+        var note = await NoteForEventAsync(eventId, noteId, ct);
+        if (note is null) return Result.Failure(TaskErrors.NotFound("Note"));
+        note.Update(request.Body, request.IsPinned, request.IsInternal);
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
+    public async Task<Result> RemoveNoteAsync(Guid eventId, Guid noteId, CancellationToken ct = default)
+    {
+        if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
+        var note = await NoteForEventAsync(eventId, noteId, ct);
+        if (note is null) return Result.Failure(TaskErrors.NotFound("Note"));
+        await RemoveAssetLinkAsync(eventId, note.AssetId, ct);
+        note.SoftDelete(currentUser.UserId, clock.UtcNow);
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
+    // ---- Documents (Asset pattern) ---------------------------------------
+
+    public async Task<Result<IReadOnlyList<TaskDocumentDto>>> ListDocumentsAsync(Guid eventId, CancellationToken ct = default)
+    {
+        if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<IReadOnlyList<TaskDocumentDto>>(TaskErrors.NotFound("Task"));
+        var list = await (
+            from ea in eventAssets.Query()
+            where ea.EventId == eventId && ea.RelationType == EventAssetRelationTypes.Document
+            join d in documents.Query() on ea.AssetId equals d.AssetId
+            join u in users.Query() on d.CreatedBy equals u.Id into ug
+            from u in ug.DefaultIfEmpty()
+            orderby d.CreatedAt descending
+            select new TaskDocumentDto(d.Id, d.FileName, d.FilePath, d.MimeType, d.CreatedBy, u != null ? u.DisplayName : null, d.CreatedAt))
+            .ToListAsync(ct);
+        return Result.Success<IReadOnlyList<TaskDocumentDto>>(list);
+    }
+
+    public async Task<Result<Guid>> AddDocumentAsync(Guid eventId, CreateDocumentRequest request, CancellationToken ct = default)
+    {
+        var te = await GetVisibleTaskAsync(eventId, ct);
+        if (te is null) return Result.Failure<Guid>(TaskErrors.NotFound("Task"));
+        var assetTypeId = await AssetTypeIdAsync(AssetTypeCodes.Document, ct);
+        if (assetTypeId is null) return Result.Failure<Guid>(TaskErrors.NotFound("Asset type"));
+
+        var asset = new Asset(te.WorkspaceId, assetTypeId.Value, request.FileName, null);
+        assets.Add(asset);
+        var doc = new Document(te.WorkspaceId, asset.Id, request.FileName, request.FilePath, request.MimeType, null);
+        documents.Add(doc);
+        eventAssets.Add(new EventAsset(te.WorkspaceId, eventId, asset.Id, EventAssetRelationTypes.Document, null));
+        AddActivity(te.WorkspaceId, eventId, EventActivityKind.DocumentAdded, "Document added.");
+        await audit.LogAsync(Entry(AuditActions.Update, eventId, te.WorkspaceId), ct);
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result.Success(doc.Id);
+    }
+
+    public async Task<Result> RemoveDocumentAsync(Guid eventId, Guid documentId, CancellationToken ct = default)
+    {
+        if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
+        var doc = await (from ea in eventAssets.Query()
+                         where ea.EventId == eventId && ea.RelationType == EventAssetRelationTypes.Document
+                         join d in documents.Query() on ea.AssetId equals d.AssetId
+                         where d.Id == documentId
+                         select d).FirstOrDefaultAsync(ct);
+        if (doc is null) return Result.Failure(TaskErrors.NotFound("Document"));
+        await RemoveAssetLinkAsync(eventId, doc.AssetId, ct);
+        doc.SoftDelete(currentUser.UserId, clock.UtcNow);
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result.Success();
+    }
+
+    // ---- Dependencies -----------------------------------------------------
+
+    public async Task<Result<IReadOnlyList<TaskDependencyDto>>> ListDependenciesAsync(Guid eventId, CancellationToken ct = default)
+    {
+        if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<IReadOnlyList<TaskDependencyDto>>(TaskErrors.NotFound("Task"));
+        var list = await (
             from d in dependencies.Query()
-            where d.TaskId == id
-            join t in tasks.Query() on d.DependsOnTaskId equals t.Id
-            select new TaskDependencyDto(d.Id, d.DependsOnTaskId, t.TaskNumber, t.Title, d.DependencyType, d.IsBlocking))
+            where d.EventId == eventId
+            join te in tasks.Query() on d.DependsOnEventId equals te.EventId
+            select new TaskDependencyDto(d.Id, d.DependsOnEventId, te.ReferenceNo, te.Title, d.IsBlocking))
             .ToListAsync(ct);
-        return Result.Success<IReadOnlyList<TaskDependencyDto>>(items);
+        return Result.Success<IReadOnlyList<TaskDependencyDto>>(list);
     }
 
-    public async Task<Result<Guid>> AddDependencyAsync(Guid id, CreateDependencyRequest request, CancellationToken ct = default)
+    public async Task<Result<Guid>> AddDependencyAsync(Guid eventId, CreateDependencyRequest request, CancellationToken ct = default)
     {
-        var task = await GetVisibleAsync(id, ct);
-        if (task is null) return Result.Failure<Guid>(TaskErrors.NotFound("Task"));
-        if (await IsClosedAsync(task.StatusId, ct)) return Result.Failure<Guid>(TaskErrors.Closed());
-        if (request.DependsOnTaskId == id) return Result.Failure<Guid>(TaskErrors.SelfDependency());
-        if (!await tasks.Query().AnyAsync(t => t.Id == request.DependsOnTaskId, ct)) return Result.Failure<Guid>(TaskErrors.NotFound("Dependency task"));
-        if (await dependencies.Query().AnyAsync(d => d.TaskId == id && d.DependsOnTaskId == request.DependsOnTaskId, ct))
+        var te = await GetVisibleTaskAsync(eventId, ct);
+        if (te is null) return Result.Failure<Guid>(TaskErrors.NotFound("Task"));
+        if (await IsClosedAsync(eventId, ct)) return Result.Failure<Guid>(TaskErrors.Closed());
+        if (request.DependsOnEventId == eventId) return Result.Failure<Guid>(TaskErrors.SelfDependency());
+        if (!await tasks.Query().AnyAsync(t => t.EventId == request.DependsOnEventId, ct))
+            return Result.Failure<Guid>(TaskErrors.NotFound("Dependency task"));
+        if (await dependencies.Query().AnyAsync(d => d.EventId == eventId && d.DependsOnEventId == request.DependsOnEventId, ct))
             return Result.Failure<Guid>(TaskErrors.DuplicateLink());
 
-        var dep = new TaskDependency(task.WorkspaceId, id, request.DependsOnTaskId, request.DependencyType, request.IsBlocking);
+        var dep = new EventDependency(te.WorkspaceId, eventId, request.DependsOnEventId, request.IsBlocking);
         dependencies.Add(dep);
-        AddActivity(task.WorkspaceId, id, TaskActivityKind.RelationChanged, "Dependency added.");
-        await audit.LogAsync(Entry(AuditActions.Update, id, task.WorkspaceId), ct);
+        AddActivity(te.WorkspaceId, eventId, EventActivityKind.RelationChanged, "Dependency added.");
+        await audit.LogAsync(Entry(AuditActions.Update, eventId, te.WorkspaceId), ct);
         await unitOfWork.SaveChangesAsync(ct);
         return Result.Success(dep.Id);
     }
 
-    public async Task<Result> RemoveDependencyAsync(Guid id, Guid dependencyId, CancellationToken ct = default)
+    public async Task<Result> RemoveDependencyAsync(Guid eventId, Guid dependencyId, CancellationToken ct = default)
     {
-        if (await GetVisibleAsync(id, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
-        var dep = await dependencies.Query().FirstOrDefaultAsync(d => d.Id == dependencyId && d.TaskId == id, ct);
+        if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
+        var dep = await dependencies.Query().FirstOrDefaultAsync(d => d.Id == dependencyId && d.EventId == eventId, ct);
         if (dep is null) return Result.Failure(TaskErrors.NotFound("Dependency"));
-        dependencies.Remove(dep);
+        dep.SoftDelete(currentUser.UserId, clock.UtcNow);
         await unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }
 
-    // ---- Relations ---------------------------------------------------------
-    public async Task<Result<IReadOnlyList<TaskRelationDto>>> ListRelationsAsync(Guid id, CancellationToken ct = default)
+    // ---- Daily reports ----------------------------------------------------
+
+    public async Task<Result<IReadOnlyList<TaskDailyReportDto>>> ListDailyReportsAsync(Guid eventId, CancellationToken ct = default)
     {
-        if (await GetVisibleAsync(id, ct) is null) return Result.Failure<IReadOnlyList<TaskRelationDto>>(TaskErrors.NotFound("Task"));
-        return Result.Success(await RelationsOf(id, ct));
+        if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<IReadOnlyList<TaskDailyReportDto>>(TaskErrors.NotFound("Task"));
+        var list = await (
+            from r in dailyReports.Query()
+            where r.EventId == eventId
+            join u in users.Query() on r.UserId equals u.Id into ug
+            from u in ug.DefaultIfEmpty()
+            join s in statuses.Query() on r.StatusId equals s.Id into sg
+            from s in sg.DefaultIfEmpty()
+            orderby r.ReportDate descending, r.CreatedAt descending
+            select new TaskDailyReportDto(r.Id, r.ReportDate, r.Description, r.EstimatedTime, r.ActualTime, r.RemainingTime,
+                r.StatusId, s != null ? s.Name : null, s != null ? s.Color : null,
+                r.UserId, u != null ? u.DisplayName : null, r.CreatedAt))
+            .ToListAsync(ct);
+        return Result.Success<IReadOnlyList<TaskDailyReportDto>>(list);
     }
 
-    public async Task<Result<Guid>> AddRelationAsync(Guid id, CreateRelationRequest request, CancellationToken ct = default)
+    public async Task<Result<Guid>> AddDailyReportAsync(Guid eventId, CreateDailyReportRequest request, CancellationToken ct = default)
     {
-        var task = await GetVisibleAsync(id, ct);
-        if (task is null) return Result.Failure<Guid>(TaskErrors.NotFound("Task"));
-        if (await IsClosedAsync(task.StatusId, ct)) return Result.Failure<Guid>(TaskErrors.Closed());
-        if (await relations.Query().AnyAsync(r => r.TaskId == id && r.RelatedEntityType == request.RelatedEntityType
-            && r.RelatedEntityId == request.RelatedEntityId && r.Role == request.Role, ct))
-            return Result.Failure<Guid>(TaskErrors.DuplicateLink());
+        var te = await GetVisibleTaskAsync(eventId, ct);
+        if (te is null) return Result.Failure<Guid>(TaskErrors.NotFound("Task"));
 
-        var rel = new TaskRelation(task.WorkspaceId, id, request.RelatedEntityType, request.RelatedEntityId, request.Role, request.Reason);
-        relations.Add(rel);
-        AddActivity(task.WorkspaceId, id, TaskActivityKind.RelationChanged, "Relation added.");
-        await audit.LogAsync(Entry(AuditActions.Update, id, task.WorkspaceId), ct);
+        var settings = await GetSettingsAsync(te.WorkspaceId, ct);
+        if (settings.RequireEstimatedTime && request.EstimatedTime is null) return Result.Failure<Guid>(TaskErrors.ReportTimeRequired("estimated"));
+        if (settings.RequireActualTime && request.ActualTime is null) return Result.Failure<Guid>(TaskErrors.ReportTimeRequired("actual"));
+
+        var author = currentUser.UserId;
+        var date = request.ReportDate ?? DateOnly.FromDateTime(clock.UtcNow.UtcDateTime);
+        if (!settings.AllowMultipleReportsPerDay &&
+            await dailyReports.Query().AnyAsync(r => r.EventId == eventId && r.ReportDate == date && r.UserId == author, ct))
+            return Result.Failure<Guid>(TaskErrors.DuplicateReport());
+
+        // Validate any selected status belongs to TASK_STATUS.
+        Status? selected = null;
+        if (request.StatusId is { } sid)
+        {
+            selected = await (from s in statuses.Query()
+                              join t in statusTypes.Query() on s.StatusTypeId equals t.Id
+                              where s.Id == sid && t.Code == StatusTypeCodes.TaskStatus
+                              select s).FirstOrDefaultAsync(ct);
+            if (selected is null) return Result.Failure<Guid>(TaskErrors.StatusInvalid());
+        }
+
+        var report = new EventDailyReport(te.WorkspaceId, eventId, author, date, request.Description,
+            request.EstimatedTime, request.ActualTime, request.RemainingTime, request.StatusId);
+        dailyReports.Add(report);
+        AddActivity(te.WorkspaceId, eventId, EventActivityKind.DailyReportAdded, $"Daily report filed for {date:yyyy-MM-dd}.");
+
+        // If the report selected a status that changes the current task status, record a status change.
+        Status? from = null;
+        var statusChanged = false;
+        if (selected is not null && settings.AllowStatusChangeFromReport)
+        {
+            var current = await eventStatuses.Query().FirstOrDefaultAsync(es => es.EventId == eventId && es.IsCurrent, ct);
+            if (current is null || current.StatusId != selected.Id)
+            {
+                from = current is not null ? await statuses.GetByIdAsync(current.StatusId, ct) : null;
+                current?.Supersede();
+                eventStatuses.Add(new EventStatus(te.WorkspaceId, eventId, selected.Id, $"Daily report {date:yyyy-MM-dd}"));
+                AddActivity(te.WorkspaceId, eventId, EventActivityKind.StatusChanged, $"Status changed to {selected.Name}.", from?.Id, selected.Id);
+                statusChanged = true;
+            }
+        }
+
+        await audit.LogAsync(Entry(AuditActions.Update, eventId, te.WorkspaceId), ct);
+
+        var extras = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Date"] = date.ToString("yyyy-MM-dd"),
+            ["DailyReportDescription"] = request.Description,
+            ["Status"] = selected?.Name ?? string.Empty,
+            ["OldStatus"] = from?.Name ?? string.Empty,
+        };
+        var notify = statusChanged ? settings.NotifyOnStatusChange : settings.NotifyOnDailyReport;
+        if (notify)
+        {
+            var code = statusChanged ? MailTemplateCodes.DailyReportStatusChanged : MailTemplateCodes.DailyReportSubmitted;
+            await NotifyAsync(te, code, [te.ReporterId, te.AssigneeId], extras, ct);
+        }
         await unitOfWork.SaveChangesAsync(ct);
-        return Result.Success(rel.Id);
+        return Result.Success(report.Id);
     }
 
-    public async Task<Result> RemoveRelationAsync(Guid id, Guid relationId, CancellationToken ct = default)
+    public async Task<Result> UpdateDailyReportAsync(Guid eventId, Guid reportId, UpdateDailyReportRequest request, CancellationToken ct = default)
     {
-        if (await GetVisibleAsync(id, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
-        var rel = await relations.Query().FirstOrDefaultAsync(r => r.Id == relationId && r.TaskId == id, ct);
-        if (rel is null) return Result.Failure(TaskErrors.NotFound("Relation"));
-        relations.Remove(rel);
+        if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
+        var report = await dailyReports.Query().FirstOrDefaultAsync(r => r.Id == reportId && r.EventId == eventId, ct);
+        if (report is null) return Result.Failure(TaskErrors.NotFound("Daily report"));
+
+        // Moving to a day the author already reported would collide with the unique index.
+        if (request.ReportDate != report.ReportDate &&
+            await dailyReports.Query().AnyAsync(r => r.EventId == eventId && r.ReportDate == request.ReportDate
+                && r.UserId == report.UserId && r.Id != reportId, ct))
+            return Result.Failure(TaskErrors.DuplicateReport());
+
+        report.Update(request.ReportDate, request.Description, request.EstimatedTime, request.ActualTime, request.RemainingTime, request.StatusId);
         await unitOfWork.SaveChangesAsync(ct);
         return Result.Success();
     }
 
-    /// <summary>
-    /// Refresh Relations (Task Model spec §3). Idempotent — must not duplicate links.
-    /// Auto-suggestion from the task's source record activates once the business
-    /// modules (customers/invoices/assets…) exist; for now it returns current links.
-    /// </summary>
-    public async Task<Result<IReadOnlyList<TaskRelationDto>>> RefreshRelationsAsync(Guid id, CancellationToken ct = default)
+    public async Task<Result> RemoveDailyReportAsync(Guid eventId, Guid reportId, CancellationToken ct = default)
     {
-        if (await GetVisibleAsync(id, ct) is null) return Result.Failure<IReadOnlyList<TaskRelationDto>>(TaskErrors.NotFound("Task"));
-        return Result.Success(await RelationsOf(id, ct));
+        if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
+        var report = await dailyReports.Query().FirstOrDefaultAsync(r => r.Id == reportId && r.EventId == eventId, ct);
+        if (report is null) return Result.Failure(TaskErrors.NotFound("Daily report"));
+        report.SoftDelete(currentUser.UserId, clock.UtcNow);
+        await unitOfWork.SaveChangesAsync(ct);
+        return Result.Success();
     }
 
-    private async Task<IReadOnlyList<TaskRelationDto>> RelationsOf(Guid id, CancellationToken ct)
-        => await relations.Query().Where(r => r.TaskId == id)
-            .Select(r => new TaskRelationDto(r.Id, r.RelatedEntityType, r.RelatedEntityId, r.Role, r.Reason)).ToListAsync(ct);
+    // ---- Helpers ----------------------------------------------------------
 
-    // ---- visibility (DataScope) -------------------------------------------
+    private IQueryable<TaskRow> BaseQuery() =>
+        from te in tasks.Query()
+        join e in events.Query() on te.EventId equals e.Id
+        join esCur in eventStatuses.Query().Where(es => es.IsCurrent) on te.EventId equals esCur.EventId into esg
+        from esCur in esg.DefaultIfEmpty()
+        join st in statuses.Query() on esCur.StatusId equals st.Id into stg
+        from st in stg.DefaultIfEmpty()
+        join pr in statuses.Query() on te.PriorityStatusId equals pr.Id into prg
+        from pr in prg.DefaultIfEmpty()
+        join au in users.Query() on te.AssigneeId equals au.Id into aug
+        from au in aug.DefaultIfEmpty()
+        select new TaskRow { te = te, st = st, pr = pr, au = au, statusSince = (DateTimeOffset?)esCur.CreatedAt };
+
+    private static System.Linq.Expressions.Expression<Func<TaskRow, TaskListItemDto>> Projection(DateTimeOffset now) =>
+        x => new TaskListItemDto(
+            x.te.EventId, x.te.ReferenceNo, x.te.Title,
+            x.st != null ? x.st.Id : (Guid?)null, x.st != null ? x.st.Name : null, x.st != null ? x.st.Color : null, x.st != null && x.st.IsClosed,
+            x.te.PriorityStatusId, x.pr != null ? x.pr.Name : null, x.pr != null ? x.pr.Color : null,
+            x.te.AssigneeId, x.au != null ? x.au.DisplayName : null,
+            x.te.DueAt, x.te.DueAt != null && x.te.DueAt < now && (x.st == null || !x.st.IsClosed),
+            x.te.CompletionPercent, x.te.CreatedAt);
+
+    private sealed class TaskRow
+    {
+        public TaskEvent te { get; set; } = default!;
+        public Status? st { get; set; }
+        public Status? pr { get; set; }
+        public User? au { get; set; }
+        /// <summary>When the current status was set (for "completed recently" analytics).</summary>
+        public DateTimeOffset? statusSince { get; set; }
+    }
+
+    private async Task<TaskEvent?> GetVisibleTaskAsync(Guid eventId, CancellationToken ct)
+    {
+        var te = await tasks.Query().FirstOrDefaultAsync(x => x.EventId == eventId, ct);
+        if (te is null) return null;
+        var visible = await VisibleAssigneeFilterAsync(ct);
+        if (visible is null) return te;
+        var me = currentUser.UserId;
+        var ok = te.AssigneeId == me || te.ReporterId == me || (te.AssigneeId is { } a && visible.Contains(a));
+        return ok ? te : null;
+    }
+
+    private async Task<bool> IsClosedAsync(Guid eventId, CancellationToken ct) =>
+        await (from es in eventStatuses.Query()
+               where es.EventId == eventId && es.IsCurrent
+               join s in statuses.Query() on es.StatusId equals s.Id
+               select s.IsClosed).FirstOrDefaultAsync(ct);
+
+    private async Task<bool> IsPriorityAsync(Guid statusId, CancellationToken ct) =>
+        await (from s in statuses.Query()
+               join t in statusTypes.Query() on s.StatusTypeId equals t.Id
+               where s.Id == statusId && t.Code == StatusTypeCodes.TaskPriority
+               select s.Id).AnyAsync(ct);
+
+    private async Task<Guid?> AssetTypeIdAsync(string code, CancellationToken ct) =>
+        await assetTypes.Query().Where(a => a.Code == code).Select(a => (Guid?)a.Id).FirstOrDefaultAsync(ct);
+
+    private Task<Note?> NoteForEventAsync(Guid eventId, Guid noteId, CancellationToken ct) =>
+        (from ea in eventAssets.Query()
+         where ea.EventId == eventId && ea.RelationType == EventAssetRelationTypes.Note
+         join n in notes.Query() on ea.AssetId equals n.AssetId
+         where n.Id == noteId
+         select n).FirstOrDefaultAsync(ct);
+
+    private async Task RemoveAssetLinkAsync(Guid eventId, Guid assetId, CancellationToken ct)
+    {
+        var when = clock.UtcNow;
+        var actor = currentUser.UserId;
+        var link = await eventAssets.Query().FirstOrDefaultAsync(ea => ea.EventId == eventId && ea.AssetId == assetId, ct);
+        link?.SoftDelete(actor, when);
+        var asset = await assets.GetByIdAsync(assetId, ct);
+        asset?.SoftDelete(actor, when);
+    }
+
+    private async Task<string> NextReferenceNoAsync(CancellationToken ct)
+    {
+        var seq = await tasks.Query().CountAsync(ct) + 1;
+        return $"TSK-{seq:D5}";
+    }
+
+    private void AddActivity(Guid ws, Guid eventId, EventActivityKind kind, string message, Guid? fromStatusId = null, Guid? toStatusId = null)
+    {
+        var act = new EventActivity(ws, eventId, kind, message, currentUser.UserId, clock.UtcNow);
+        if (fromStatusId is not null || toStatusId is not null) act.WithStatusChange(fromStatusId, toStatusId);
+        activities.Add(act);
+    }
+
     /// <summary>
-    /// Returns null when the caller may see all workspace tasks (Cluster scope or
-    /// broader), otherwise the set of assignee user-ids whose tasks are visible
-    /// (own + reporter are always added at query time). Empty set = own/reporter only.
+    /// Queues a task notification onto the mail outbox (best-effort; never aborts the operation).
+    /// Recipients are resolved to their email addresses, excluding the acting user. Persisted by
+    /// the caller's SaveChanges and delivered later by the dispatcher worker.
     /// </summary>
+    private async Task NotifyAsync(TaskEvent te, string templateCode, IEnumerable<Guid?> recipientUserIds,
+        IReadOnlyDictionary<string, string> extraPlaceholders, CancellationToken ct)
+    {
+        try
+        {
+            var me = currentUser.UserId;
+            var ids = recipientUserIds.Where(id => id is { } && id != me).Select(id => id!.Value).Distinct().ToList();
+            if (ids.Count == 0) return;
+
+            var people = await users.Query()
+                .Where(u => ids.Contains(u.Id) && u.Email != null)
+                .Select(u => new { u.Email, u.DisplayName }).ToListAsync(ct);
+            var recipients = people
+                .Where(p => !string.IsNullOrWhiteSpace(p.Email))
+                .Select(p => new MailRecipientInput(p.Email!, p.DisplayName))
+                .ToList();
+            if (recipients.Count == 0) return;
+
+            var actorName = me is { } a
+                ? await users.Query().Where(u => u.Id == a).Select(u => u.DisplayName).FirstOrDefaultAsync(ct) ?? "Someone"
+                : "Someone";
+            var priorityName = te.PriorityStatusId is { } pid
+                ? await statuses.Query().Where(s => s.Id == pid).Select(s => s.Name).FirstOrDefaultAsync(ct) : null;
+            var assigneeName = te.AssigneeId is { } aid
+                ? await users.Query().Where(u => u.Id == aid).Select(u => u.DisplayName).FirstOrDefaultAsync(ct) : null;
+            var reporterName = te.ReporterId is { } rid
+                ? await users.Query().Where(u => u.Id == rid).Select(u => u.DisplayName).FirstOrDefaultAsync(ct) : null;
+            var dueDate = te.DueAt?.ToString("yyyy-MM-dd") ?? string.Empty;
+
+            // Provide both our placeholder names and the doc's names (Mail doc §5/§12) as aliases.
+            var placeholders = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["TaskRef"] = te.ReferenceNo,
+                ["ReferenceNo"] = te.ReferenceNo,
+                ["TaskTitle"] = te.Title,
+                ["Actor"] = actorName,
+                ["UserName"] = actorName,
+                ["AssigneeName"] = assigneeName ?? string.Empty,
+                ["ReporterName"] = reporterName ?? string.Empty,
+                ["Priority"] = priorityName ?? string.Empty,
+                ["PriorityName"] = priorityName ?? string.Empty,
+                ["DueDate"] = dueDate,
+                ["Date"] = clock.UtcNow.ToString("yyyy-MM-dd"),
+                ["ReportDate"] = clock.UtcNow.ToString("yyyy-MM-dd"),
+            };
+            foreach (var kv in extraPlaceholders) placeholders[kv.Key] = kv.Value;
+            if (placeholders.TryGetValue("Status", out var st)) placeholders["NewStatus"] = st;
+
+            var fallbackSubject = $"{te.ReferenceNo}: {te.Title}";
+            var fallbackBody = $"<p>Update on <strong>{te.ReferenceNo} — {te.Title}</strong> by {actorName}.</p>";
+
+            await mailOutbox.QueueAsync(new MailRequest(te.WorkspaceId, templateCode, fallbackSubject, fallbackBody,
+                placeholders, recipients), ct);
+        }
+        catch
+        {
+            // Notifications are best-effort; a queueing failure must not roll back the task operation.
+        }
+    }
+
+    private static readonly IReadOnlyDictionary<string, string> NoExtras =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+    private static AuditEntry Entry(string action, Guid eventId, Guid ws, string? newValues = null) => new()
+    {
+        Action = action,
+        Module = "Tasks",
+        ResourceType = "Task",
+        ResourceId = eventId.ToString(),
+        WorkspaceId = ws,
+        NewValues = newValues,
+    };
+
+    private static string Escape(string s) => s.Replace("\\", "\\\\").Replace("\"", "\\\"");
+
+    // ---- DataScope visibility (own/team/department/broader) ----------------
+
     private async Task<HashSet<Guid>?> VisibleAssigneeFilterAsync(CancellationToken ct)
     {
-        if (currentUser.IsPlatformAdmin) return null;
-        if (currentUser.UserId is not { } me) return new HashSet<Guid>();
-
-        var perms = await permissions.ResolveAsync(me, ct);
-        var scope = perms.ScopeFor(PermissionCatalog.TaskView) ?? DataScope.Own;
-        if (scope >= DataScope.Cluster) return null; // Cluster/Organization/Workspace/AllTenants → all workspace tasks
-        if (scope == DataScope.Own) return new HashSet<Guid>();
+        if (currentUser.UserId is not { } me) return [];
+        var scope = (await permissions.ResolveAsync(me, ct)).ScopeFor(PermissionCatalog.TaskView) ?? DataScope.Own;
+        if (scope >= DataScope.Cluster) return null; // sees everything in the workspace
+        if (scope == DataScope.Own) return [me];
 
         var myNode = await employees.Query().Where(e => e.UserId == me).Select(e => e.PlacementNodeId).FirstOrDefaultAsync(ct);
-        if (myNode is not { } placement) return new HashSet<Guid>();
+        if (myNode is not { } nodeId) return [me];
 
-        var all = await nodes.Query().Select(n => new NodeRef(n.Id, n.ParentId, n.NodeType)).ToListAsync(ct);
-        var root = scope == DataScope.Department ? NearestDepartment(all, placement) : placement;
-        var subtree = Descendants(all, root);
-        var userIds = await employees.Query()
+        var nodes = await structureNodes.Query().Select(n => new NodeRef(n.Id, n.ParentId, n.NodeType)).ToListAsync(ct);
+        var root = scope == DataScope.Department ? NearestDepartment(nodes, nodeId) : nodeId;
+        var subtree = Descendants(nodes, root);
+        var ids = await employees.Query()
             .Where(e => e.PlacementNodeId != null && subtree.Contains(e.PlacementNodeId.Value))
             .Select(e => e.UserId).ToListAsync(ct);
-        return userIds.ToHashSet();
+        var set = ids.ToHashSet();
+        set.Add(me);
+        return set;
     }
-
-    private static IQueryable<TaskItem> ApplyVisibility(IQueryable<TaskItem> q, HashSet<Guid>? visible, Guid? me)
-        => visible is null ? q
-            : q.Where(t => t.AssigneeId == me || t.ReporterId == me || (t.AssigneeId != null && visible.Contains(t.AssigneeId.Value)));
-
-    private async Task<IQueryable<TaskItem>> VisibleTasksAsync(CancellationToken ct)
-        => ApplyVisibility(tasks.Query(), await VisibleAssigneeFilterAsync(ct), currentUser.UserId);
-
-    private async Task<TaskItem?> GetVisibleAsync(Guid id, CancellationToken ct)
-    {
-        var task = await tasks.GetByIdAsync(id, ct);
-        if (task is null) return null;
-        var visible = await VisibleAssigneeFilterAsync(ct);
-        if (visible is null) return task;
-        var me = currentUser.UserId;
-        var ok = task.AssigneeId == me || task.ReporterId == me || (task.AssigneeId is { } a && visible.Contains(a));
-        return ok ? task : null;
-    }
-
-    /// <summary>
-    /// Closed-status protection (Task Model spec §10): a task in a Final status
-    /// (Done/Cancelled/Rejected) is locked against content edits and structural
-    /// changes. Status changes are still allowed so the task can be reopened.
-    /// </summary>
-    private async Task<bool> IsClosedAsync(Guid statusId, CancellationToken ct)
-        => await statuses.Query().AnyAsync(s => s.Id == statusId && s.IsFinal, ct);
 
     private readonly record struct NodeRef(Guid Id, Guid? ParentId, StructureNodeType NodeType);
 
@@ -473,44 +1008,18 @@ public sealed class TaskService(
 
     private static HashSet<Guid> Descendants(List<NodeRef> all, Guid root)
     {
-        var children = all.Where(n => n.ParentId is not null).GroupBy(n => n.ParentId!.Value)
+        var childrenByParent = all.Where(n => n.ParentId is not null)
+            .GroupBy(n => n.ParentId!.Value)
             .ToDictionary(g => g.Key, g => g.Select(n => n.Id).ToList());
         var result = new HashSet<Guid> { root };
-        var stack = new Stack<Guid>([root]);
+        var stack = new Stack<Guid>();
+        stack.Push(root);
         while (stack.Count > 0)
         {
-            if (!children.TryGetValue(stack.Pop(), out var kids)) continue;
-            foreach (var k in kids.Where(result.Add)) stack.Push(k);
+            var id = stack.Pop();
+            if (!childrenByParent.TryGetValue(id, out var kids)) continue;
+            foreach (var kid in kids.Where(result.Add)) stack.Push(kid);
         }
         return result;
     }
-
-    // ---- helpers -----------------------------------------------------------
-    private IQueryable<TaskListItemDto> Project(IQueryable<TaskItem> q, DateTimeOffset now)
-        => from t in q
-           join s in statuses.Query() on t.StatusId equals s.Id
-           join au in users.Query() on t.AssigneeId equals au.Id into ag
-           from au in ag.DefaultIfEmpty()
-           select new TaskListItemDto(
-               t.Id, t.TaskNumber, t.Title, t.Priority,
-               s.Id, s.Name, s.Category, s.Color,
-               t.AssigneeId, au != null ? au.DisplayName : null,
-               t.DueDate, t.DueDate != null && t.DueDate < now && !s.IsFinal,
-               t.CompletionPercent, t.CreatedAt);
-
-    private async Task<string> NextTaskNumberAsync(Guid workspaceId, CancellationToken ct)
-    {
-        var seq = await tasks.Query().IgnoreQueryFilters().Where(t => t.WorkspaceId == workspaceId).CountAsync(ct) + 1;
-        return $"TSK-{seq:D5}";
-    }
-
-    private void AddActivity(Guid ws, Guid taskId, TaskActivityKind kind, string message, Guid? fromStatusId = null, Guid? toStatusId = null)
-        => activities.Add(new TaskActivity(ws, taskId, kind, message, currentUser.UserId, clock.UtcNow, fromStatusId, toStatusId));
-
-    private static AuditEntry Entry(string action, Guid id, Guid ws, string? newValues = null) => new()
-    {
-        Action = action, Module = "Tasks", ResourceType = "Task", ResourceId = id.ToString(), WorkspaceId = ws, NewValues = newValues,
-    };
-
-    private static string Escape(string value) => value.Replace("\\", "\\\\").Replace("\"", "\\\"");
 }

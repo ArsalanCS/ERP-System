@@ -19,6 +19,7 @@
     "accessControl": "Access Control",
     "businessStructure": "Business Structure",
     "tasks": "Tasks",
+    "mail": "Mail",
     "security": "Security",
     "audit": "Audit & Activity",
     "settings": "Settings",
@@ -265,7 +266,9 @@
     "filters": {
       "allStatuses": "All statuses",
       "allPriorities": "All priorities",
-      "overdue": "Overdue only"
+      "overdue": "Overdue only",
+      "status": "Status",
+      "priority": "Priority"
     },
     "priority": {
       "0": "Low",
@@ -298,7 +301,80 @@
       "reminder": "Reminder",
       "completion": "Completion %",
       "source": "Source",
-      "manual": "Manual"
+      "manual": "Manual",
+      "noPriority": "No priority",
+      "noStatus": "No status"
+    },
+    "dashboard": {
+      "link": "Dashboard",
+      "title": "Task Dashboard",
+      "total": "Total",
+      "open": "Open",
+      "overdue": "Overdue",
+      "dueToday": "Due today",
+      "completed": "Completed",
+      "unassigned": "Unassigned",
+      "completed7": "Done (7 days)",
+      "avgCompletion": "Avg. completion",
+      "byStatus": "By status",
+      "byPriority": "By priority",
+      "byAssignee": "Workload by assignee",
+      "trend": "Activity (last 14 days)",
+      "created": "Created",
+      "completedLegend": "Completed",
+      "openCount": "{{count}} open",
+      "overdueCount": "{{count}} overdue",
+      "noData": "No data yet",
+      "inProgress": "In progress",
+      "dueThisWeek": "Due this week",
+      "highPriority": "High / critical",
+      "reportsToday": "Reports today",
+      "timeAnalysis": "Time analysis",
+      "estimatedTotal": "Estimated",
+      "actualTotal": "Actual",
+      "variance": "Variance",
+      "gantt": "Schedule",
+      "recentActivity": "Recent activity"
+    },
+    "settings": {
+      "link": "Settings",
+      "title": "Task Settings",
+      "subtitle": "Manage the statuses and priorities used across this workspace's tasks.",
+      "statuses": "Statuses",
+      "priorities": "Priorities",
+      "empty": "Nothing configured yet",
+      "initial": "Start",
+      "closed": "Closed",
+      "inactive": "Inactive",
+      "newStatus": "New value",
+      "editStatus": "Edit value",
+      "name": "Name",
+      "color": "Colour",
+      "initialHint": "Starting status for new tasks",
+      "closedHint": "Counts as completed/closed",
+      "activeHint": "Active (available for selection)",
+      "saved": "Saved.",
+      "deleted": "Deleted.",
+      "deleteTitle": "Delete value",
+      "deleteConfirm": "Delete \"{{name}}\"? This cannot be undone.",
+      "deleteHint": "In-use values cannot be deleted — deactivate them instead.",
+      "config": {
+        "title": "Workspace configuration",
+        "dailyRules": "Daily report rules",
+        "notifications": "Notifications",
+        "dashboard": "Dashboard",
+        "dailyReportRequired": "Daily report required",
+        "allowStatusChangeFromReport": "Allow status change from report",
+        "allowStatusChangeFromReportHint": "Selecting a status in a daily report updates the task status.",
+        "requireEstimatedTime": "Require estimated time",
+        "requireActualTime": "Require actual time",
+        "allowMultipleReportsPerDay": "Allow multiple reports per day",
+        "notifyOnTaskCreated": "On task created",
+        "notifyOnTaskAssigned": "On task assigned",
+        "notifyOnStatusChange": "On status change",
+        "notifyOnDailyReport": "On daily report",
+        "dashboardDefaultRangeDays": "Default range (days)"
+      }
     },
     "myTasks": "My tasks",
     "allTasks": "All tasks",
@@ -313,6 +389,7 @@
       "general": "General",
       "planning": "Planning",
       "subtasks": "Subtasks",
+      "dailyReports": "Daily Reports",
       "checklist": "Checklist",
       "notes": "Notes",
       "documents": "Documents",
@@ -323,6 +400,28 @@
     },
     "logs": {
       "empty": "No activity yet"
+    },
+    "dailyReports": {
+      "empty": "No daily reports yet",
+      "file": "File report",
+      "filed": "Daily report filed",
+      "date": "Date",
+      "hours": "Hours",
+      "hoursValue": "{{value}}h",
+      "completion": "Progress %",
+      "summaryPlaceholder": "What did you work on today?",
+      "blockersPlaceholder": "Any blockers? (optional)",
+      "blockers": "Blockers",
+      "description": "Description",
+      "descriptionPlaceholder": "What was done today…",
+      "estimated": "Estimated (h)",
+      "actual": "Actual (h)",
+      "remaining": "Remaining (h)",
+      "estimatedShort": "Est",
+      "actualShort": "Act",
+      "remainingShort": "Rem",
+      "statusChange": "Change task status",
+      "noStatusChange": "No status change"
     },
     "subtasks": {
       "empty": "No subtasks yet",
@@ -353,6 +452,7 @@
       "dependsOn": "Depends on",
       "blocking": "Blocking",
       "linkedRecords": "Linked records",
+      "linkedRecordsHint": "Linking customers, invoices, assets and other records will be available as those modules are added.",
       "noRecords": "No linked records",
       "refresh": "Refresh relations",
       "refreshed": "Relations refreshed.",
@@ -360,7 +460,11 @@
       "entityType": "Type",
       "entityId": "Record ID",
       "role": "Role",
-      "roles": { "0": "Primary source", "1": "Supporting", "2": "Reference" }
+      "roles": {
+        "0": "Primary source",
+        "1": "Supporting",
+        "2": "Reference"
+      }
     },
     "gantt": {
       "noDates": "No dates to chart",
@@ -416,6 +520,24 @@
         "saved": "Workflow saved.",
         "archived": "Archived."
       }
+    },
+    "reports": {
+      "link": "Reports",
+      "title": "Task reports",
+      "subtitle": "Filtered task analytics and daily report log.",
+      "tabs": {
+        "tasks": "Tasks",
+        "dailyReports": "Daily reports"
+      },
+      "scope": "Scope",
+      "scopeAll": "All",
+      "scopeOverdue": "Overdue",
+      "scopeClosed": "Closed",
+      "task": "Task",
+      "author": "Author",
+      "from": "From",
+      "to": "To",
+      "noReports": "No daily reports match the filters."
     }
   },
   "security": {
@@ -581,6 +703,68 @@
       "updated": "Role updated.",
       "permissionsSaved": "Permissions saved.",
       "deleted": "Role deleted."
+    }
+  },
+  "mail": {
+    "title": "Mail",
+    "subtitle": "Notification outbox and email templates.",
+    "tabs": {
+      "outbox": "Outbox",
+      "templates": "Templates"
+    },
+    "columns": {
+      "subject": "Subject",
+      "status": "Status",
+      "recipients": "Recipients",
+      "attempts": "Attempts",
+      "created": "Created"
+    },
+    "filters": {
+      "allStatuses": "All statuses"
+    },
+    "status": {
+      "0": "Pending",
+      "1": "Processing",
+      "2": "Sent",
+      "3": "Failed",
+      "4": "Cancelled"
+    },
+    "empty": {
+      "title": "No messages",
+      "body": "Notifications appear here as tasks are created, assigned and updated."
+    },
+    "detail": {
+      "title": "Message",
+      "recipients": "Recipients",
+      "body": "Body",
+      "lastError": "Last error",
+      "attempts": "Attempts",
+      "noAttempts": "No delivery attempts yet."
+    },
+    "attempt": {
+      "ok": "Delivered",
+      "fail": "Failed"
+    },
+    "actions": {
+      "retry": "Requeue",
+      "cancel": "Cancel"
+    },
+    "templates": {
+      "name": "Name",
+      "subject": "Subject",
+      "body": "Body (HTML)",
+      "active": "Active",
+      "inactive": "Inactive",
+      "editHint": "Customise the subject and body for this workspace.",
+      "placeholdersHint": "Placeholders: {{TaskRef}}, {{TaskTitle}}, {{Status}}, {{Actor}}, {{Date}}.",
+      "global": "Global",
+      "bodyText": "Plain-text body",
+      "overrideHint": "This is a global default template. Saving creates a workspace-specific override."
+    },
+    "feedback": {
+      "requeued": "Message requeued for delivery.",
+      "cancelled": "Message cancelled.",
+      "templateSaved": "Template saved."
     }
   },
   "audit": {

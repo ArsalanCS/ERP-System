@@ -10,16 +10,16 @@ const DAY = 86_400_000;
 
 export function GanttTab({ task }: { task: TaskDetails }) {
   const { t } = useTranslation();
-  const subsQuery = useQuery({ queryKey: taskKeys.subtasks(task.id), queryFn: () => tasksApi.subtasks(task.id) });
-  const depsQuery = useQuery({ queryKey: taskKeys.dependencies(task.id), queryFn: () => tasksApi.dependencies(task.id) });
+  const subsQuery = useQuery({ queryKey: taskKeys.subtasks(task.eventId), queryFn: () => tasksApi.subtasks(task.eventId) });
+  const depsQuery = useQuery({ queryKey: taskKeys.dependencies(task.eventId), queryFn: () => tasksApi.dependencies(task.eventId) });
 
   if (subsQuery.isLoading) return <Card className="card-pad"><div className="flex justify-center py-6"><Spinner size={20} /></div></Card>;
 
   const subs = subsQuery.data ?? [];
   const deps = depsQuery.data ?? [];
   const rows: Row[] = [
-    { id: task.id, label: task.title, number: task.taskNumber, start: ms(task.startDate), due: ms(task.dueDate), progress: task.completionPercent, overdue: task.isOverdue, hasDeps: deps.length > 0 },
-    ...subs.map((s) => ({ id: s.id, label: s.title, number: s.taskNumber, start: null, due: ms(s.dueDate), progress: s.completionPercent, overdue: s.isOverdue, hasDeps: false })),
+    { id: task.eventId, label: task.title, number: task.referenceNo, start: ms(task.startAt), due: ms(task.dueAt), progress: task.completionPercent, overdue: task.isOverdue, hasDeps: deps.length > 0 },
+    ...subs.map((s) => ({ id: s.eventId, label: s.title, number: s.referenceNo, start: null, due: ms(s.dueAt), progress: s.completionPercent, overdue: s.isOverdue, hasDeps: false })),
   ];
 
   const points = rows.flatMap((r) => [r.start, r.due]).filter((x): x is number => x !== null);
@@ -27,9 +27,8 @@ export function GanttTab({ task }: { task: TaskDetails }) {
     return <Card className="card-pad"><EmptyState icon="history" title={t('tasks.gantt.noDates')} body={t('tasks.gantt.noDatesBody')} /></Card>;
   }
   const min = Math.min(...points);
-  const max = Math.max(...points) + DAY; // pad a day so single-day bars are visible
+  const max = Math.max(...points) + DAY;
   const span = Math.max(max - min, DAY);
-
   const pct = (v: number) => `${((v - min) / span) * 100}%`;
 
   return (
@@ -68,9 +67,9 @@ export function GanttTab({ task }: { task: TaskDetails }) {
             {deps.map((d) => (
               <li key={d.id} className="flex items-center gap-2 text-[12.5px] text-ink-2">
                 <Icon name="link" size={12} className="flex-none text-clay" />
-                <span className="font-mono text-[11px] text-ink-4">{task.taskNumber}</span>
+                <span className="font-mono text-[11px] text-ink-4">{task.referenceNo}</span>
                 <span className="text-ink-4">{t('tasks.relations.dependsOn')}</span>
-                <span className="font-mono text-[11px] text-ink-4">{d.dependsOnNumber}</span>
+                <span className="font-mono text-[11px] text-ink-4">{d.dependsOnReferenceNo}</span>
                 <span className="truncate">{d.dependsOnTitle}</span>
                 {d.isBlocking && <span className="text-[11px] font-semibold uppercase text-red">{t('tasks.relations.blocking')}</span>}
               </li>

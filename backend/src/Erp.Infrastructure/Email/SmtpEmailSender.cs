@@ -50,6 +50,9 @@ public sealed class SmtpEmailSender(IConfiguration config, ILogger<SmtpEmailSend
             "Confirm email", url, ct);
     }
 
+    public Task SendMessageAsync(string toEmail, string subject, string htmlBody, CancellationToken ct = default)
+        => DeliverAsync(toEmail, subject, htmlBody, ct);
+
     private async Task SendAsync(string to, string subject, string body, string cta, string url, CancellationToken ct)
     {
         var html = $"""
@@ -65,7 +68,22 @@ public sealed class SmtpEmailSender(IConfiguration config, ILogger<SmtpEmailSend
               </div>
             </body></html>
             """;
+        // Token flows are best-effort — never fail the surrounding operation (e.g. user
+        // creation) because mail delivery failed. The link is logged so the flow can still
+        // be completed and the misconfiguration diagnosed.
+        try
+        {
+            await DeliverAsync(to, subject, html, ct);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to send '{Subject}' to {To} via {Host}:{Port}. Link: {Url}",
+                subject, to, Host, Port, url);
+        }
+    }
 
+    private async Task DeliverAsync(string to, string subject, string html, CancellationToken ct)
+    {
         using var msg = new MailMessage
         {
             From = new MailAddress(FromAddress, FromName),
@@ -85,18 +103,7 @@ public sealed class SmtpEmailSender(IConfiguration config, ILogger<SmtpEmailSend
             client.Credentials = new NetworkCredential(User, Password);
         }
 
-        try
-        {
-            await client.SendMailAsync(msg, ct);
-            logger.LogInformation("Sent '{Subject}' to {To} via {Host}:{Port}.", subject, to, Host, Port);
-        }
-        catch (Exception ex)
-        {
-            // Email is best-effort — never fail the surrounding operation (e.g. user
-            // creation) because mail delivery failed. The link is logged so the
-            // flow can still be completed and the misconfiguration diagnosed.
-            logger.LogError(ex, "Failed to send '{Subject}' to {To} via {Host}:{Port}. Link: {Url}",
-                subject, to, Host, Port, url);
-        }
+        await client.SendMailAsync(msg, ct);
+        logger.LogInformation("Sent '{Subject}' to {To} via {Host}:{Port}.", subject, to, Host, Port);
     }
 }

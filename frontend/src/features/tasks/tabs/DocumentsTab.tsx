@@ -8,14 +8,14 @@ export function DocumentsTab({ taskId, canManage }: { taskId: string; canManage:
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [fileName, setFileName] = useState('');
-  const [url, setUrl] = useState('');
+  const [filePath, setFilePath] = useState('');
 
   const query = useQuery({ queryKey: taskKeys.documents(taskId), queryFn: () => tasksApi.documents(taskId) });
   const invalidate = () => queryClient.invalidateQueries({ queryKey: taskKeys.documents(taskId) });
 
   const add = useMutation({
-    mutationFn: () => tasksApi.addDocument(taskId, { fileName: fileName.trim(), url: url.trim() || null }),
-    onSuccess: () => { setFileName(''); setUrl(''); void invalidate(); },
+    mutationFn: () => tasksApi.addDocument(taskId, { fileName: fileName.trim(), filePath: filePath.trim(), mimeType: null }),
+    onSuccess: () => { setFileName(''); setFilePath(''); void invalidate(); },
   });
   const remove = useMutation({
     mutationFn: (docId: string) => tasksApi.removeDocument(taskId, docId),
@@ -37,12 +37,12 @@ export function DocumentsTab({ taskId, canManage }: { taskId: string; canManage:
             <li key={d.id} className="group flex items-center gap-3 px-3 py-2.5">
               <Icon name="download" size={15} className="flex-none text-ink-4" />
               <div className="min-w-0 flex-1">
-                {d.url ? (
-                  <a href={d.url} target="_blank" rel="noreferrer" className="truncate text-[13.5px] font-medium text-clay hover:underline">{d.fileName}</a>
+                {d.filePath ? (
+                  <a href={d.filePath} target="_blank" rel="noreferrer" className="truncate text-[13.5px] font-medium text-clay hover:underline">{d.fileName}</a>
                 ) : (
                   <span className="truncate text-[13.5px] font-medium text-ink">{d.fileName}</span>
                 )}
-                {d.fileType && <span className="ms-2 text-[11px] uppercase text-ink-4">{d.fileType}</span>}
+                {d.mimeType && <span className="ms-2 text-[11px] uppercase text-ink-4">{d.mimeType}</span>}
               </div>
               {canManage && (
                 <button type="button" title={t('common.delete')} onClick={() => remove.mutate(d.id)}
@@ -55,10 +55,10 @@ export function DocumentsTab({ taskId, canManage }: { taskId: string; canManage:
         </ul>
       )}
       {canManage && (
-        <form className="mt-3 flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); if (fileName.trim()) add.mutate(); }}>
+        <form className="mt-3 flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); if (fileName.trim() && filePath.trim()) add.mutate(); }}>
           <div className="min-w-[160px] flex-1"><Input label={t('tasks.documents.fileName')} value={fileName} onChange={(e) => setFileName(e.target.value)} /></div>
-          <div className="min-w-[200px] flex-1"><Input label={t('tasks.documents.link')} value={url} onChange={(e) => setUrl(e.target.value)} /></div>
-          <Button type="submit" size="sm" disabled={!fileName.trim() || add.isPending}>{t('common.add')}</Button>
+          <div className="min-w-[200px] flex-1"><Input label={t('tasks.documents.link')} value={filePath} onChange={(e) => setFilePath(e.target.value)} /></div>
+          <Button type="submit" size="sm" disabled={!fileName.trim() || !filePath.trim() || add.isPending}>{t('common.add')}</Button>
         </form>
       )}
     </Card>

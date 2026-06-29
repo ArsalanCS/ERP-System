@@ -1,0 +1,22 @@
+using Erp.Domain.Common;
+
+namespace Erp.Domain.Events;
+
+/// <summary>
+/// Base event record (Event/Asset architecture §5): minimal by design — it only
+/// identifies that an event exists and its <see cref="EventTypeId"/>. Type-specific
+/// detail lives in extension tables (e.g. <see cref="TaskEvent"/>). Tenant-owned so
+/// the same two-layer isolation (EF query filter + Postgres RLS) applies.
+/// </summary>
+public sealed class Event : TenantEntity
+{
+    private Event() { } // EF
+
+    public Event(Guid workspaceId, Guid eventTypeId)
+    {
+        AssignWorkspace(workspaceId);
+        EventTypeId = eventTypeId;
+    }
+
+    public Guid EventTypeId { get; private set; }
+}

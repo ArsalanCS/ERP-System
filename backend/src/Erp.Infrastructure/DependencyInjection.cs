@@ -91,6 +91,10 @@ public static class DependencyInjection
         services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         services.AddScoped<ISecurityPolicyRepository, SecurityPolicyRepository>();
 
+        // Mail outbox dispatcher + background worker.
+        services.AddScoped<IMailDispatcher, Mail.MailDispatcher>();
+        services.AddHostedService<Mail.MailDispatcherService>();
+
         return services;
     }
 }

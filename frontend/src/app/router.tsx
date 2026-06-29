@@ -26,12 +26,19 @@ const BusinessStructurePage = lazy(() =>
   import('@/features/structure/BusinessStructurePage').then((m) => ({ default: m.BusinessStructurePage })),
 );
 const TasksPage = lazy(() => import('@/features/tasks/TasksPage').then((m) => ({ default: m.TasksPage })));
+const TaskDashboardPage = lazy(() =>
+  import('@/features/tasks/TaskDashboardPage').then((m) => ({ default: m.TaskDashboardPage })),
+);
+const TaskSettingsPage = lazy(() =>
+  import('@/features/tasks/TaskSettingsPage').then((m) => ({ default: m.TaskSettingsPage })),
+);
+const TaskReportsPage = lazy(() =>
+  import('@/features/tasks/TaskReportsPage').then((m) => ({ default: m.TaskReportsPage })),
+);
 const TaskDetailsPage = lazy(() =>
   import('@/features/tasks/TaskDetailsPage').then((m) => ({ default: m.TaskDetailsPage })),
 );
-const TaskWorkflowsPage = lazy(() =>
-  import('@/features/tasks/TaskWorkflowsPage').then((m) => ({ default: m.TaskWorkflowsPage })),
-);
+const MailPage = lazy(() => import('@/features/mail/MailPage').then((m) => ({ default: m.MailPage })));
 const SecurityPage = lazy(() =>
   import('@/features/security/SecurityPage').then((m) => ({ default: m.SecurityPage })),
 );
@@ -99,8 +106,11 @@ export const router = createBrowserRouter([
             handle: { crumbKey: 'nav.businessStructure' },
           },
           { path: 'tasks', element: <TasksPage />, handle: { crumbKey: 'nav.tasks' } },
-          { path: 'tasks/workflows', element: <TaskWorkflowsPage />, handle: { crumbKey: 'tasks.workflow.title' } },
+          { path: 'tasks/dashboard', element: <TaskDashboardPage />, handle: { crumbKey: 'nav.tasks' } },
+          { path: 'tasks/reports', element: <TaskReportsPage />, handle: { crumbKey: 'nav.tasks' } },
+          { path: 'tasks/settings', element: <TaskSettingsPage />, handle: { crumbKey: 'nav.tasks' } },
           { path: 'tasks/:id', element: <TaskDetailsPage />, handle: { crumbKey: 'nav.tasks' } },
+          { path: 'mail', element: <MailPage />, handle: { crumbKey: 'nav.mail' } },
           { path: 'security', element: <SecurityPage />, handle: { crumbKey: 'nav.security' } },
           { path: 'audit', element: <AuditPage />, handle: { crumbKey: 'nav.audit' } },
           { path: 'settings', element: <SettingsPage />, handle: { crumbKey: 'nav.settings' } },

@@ -1,21 +1,14 @@
-import { Badge, type BadgeTone } from '@/shared/ui';
-import { TaskStatusCategory } from './types';
-
-const CATEGORY_TONE: Record<TaskStatusCategory, BadgeTone> = {
-  [TaskStatusCategory.Open]: 'blue',
-  [TaskStatusCategory.InProgress]: 'clay',
-  [TaskStatusCategory.Waiting]: 'amber',
-  [TaskStatusCategory.Review]: 'violet',
-  [TaskStatusCategory.Completed]: 'green',
-  [TaskStatusCategory.Cancelled]: 'neutral',
-  [TaskStatusCategory.Rejected]: 'red',
-};
-
-/** Renders a custom status name with a tone derived from its reporting category. */
-export function TaskStatusBadge({ name, category }: { name: string; category: TaskStatusCategory }) {
+/** Renders a status/priority name as a pill tinted by its configured color. */
+export function TaskStatusBadge({ name, color }: { name: string | null; color?: string | null }) {
+  if (!name) return <span className="text-ink-4">—</span>;
+  const c = color || '#64748b';
   return (
-    <Badge tone={CATEGORY_TONE[category]} dot>
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[12px] font-medium"
+      style={{ color: c, backgroundColor: `${c}1a` }}
+    >
+      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: c }} />
       {name}
-    </Badge>
+    </span>
   );
 }

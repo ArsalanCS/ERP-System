@@ -16,4 +16,10 @@ public interface IEmailSender
 
     /// <summary>Sends an email-verification link to the owner of a newly self-registered workspace.</summary>
     Task SendEmailVerificationAsync(string toEmail, string displayName, string token, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends a generic notification message (already-rendered subject + HTML body). Used by
+    /// the mail outbox dispatcher for module notifications (e.g. task assigned).
+    /// </summary>
+    Task SendMessageAsync(string toEmail, string subject, string htmlBody, CancellationToken cancellationToken = default);
 }

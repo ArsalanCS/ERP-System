@@ -24,8 +24,7 @@ export function AuditTab({ taskId }: { taskId: string }) {
             <li key={a.id} className="flex items-center gap-3 px-3 py-2 text-[13px]">
               <span className="font-mono text-[11.5px] uppercase text-ink-4">{a.action}</span>
               <span className="text-ink-2">{a.actorName ?? '—'}</span>
-              {a.reason && <span className="text-ink-4">· {a.reason}</span>}
-              <span className="ms-auto text-[11.5px] text-ink-4">{formatDateTime(a.occurredAt, locale)}</span>
+              <span className="ms-auto text-[11.5px] text-ink-4">{formatDateTime(a.createdAt, locale)}</span>
             </li>
           ))}
         </ul>

@@ -18,15 +18,15 @@ public static class DependencyInjection
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IRoleService, RoleService>();
         services.AddScoped<IStructureService, StructureService>();
-        services.AddScoped<Tasks.ITaskService, Tasks.TaskService>();
-        services.AddScoped<Tasks.ITaskWorkflowService, Tasks.TaskWorkflowService>();
-        services.AddScoped<Tasks.ITaskNoteService, Tasks.TaskNoteService>();
-        services.AddScoped<Tasks.ITaskDocumentService, Tasks.TaskDocumentService>();
+        // Task Management (Event/Asset) services registered in Tasks/TaskModule.cs
+        Tasks.TaskModule.Register(services);
         services.AddScoped<Auditing.IAuditQueryService, Auditing.AuditQueryService>();
         services.AddScoped<Account.IAccountService, Account.AccountService>();
         services.AddScoped<Dashboard.IDashboardService, Dashboard.DashboardService>();
         services.AddScoped<Settings.ISettingsService, Settings.SettingsService>();
         services.AddScoped<Security.ISecurityPolicyService, Security.SecurityPolicyService>();
+        services.AddScoped<Abstractions.IMailOutbox, Mail.MailOutbox>();
+        services.AddScoped<Mail.IMailService, Mail.MailService>();
 
         return services;
     }
