@@ -52,70 +52,14 @@ public sealed class TaskService(
 
     public async Task<Result<PagedResult<TaskListItemDto>>> ListAsync(TaskListQuery query, CancellationToken ct = default)
     {
-        var now = clock.UtcNow;
-        var q = ApplyFilters(await VisibleRowsAsync(ct), query, now);
-        var dto = q.OrderByDescending(x => x.te.InsertedDate).Select(Projection(now));
-        var page = await dto.ToPagedResultAsync(query.Page, query.PageSize, ct);
-        return Result.Success(page);
-    }
-
-    /// <summary>Tasks visible to the caller under their task.view DataScope (own/team/department/broader).</summary>
-    private async Task<IQueryable<TaskRow>> VisibleRowsAsync(CancellationToken ct)
-    {
-        var visible = await VisibleAssigneeFilterAsync(ct);
-        var me = currentUser.UserId;
-        var q = BaseQuery();
-        if (visible is not null)
-            q = q.Where(x => (x.te.AssigneeId != null && visible.Contains(x.te.AssigneeId.Value)) || x.te.ReporterId == me);
-        return q;
-    }
-
-    private static IQueryable<TaskRow> ApplyFilters(IQueryable<TaskRow> q, TaskListQuery query, DateTimeOffset now)
-    {
-        if (query.StatusId is { } sid) q = q.Where(x => x.st != null && x.st.Id == sid);
-        if (query.PriorityStatusId is { } pid) q = q.Where(x => x.te.PriorityStatusId == pid);
-        if (query.AssigneeId is { } aid) q = q.Where(x => x.te.AssigneeId == aid);
-        if (query.ParentEventId is { } parent) q = q.Where(x => x.te.ParentEventId == parent);
-        if (query.Overdue == true) q = q.Where(x => x.te.DueAt != null && x.te.DueAt < now && (x.st == null || !x.st.IsClosed));
-        if (query.ClosedOnly == true) q = q.Where(x => x.st != null && x.st.IsClosed);
-        if (!string.IsNullOrWhiteSpace(query.Search))
-        {
-            var term = query.Search.Trim();
-            q = q.Where(x => x.te.Title.Contains(term) || x.te.ReferenceNo.Contains(term));
-        }
-        return q;
+        if (await ResolveScopeAsync(ct) is not { } scope) return Result.Failure<PagedResult<TaskListItemDto>>(TaskErrors.NoScope());
+        return Result.Success(await taskRead.ListAsync(scope, query, ct));
     }
 
     public async Task<Result<TaskDetailsDto>> GetAsync(long eventId, CancellationToken ct = default)
     {
-        if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<TaskDetailsDto>(TaskErrors.NotFound("Task"));
-        var now = clock.UtcNow;
-
-        var dto = await (
-            from te in tasks.Query()
-            where te.EventId == eventId
-            join esCur in eventStatuses.Query().Where(es => es.IsCurrent) on te.EventId equals esCur.EventId into esg
-            from esCur in esg.DefaultIfEmpty()
-            join st in statuses.Query() on esCur.StatusId equals st.Id into stg
-            from st in stg.DefaultIfEmpty()
-            join pr in statuses.Query() on te.PriorityStatusId equals pr.Id into prg
-            from pr in prg.DefaultIfEmpty()
-            join au in users.Query() on te.AssigneeId equals au.Id into aug
-            from au in aug.DefaultIfEmpty()
-            join rp in users.Query() on te.ReporterId equals rp.Id into rpg
-            from rp in rpg.DefaultIfEmpty()
-            select new TaskDetailsDto(
-                te.EventId, te.ReferenceNo, te.Title, te.Description,
-                st != null ? st.Id : (long?)null, st != null ? st.Name : null, st != null ? st.Color : null, st != null && st.IsClosed,
-                te.PriorityStatusId, pr != null ? pr.Name : null, pr != null ? pr.Color : null,
-                te.AssigneeId, au != null ? au.DisplayName : null,
-                te.ReporterId, rp != null ? rp.DisplayName : null,
-                te.ParentEventId,
-                te.StartAt, te.DueAt, te.EstimatedTime, te.ActualTime,
-                te.CompletionPercent, te.DueAt != null && te.DueAt < now && (st == null || !st.IsClosed),
-                te.InsertedDate, te.ChangedDate))
-            .FirstOrDefaultAsync(ct);
-
+        if (await ResolveScopeAsync(ct) is not { } scope) return Result.Failure<TaskDetailsDto>(TaskErrors.NoScope());
+        var dto = await taskRead.GetDetailsAsync(scope, eventId, ct);
         return dto is null ? Result.Failure<TaskDetailsDto>(TaskErrors.NotFound("Task")) : Result.Success(dto);
     }
 

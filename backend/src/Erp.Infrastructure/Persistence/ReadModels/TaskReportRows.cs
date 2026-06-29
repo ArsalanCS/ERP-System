@@ -68,6 +68,27 @@ public sealed class TaskGanttRow
     public bool IsClosed { get; set; }
 }
 
+public sealed class TaskListItemRow
+{
+    public long EventId { get; set; }
+    public string ReferenceNo { get; set; } = "";
+    public string Title { get; set; } = "";
+    public long? StatusId { get; set; }
+    public string? StatusName { get; set; }
+    public string? StatusColor { get; set; }
+    public bool StatusIsClosed { get; set; }
+    public long? PriorityStatusId { get; set; }
+    public string? PriorityName { get; set; }
+    public string? PriorityColor { get; set; }
+    public long? AssigneeId { get; set; }
+    public string? AssigneeName { get; set; }
+    public DateTimeOffset? DueAt { get; set; }
+    public bool IsOverdue { get; set; }
+    public int CompletionPercent { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public int TotalCount { get; set; }
+}
+
 public sealed class TaskDailyReportRow
 {
     public long Id { get; set; }

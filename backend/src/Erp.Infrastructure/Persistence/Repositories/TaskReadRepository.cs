@@ -38,6 +38,63 @@ public sealed class TaskReadRepository(ErpDbContext db, IClock clock) : ITaskRea
         return new VisibleScope(workspaceId, false, [.. set], me);
     }
 
+    public async Task<PagedResult<TaskListItemDto>> ListAsync(VisibleScope scope, TaskListQuery query, CancellationToken ct = default)
+    {
+        var now = clock.UtcNow;
+        var page = query.Page < 1 ? 1 : query.Page;
+        var size = query.PageSize is < 1 or > 200 ? 25 : query.PageSize;
+
+        var rows = await db.Set<TaskListItemRow>()
+            .FromSqlRaw("SELECT * FROM bpm.get_task_list(@p_ws,@p_all,@p_users,@p_me,@p_now,@p_search,@p_status,@p_priority,@p_assignee,@p_overdue,@p_closed,@p_parent,@p_offset,@p_limit)",
+                [.. Scope(scope),
+                new NpgsqlParameter("p_now", NpgsqlDbType.TimestampTz) { Value = now },
+                Text("p_search", string.IsNullOrWhiteSpace(query.Search) ? null : query.Search.Trim()),
+                NullableLong("p_status", query.StatusId), NullableLong("p_priority", query.PriorityStatusId),
+                NullableLong("p_assignee", query.AssigneeId),
+                new NpgsqlParameter("p_overdue", NpgsqlDbType.Boolean) { Value = query.Overdue ?? false },
+                new NpgsqlParameter("p_closed", NpgsqlDbType.Boolean) { Value = query.ClosedOnly ?? false },
+                NullableLong("p_parent", query.ParentEventId),
+                Int("p_offset", (page - 1) * size), Int("p_limit", size)])
+            .AsNoTracking().ToListAsync(ct);
+
+        var total = rows.Count > 0 ? rows[0].TotalCount : 0;
+        var items = rows.Select(r => new TaskListItemDto(
+            r.EventId, r.ReferenceNo, r.Title, r.StatusId, r.StatusName, r.StatusColor, r.StatusIsClosed,
+            r.PriorityStatusId, r.PriorityName, r.PriorityColor, r.AssigneeId, r.AssigneeName,
+            r.DueAt, r.IsOverdue, r.CompletionPercent, r.CreatedAt)).ToList();
+        return new PagedResult<TaskListItemDto>(items, page, size, total);
+    }
+
+    public async Task<TaskDetailsDto?> GetDetailsAsync(VisibleScope scope, long eventId, CancellationToken ct = default)
+    {
+        var now = clock.UtcNow;
+        return await (
+            from te in db.TaskEvents
+            where te.EventId == eventId
+                && (scope.All || (te.AssigneeId != null && scope.UserIds.Contains(te.AssigneeId.Value)) || te.ReporterId == scope.Me)
+            join esCur in db.EventStatuses.Where(es => es.IsCurrent) on te.EventId equals esCur.EventId into esg
+            from esCur in esg.DefaultIfEmpty()
+            join st in db.Statuses on esCur.StatusId equals st.Id into stg
+            from st in stg.DefaultIfEmpty()
+            join pr in db.Statuses on te.PriorityStatusId equals pr.Id into prg
+            from pr in prg.DefaultIfEmpty()
+            join au in db.Users on te.AssigneeId equals au.Id into aug
+            from au in aug.DefaultIfEmpty()
+            join rp in db.Users on te.ReporterId equals rp.Id into rpg
+            from rp in rpg.DefaultIfEmpty()
+            select new TaskDetailsDto(
+                te.EventId, te.ReferenceNo, te.Title, te.Description,
+                st != null ? st.Id : (long?)null, st != null ? st.Name : null, st != null ? st.Color : null, st != null && st.IsClosed,
+                te.PriorityStatusId, pr != null ? pr.Name : null, pr != null ? pr.Color : null,
+                te.AssigneeId, au != null ? au.DisplayName : null,
+                te.ReporterId, rp != null ? rp.DisplayName : null,
+                te.ParentEventId,
+                te.StartAt, te.DueAt, te.EstimatedTime, te.ActualTime,
+                te.CompletionPercent, te.DueAt != null && te.DueAt < now && (st == null || !st.IsClosed),
+                te.InsertedDate, te.ChangedDate))
+            .AsNoTracking().FirstOrDefaultAsync(ct);
+    }
+
     public async Task<TaskDashboardDto> GetDashboardAsync(VisibleScope scope, CancellationToken ct = default)
     {
         var now = clock.UtcNow;
@@ -153,6 +210,9 @@ public sealed class TaskReadRepository(ErpDbContext db, IClock clock) : ITaskRea
 
     private static NpgsqlParameter Int(string name, int v) =>
         new(name, NpgsqlDbType.Integer) { Value = v };
+
+    private static NpgsqlParameter Text(string name, string? v) =>
+        new(name, NpgsqlDbType.Text) { Value = (object?)v ?? DBNull.Value };
 
     private readonly record struct NodeRef(long Id, long? ParentId, StructureNodeType NodeType);
 

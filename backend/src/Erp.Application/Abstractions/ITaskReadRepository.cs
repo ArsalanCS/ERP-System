@@ -22,6 +22,12 @@ public interface ITaskReadRepository
     /// <summary>Resolves the visible user-id set for the caller's task.view DataScope.</summary>
     Task<VisibleScope> GetVisibleScopeAsync(long workspaceId, long me, DataScope scope, CancellationToken ct = default);
 
+    /// <summary>Heavy paged task list (bpm.get_task_list), scoped to the caller's visible set.</summary>
+    Task<PagedResult<TaskListItemDto>> ListAsync(VisibleScope scope, TaskListQuery query, CancellationToken ct = default);
+
+    /// <summary>Single task details, returning null when not visible to the caller.</summary>
+    Task<TaskDetailsDto?> GetDetailsAsync(VisibleScope scope, long eventId, CancellationToken ct = default);
+
     Task<TaskDashboardDto> GetDashboardAsync(VisibleScope scope, CancellationToken ct = default);
 
     Task<TaskReportDto> GetReportAsync(VisibleScope scope, TaskListQuery filters, CancellationToken ct = default);

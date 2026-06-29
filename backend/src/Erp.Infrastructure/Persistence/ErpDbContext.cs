@@ -80,6 +80,7 @@ public sealed class ErpDbContext(DbContextOptions<ErpDbContext> options, ITenant
         ConfigureRowModel<ReadModels.TaskRecentActivityRow>(modelBuilder, "task_recent_activity_row");
         ConfigureRowModel<ReadModels.TaskGanttRow>(modelBuilder, "task_gantt_row");
         ConfigureRowModel<ReadModels.TaskDailyReportRow>(modelBuilder, "task_daily_report_row");
+        ConfigureRowModel<ReadModels.TaskListItemRow>(modelBuilder, "task_list_item_row");
 
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
