@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace Erp.Domain.Workflow;
+namespace Erp.Domain.Statuses;
 
 /// <summary>
 /// A single status value under a <see cref="StatusType"/> (Event/Asset architecture §14).

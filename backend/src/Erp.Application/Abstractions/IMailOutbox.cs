@@ -1,4 +1,4 @@
-using Erp.Domain.Mail;
+using Erp.Domain.Mailing;
 
 namespace Erp.Application.Abstractions;
 

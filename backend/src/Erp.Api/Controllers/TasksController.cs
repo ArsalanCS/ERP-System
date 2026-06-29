@@ -16,13 +16,10 @@ namespace Erp.Api.Controllers;
 [Route("api/v1/tasks")]
 public sealed class TasksController(
     ITaskService tasks,
-    ITaskSettingsService settings,
     IValidator<CreateTaskRequest> createValidator,
     IValidator<UpdateTaskRequest> updateValidator,
     IValidator<CreateDailyReportRequest> createReportValidator,
-    IValidator<UpdateDailyReportRequest> updateReportValidator,
-    IValidator<CreateStatusRequest> createStatusValidator,
-    IValidator<UpdateStatusRequest> updateStatusValidator) : ApiControllerBase
+    IValidator<UpdateDailyReportRequest> updateReportValidator) : ApiControllerBase
 {
     [HttpGet]
     [RequirePermission(PermissionCatalog.TaskView)]
@@ -32,20 +29,6 @@ public sealed class TasksController(
     [HttpGet("my")]
     [RequirePermission(PermissionCatalog.TaskView)]
     public async Task<IActionResult> My(CancellationToken ct) => FromResult(await tasks.GetMyTasksAsync(ct), Ok);
-
-    [HttpGet("dashboard")]
-    [RequirePermission(PermissionCatalog.TaskView)]
-    public async Task<IActionResult> Dashboard(CancellationToken ct) => FromResult(await tasks.GetDashboardAsync(ct), Ok);
-
-    [HttpGet("report")]
-    [RequirePermission(PermissionCatalog.TaskView)]
-    public async Task<IActionResult> Report([FromQuery] TaskListQuery query, CancellationToken ct)
-        => FromResult(await tasks.GetReportAsync(query, ct), Ok);
-
-    [HttpGet("report/daily-reports")]
-    [RequirePermission(PermissionCatalog.TaskView)]
-    public async Task<IActionResult> DailyReportsReport([FromQuery] TaskDailyReportQuery query, CancellationToken ct)
-        => FromResult(await tasks.GetDailyReportsReportAsync(query, ct), Ok);
 
     [HttpGet("statuses")]
     [RequirePermission(PermissionCatalog.TaskView)]
@@ -195,47 +178,4 @@ public sealed class TasksController(
     [RequirePermission(PermissionCatalog.TaskDailyReportManage)]
     public async Task<IActionResult> RemoveDailyReport(long eventId, long reportId, CancellationToken ct)
         => FromResult(await tasks.RemoveDailyReportAsync(eventId, reportId, ct), NoContent);
-
-    // ---- Settings: statuses & priorities ----
-    [HttpGet("settings/statuses")]
-    [RequirePermission(PermissionCatalog.TaskView)]
-    public async Task<IActionResult> SettingsStatuses([FromQuery] string code, CancellationToken ct)
-        => FromResult(await settings.ListAsync(code, ct), Ok);
-
-    [HttpPost("settings/statuses")]
-    [RequirePermission(PermissionCatalog.TaskWorkflowManage)]
-    public async Task<IActionResult> CreateStatus([FromBody] CreateStatusRequest request, CancellationToken ct)
-    {
-        if (await ValidateAsync(createStatusValidator, request, ct) is { } invalid) return invalid;
-        return FromResult(await settings.CreateStatusAsync(request, ct), id => Created($"/api/v1/tasks/settings/statuses/{id}", new { id }));
-    }
-
-    [HttpPut("settings/statuses/{id:long}")]
-    [RequirePermission(PermissionCatalog.TaskWorkflowManage)]
-    public async Task<IActionResult> UpdateStatus(long id, [FromBody] UpdateStatusRequest request, CancellationToken ct)
-    {
-        if (await ValidateAsync(updateStatusValidator, request, ct) is { } invalid) return invalid;
-        return FromResult(await settings.UpdateStatusAsync(id, request, ct), NoContent);
-    }
-
-    [HttpPost("settings/statuses/reorder")]
-    [RequirePermission(PermissionCatalog.TaskWorkflowManage)]
-    public async Task<IActionResult> ReorderStatuses([FromBody] ReorderStatusesRequest request, CancellationToken ct)
-        => FromResult(await settings.ReorderAsync(request, ct), NoContent);
-
-    [HttpDelete("settings/statuses/{id:long}")]
-    [RequirePermission(PermissionCatalog.TaskWorkflowManage)]
-    public async Task<IActionResult> DeleteStatus(long id, CancellationToken ct)
-        => FromResult(await settings.DeleteStatusAsync(id, ct), NoContent);
-
-    // ---- Settings: workspace config (daily-report rules / notifications / dashboard defaults) ----
-    [HttpGet("settings/config")]
-    [RequirePermission(PermissionCatalog.TaskView)]
-    public async Task<IActionResult> GetConfig(CancellationToken ct)
-        => FromResult(await settings.GetSettingsAsync(ct), Ok);
-
-    [HttpPut("settings/config")]
-    [RequirePermission(PermissionCatalog.TaskWorkflowManage)]
-    public async Task<IActionResult> UpdateConfig([FromBody] UpdateTaskSettingsRequest request, CancellationToken ct)
-        => FromResult(await settings.UpdateSettingsAsync(request, ct), NoContent);
 }

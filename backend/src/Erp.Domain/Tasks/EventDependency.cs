@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace Erp.Domain.Events;
+namespace Erp.Domain.Tasks;
 
 /// <summary>
 /// A dependency between two events/tasks ("this depends on that") used by the Gantt and

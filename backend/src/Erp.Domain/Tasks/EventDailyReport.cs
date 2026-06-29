@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace Erp.Domain.Events;
+namespace Erp.Domain.Tasks;
 
 /// <summary>
 /// A daily progress report against an event/task (Event/Asset architecture §16). One row per author

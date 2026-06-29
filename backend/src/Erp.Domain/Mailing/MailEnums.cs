@@ -1,4 +1,4 @@
-namespace Erp.Domain.Mail;
+namespace Erp.Domain.Mailing;
 
 /// <summary>Lifecycle of an outbox message (Mail doc §8: PENDING/PROCESSING/SENT/FAILED/CANCELLED).</summary>
 public enum SendStatus

@@ -1,5 +1,5 @@
 using Erp.Application.Abstractions;
-using Erp.Domain.Mail;
+using Erp.Domain.Mailing;
 using Erp.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

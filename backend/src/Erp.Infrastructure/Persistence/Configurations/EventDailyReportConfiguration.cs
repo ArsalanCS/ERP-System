@@ -1,5 +1,5 @@
-using Erp.Domain.Events;
-using Erp.Domain.Workflow;
+using Erp.Domain.Tasks;
+using Erp.Domain.Statuses;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

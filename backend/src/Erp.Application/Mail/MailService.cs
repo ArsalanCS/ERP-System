@@ -1,7 +1,7 @@
 using Erp.Application.Abstractions;
 using Erp.Application.Common;
 using Erp.Application.Mail.Contracts;
-using Erp.Domain.Mail;
+using Erp.Domain.Mailing;
 using Erp.Shared.Results;
 using Microsoft.EntityFrameworkCore;
 

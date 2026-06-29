@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace Erp.Domain.Workflow;
+namespace Erp.Domain.Statuses;
 
 /// <summary>
 /// Workflow status history for an event (Event/Asset architecture §15). Exactly one row

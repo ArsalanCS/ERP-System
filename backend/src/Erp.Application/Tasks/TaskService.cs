@@ -4,11 +4,11 @@ using Erp.Application.Tasks.Contracts;
 using Erp.Domain.Assets;
 using Erp.Domain.Auditing;
 using Erp.Domain.Authorization;
-using Erp.Domain.Events;
+using Erp.Domain.Tasks;
 using Erp.Domain.Identity;
-using Erp.Domain.Mail;
+using Erp.Domain.Mailing;
 using Erp.Domain.Structure;
-using Erp.Domain.Workflow;
+using Erp.Domain.Statuses;
 using Erp.Shared.Results;
 using Microsoft.EntityFrameworkCore;
 

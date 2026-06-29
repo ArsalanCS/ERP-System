@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace Erp.Domain.Events;
+namespace Erp.Domain.Tasks;
 
 /// <summary>
 /// Per-workspace Task Management settings (Dashboard/Settings doc §7): daily-report rules, mail

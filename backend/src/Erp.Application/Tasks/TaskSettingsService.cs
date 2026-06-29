@@ -1,8 +1,8 @@
 using Erp.Application.Abstractions;
 using Erp.Application.Tasks.Contracts;
 using Erp.Domain.Auditing;
-using Erp.Domain.Events;
-using Erp.Domain.Workflow;
+using Erp.Domain.Tasks;
+using Erp.Domain.Statuses;
 using Erp.Shared.Results;
 using Microsoft.EntityFrameworkCore;
 

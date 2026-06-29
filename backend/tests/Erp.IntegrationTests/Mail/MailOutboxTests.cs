@@ -5,7 +5,7 @@ using Erp.Application.Auth;
 using Erp.Application.Common;
 using Erp.Application.Mail.Contracts;
 using Erp.Application.Tasks.Contracts;
-using Erp.Domain.Mail;
+using Erp.Domain.Mailing;
 using Erp.IntegrationTests.Infrastructure;
 using Xunit;
 

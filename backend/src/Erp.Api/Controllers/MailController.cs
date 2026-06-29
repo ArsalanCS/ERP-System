@@ -8,9 +8,10 @@ using Microsoft.AspNetCore.Mvc;
 namespace Erp.Api.Controllers;
 
 /// <summary>
-/// Mail outbox + template management. Messages are queued by module triggers (e.g. task
-/// assigned) and delivered asynchronously by the dispatcher worker; these endpoints expose
-/// the queue for monitoring and let admins edit per-workspace templates.
+/// Mail outbox monitoring. Messages are queued by module triggers (e.g. task assigned) and
+/// delivered asynchronously by the dispatcher worker; these endpoints expose the queue for
+/// monitoring and operator retry/cancel. Template management lives in
+/// <see cref="MailTemplatesController"/>.
 /// </summary>
 [Authorize]
 [Route("api/v1/mail")]
@@ -35,14 +36,4 @@ public sealed class MailController(IMailService mail) : ApiControllerBase
     [RequirePermission(PermissionCatalog.MailManage)]
     public async Task<IActionResult> Cancel(long id, CancellationToken ct)
         => FromResult(await mail.CancelAsync(id, ct), NoContent);
-
-    [HttpGet("templates")]
-    [RequirePermission(PermissionCatalog.MailView)]
-    public async Task<IActionResult> Templates(CancellationToken ct)
-        => FromResult(await mail.ListTemplatesAsync(ct), Ok);
-
-    [HttpPut("templates/{id:long}")]
-    [RequirePermission(PermissionCatalog.MailManage)]
-    public async Task<IActionResult> UpdateTemplate(long id, [FromBody] UpdateMailTemplateRequest request, CancellationToken ct)
-        => FromResult(await mail.UpdateTemplateAsync(id, request, ct), NoContent);
 }

@@ -1,5 +1,5 @@
 using Erp.Application.Common;
-using Erp.Domain.Mail;
+using Erp.Domain.Mailing;
 
 namespace Erp.Application.Mail.Contracts;
 

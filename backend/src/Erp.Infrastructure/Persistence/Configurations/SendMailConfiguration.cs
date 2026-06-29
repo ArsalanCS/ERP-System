@@ -1,4 +1,4 @@
-using Erp.Domain.Mail;
+using Erp.Domain.Mailing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

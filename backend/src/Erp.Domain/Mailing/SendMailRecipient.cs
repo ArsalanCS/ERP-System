@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace Erp.Domain.Mail;
+namespace Erp.Domain.Mailing;
 
 /// <summary>A recipient of a <see cref="SendMail"/> (To/Cc/Bcc).</summary>
 public sealed class SendMailRecipient : TenantEntity

@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace Erp.Domain.Mail;
+namespace Erp.Domain.Mailing;
 
 /// <summary>
 /// An outbox message (send mail) — the final rendered email ready for the worker (Mail doc §6).

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Erp.Application.Abstractions;
-using Erp.Domain.Mail;
+using Erp.Domain.Mailing;
 using Microsoft.EntityFrameworkCore;
 
 namespace Erp.Application.Mail;

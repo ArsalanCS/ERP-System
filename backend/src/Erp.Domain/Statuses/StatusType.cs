@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace Erp.Domain.Workflow;
+namespace Erp.Domain.Statuses;
 
 /// <summary>
 /// A category of statuses (Event/Asset architecture §14): TASK_STATUS (workflow),

@@ -1,4 +1,4 @@
-using Erp.Domain.Events;
+using Erp.Domain.Tasks;
 
 namespace Erp.Application.Tasks.Contracts;
 

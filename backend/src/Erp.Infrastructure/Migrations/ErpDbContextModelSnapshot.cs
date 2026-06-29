@@ -848,7 +848,7 @@ namespace Erp.Infrastructure.Migrations
                     b.ToTable("user_roles", (string)null);
                 });
 
-            modelBuilder.Entity("Erp.Domain.Events.Event", b =>
+            modelBuilder.Entity("Erp.Domain.Tasks.Event", b =>
                 {
                     b.Property<long>("Id")
                         .HasColumnType("bigint")
@@ -904,7 +904,7 @@ namespace Erp.Infrastructure.Migrations
                     b.ToTable("events", "bpm");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Events.EventActivity", b =>
+            modelBuilder.Entity("Erp.Domain.Tasks.EventActivity", b =>
                 {
                     b.Property<long>("Id")
                         .HasColumnType("bigint")
@@ -985,7 +985,7 @@ namespace Erp.Infrastructure.Migrations
                     b.ToTable("event_activities", "bpm");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Events.EventDailyReport", b =>
+            modelBuilder.Entity("Erp.Domain.Tasks.EventDailyReport", b =>
                 {
                     b.Property<long>("Id")
                         .HasColumnType("bigint")
@@ -1075,7 +1075,7 @@ namespace Erp.Infrastructure.Migrations
                     b.ToTable("event_daily_reports", "bpm");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Events.EventDependency", b =>
+            modelBuilder.Entity("Erp.Domain.Tasks.EventDependency", b =>
                 {
                     b.Property<long>("Id")
                         .HasColumnType("bigint")
@@ -1141,7 +1141,7 @@ namespace Erp.Infrastructure.Migrations
                     b.ToTable("event_dependencies", "bpm");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Events.EventType", b =>
+            modelBuilder.Entity("Erp.Domain.Tasks.EventType", b =>
                 {
                     b.Property<long>("Id")
                         .HasColumnType("bigint")
@@ -1199,7 +1199,7 @@ namespace Erp.Infrastructure.Migrations
                     b.ToTable("event_types", "bpm");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Events.TaskEvent", b =>
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskEvent", b =>
                 {
                     b.Property<long>("Id")
                         .HasColumnType("bigint")
@@ -1319,7 +1319,7 @@ namespace Erp.Infrastructure.Migrations
                     b.ToTable("task_events", "bpm");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Events.TaskSettings", b =>
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskSettings", b =>
                 {
                     b.Property<long>("Id")
                         .HasColumnType("bigint")
@@ -1890,7 +1890,7 @@ namespace Erp.Infrastructure.Migrations
                     b.ToTable("workspace_security_policies", (string)null);
                 });
 
-            modelBuilder.Entity("Erp.Domain.Mail.MailTemplate", b =>
+            modelBuilder.Entity("Erp.Domain.Mailing.MailTemplate", b =>
                 {
                     b.Property<long>("Id")
                         .HasColumnType("bigint")
@@ -1968,7 +1968,7 @@ namespace Erp.Infrastructure.Migrations
                     b.ToTable("mail_templates", "bpm");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Mail.SendMail", b =>
+            modelBuilder.Entity("Erp.Domain.Mailing.SendMail", b =>
                 {
                     b.Property<long>("Id")
                         .HasColumnType("bigint")
@@ -2076,7 +2076,7 @@ namespace Erp.Infrastructure.Migrations
                     b.ToTable("send_mails", "bpm");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Mail.SendMailAttempt", b =>
+            modelBuilder.Entity("Erp.Domain.Mailing.SendMailAttempt", b =>
                 {
                     b.Property<long>("Id")
                         .HasColumnType("bigint")
@@ -2150,7 +2150,7 @@ namespace Erp.Infrastructure.Migrations
                     b.ToTable("send_mail_attempts", "bpm");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Mail.SendMailRecipient", b =>
+            modelBuilder.Entity("Erp.Domain.Mailing.SendMailRecipient", b =>
                 {
                     b.Property<long>("Id")
                         .HasColumnType("bigint")
@@ -2410,7 +2410,7 @@ namespace Erp.Infrastructure.Migrations
                     b.ToTable("workspaces", (string)null);
                 });
 
-            modelBuilder.Entity("Erp.Domain.Workflow.EventStatus", b =>
+            modelBuilder.Entity("Erp.Domain.Statuses.EventStatus", b =>
                 {
                     b.Property<long>("Id")
                         .HasColumnType("bigint")
@@ -2478,7 +2478,7 @@ namespace Erp.Infrastructure.Migrations
                     b.ToTable("event_statuses", "bpm");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Workflow.Status", b =>
+            modelBuilder.Entity("Erp.Domain.Statuses.Status", b =>
                 {
                     b.Property<long>("Id")
                         .HasColumnType("bigint")
@@ -2563,7 +2563,7 @@ namespace Erp.Infrastructure.Migrations
                     b.ToTable("statuses", "bpm");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Workflow.StatusType", b =>
+            modelBuilder.Entity("Erp.Domain.Statuses.StatusType", b =>
                 {
                     b.Property<long>("Id")
                         .HasColumnType("bigint")
@@ -2942,7 +2942,7 @@ namespace Erp.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_event_assets_assets_asset_id");
 
-                    b.HasOne("Erp.Domain.Events.Event", null)
+                    b.HasOne("Erp.Domain.Tasks.Event", null)
                         .WithMany()
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -2997,9 +2997,9 @@ namespace Erp.Infrastructure.Migrations
                         .HasConstraintName("fk_user_roles_roles_role_id");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Events.Event", b =>
+            modelBuilder.Entity("Erp.Domain.Tasks.Event", b =>
                 {
-                    b.HasOne("Erp.Domain.Events.EventType", null)
+                    b.HasOne("Erp.Domain.Tasks.EventType", null)
                         .WithMany()
                         .HasForeignKey("EventTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -3007,9 +3007,9 @@ namespace Erp.Infrastructure.Migrations
                         .HasConstraintName("fk_events_event_types_event_type_id");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Events.EventActivity", b =>
+            modelBuilder.Entity("Erp.Domain.Tasks.EventActivity", b =>
                 {
-                    b.HasOne("Erp.Domain.Events.Event", null)
+                    b.HasOne("Erp.Domain.Tasks.Event", null)
                         .WithMany()
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -3017,32 +3017,32 @@ namespace Erp.Infrastructure.Migrations
                         .HasConstraintName("fk_event_activities_events_event_id");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Events.EventDailyReport", b =>
+            modelBuilder.Entity("Erp.Domain.Tasks.EventDailyReport", b =>
                 {
-                    b.HasOne("Erp.Domain.Events.Event", null)
+                    b.HasOne("Erp.Domain.Tasks.Event", null)
                         .WithMany()
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_event_daily_reports_events_event_id");
 
-                    b.HasOne("Erp.Domain.Workflow.Status", null)
+                    b.HasOne("Erp.Domain.Statuses.Status", null)
                         .WithMany()
                         .HasForeignKey("StatusId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_event_daily_reports_statuses_status_id");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Events.EventDependency", b =>
+            modelBuilder.Entity("Erp.Domain.Tasks.EventDependency", b =>
                 {
-                    b.HasOne("Erp.Domain.Events.Event", null)
+                    b.HasOne("Erp.Domain.Tasks.Event", null)
                         .WithMany()
                         .HasForeignKey("DependsOnEventId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_event_dependencies_events_depends_on_event_id");
 
-                    b.HasOne("Erp.Domain.Events.Event", null)
+                    b.HasOne("Erp.Domain.Tasks.Event", null)
                         .WithMany()
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -3050,9 +3050,9 @@ namespace Erp.Infrastructure.Migrations
                         .HasConstraintName("fk_event_dependencies_events_event_id");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Events.TaskEvent", b =>
+            modelBuilder.Entity("Erp.Domain.Tasks.TaskEvent", b =>
                 {
-                    b.HasOne("Erp.Domain.Events.Event", null)
+                    b.HasOne("Erp.Domain.Tasks.Event", null)
                         .WithMany()
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -3106,9 +3106,9 @@ namespace Erp.Infrastructure.Migrations
                         .HasConstraintName("fk_users_workspaces_workspace_id");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Mail.SendMailAttempt", b =>
+            modelBuilder.Entity("Erp.Domain.Mailing.SendMailAttempt", b =>
                 {
-                    b.HasOne("Erp.Domain.Mail.SendMail", null)
+                    b.HasOne("Erp.Domain.Mailing.SendMail", null)
                         .WithMany()
                         .HasForeignKey("SendMailId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3116,9 +3116,9 @@ namespace Erp.Infrastructure.Migrations
                         .HasConstraintName("fk_send_mail_attempts_send_mails_send_mail_id");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Mail.SendMailRecipient", b =>
+            modelBuilder.Entity("Erp.Domain.Mailing.SendMailRecipient", b =>
                 {
-                    b.HasOne("Erp.Domain.Mail.SendMail", null)
+                    b.HasOne("Erp.Domain.Mailing.SendMail", null)
                         .WithMany()
                         .HasForeignKey("SendMailId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3135,16 +3135,16 @@ namespace Erp.Infrastructure.Migrations
                         .HasConstraintName("fk_structure_nodes_structure_nodes_parent_id");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Workflow.EventStatus", b =>
+            modelBuilder.Entity("Erp.Domain.Statuses.EventStatus", b =>
                 {
-                    b.HasOne("Erp.Domain.Events.Event", null)
+                    b.HasOne("Erp.Domain.Tasks.Event", null)
                         .WithMany()
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_event_statuses_events_event_id");
 
-                    b.HasOne("Erp.Domain.Workflow.Status", null)
+                    b.HasOne("Erp.Domain.Statuses.Status", null)
                         .WithMany()
                         .HasForeignKey("StatusId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -3152,9 +3152,9 @@ namespace Erp.Infrastructure.Migrations
                         .HasConstraintName("fk_event_statuses_statuses_status_id");
                 });
 
-            modelBuilder.Entity("Erp.Domain.Workflow.Status", b =>
+            modelBuilder.Entity("Erp.Domain.Statuses.Status", b =>
                 {
-                    b.HasOne("Erp.Domain.Workflow.StatusType", null)
+                    b.HasOne("Erp.Domain.Statuses.StatusType", null)
                         .WithMany()
                         .HasForeignKey("StatusTypeId")
                         .OnDelete(DeleteBehavior.Restrict)

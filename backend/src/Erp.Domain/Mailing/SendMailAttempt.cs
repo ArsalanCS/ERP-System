@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace Erp.Domain.Mail;
+namespace Erp.Domain.Mailing;
 
 /// <summary>An individual delivery attempt for a <see cref="SendMail"/> (Mail doc §10 — audit/diagnostics).</summary>
 public sealed class SendMailAttempt : TenantEntity

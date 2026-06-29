@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace Erp.Domain.Events;
+namespace Erp.Domain.Tasks;
 
 /// <summary>Kinds of user-visible activity shown on the Logs tab.</summary>
 public enum EventActivityKind

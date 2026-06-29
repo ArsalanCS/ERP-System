@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace Erp.Domain.Mail;
+namespace Erp.Domain.Mailing;
 
 /// <summary>
 /// A reusable email template (Mail doc §4). <see cref="WorkspaceId"/> is nullable: null = a global
