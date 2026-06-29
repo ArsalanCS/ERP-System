@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Q4lqw6nqVpbl6E2Zd7ThSW3qjV3xnaItd59kEOQi07GBfqipIkZCkdZECJ8yidp
+\restrict s3ss44X5BUrFhWO0Y4JhZcehacZZJqwbKtcSAPa67RZJkJParDEkqUyIAxfGY7d
 
 -- Dumped from database version 16.14 (Homebrew)
 -- Dumped by pg_dump version 16.14 (Homebrew)
@@ -26,10 +26,10 @@ CREATE SCHEMA bpm;
 
 
 --
--- Name: fn_task_assignee_load(bigint, boolean, bigint[], bigint, timestamp with time zone, bigint, bigint, boolean, boolean); Type: FUNCTION; Schema: bpm; Owner: -
+-- Name: fn_task_assignee_workload(bigint, boolean, bigint[], bigint, timestamp with time zone, bigint, bigint, boolean, boolean); Type: FUNCTION; Schema: bpm; Owner: -
 --
 
-CREATE FUNCTION bpm.fn_task_assignee_load(p_ws bigint, p_all boolean, p_users bigint[], p_me bigint, p_now timestamp with time zone, p_status bigint, p_priority bigint, p_overdue boolean, p_closed boolean) RETURNS TABLE(assignee_id bigint, assignee_name text, open integer, overdue integer)
+CREATE FUNCTION bpm.fn_task_assignee_workload(p_ws bigint, p_all boolean, p_users bigint[], p_me bigint, p_now timestamp with time zone, p_status bigint, p_priority bigint, p_overdue boolean, p_closed boolean) RETURNS TABLE(assignee_id bigint, assignee_name text, open integer, overdue integer)
     LANGUAGE sql STABLE
     AS $$
     SELECT te.assignee_id, au.display_name,
@@ -52,10 +52,10 @@ $$;
 
 
 --
--- Name: fn_task_daily_reports(bigint, boolean, bigint[], bigint, date, date, bigint, bigint, integer, integer); Type: FUNCTION; Schema: bpm; Owner: -
+-- Name: fn_task_daily_report_summary(bigint, boolean, bigint[], bigint, date, date, bigint, bigint, integer, integer); Type: FUNCTION; Schema: bpm; Owner: -
 --
 
-CREATE FUNCTION bpm.fn_task_daily_reports(p_ws bigint, p_all boolean, p_users bigint[], p_me bigint, p_from date, p_to date, p_author bigint, p_status bigint, p_offset integer, p_limit integer) RETURNS TABLE(id bigint, event_id bigint, reference_no text, task_title text, report_date date, description text, estimated_time numeric, actual_time numeric, remaining_time numeric, status_id bigint, status_name text, status_color text, author_id bigint, author_name text, created_at timestamp with time zone, total bigint)
+CREATE FUNCTION bpm.fn_task_daily_report_summary(p_ws bigint, p_all boolean, p_users bigint[], p_me bigint, p_from date, p_to date, p_author bigint, p_status bigint, p_offset integer, p_limit integer) RETURNS TABLE(id bigint, event_id bigint, reference_no text, task_title text, report_date date, description text, estimated_time numeric, actual_time numeric, remaining_time numeric, status_id bigint, status_name text, status_color text, author_id bigint, author_name text, created_at timestamp with time zone, total bigint)
     LANGUAGE sql STABLE
     AS $$
     SELECT dr.id, dr.event_id, te.reference_no, te.title, dr.report_date, dr.description,
@@ -78,97 +78,10 @@ $$;
 
 
 --
--- Name: fn_task_gantt(bigint, boolean, bigint[], bigint, integer); Type: FUNCTION; Schema: bpm; Owner: -
+-- Name: fn_task_dashboard_summary(bigint, boolean, bigint[], bigint, timestamp with time zone, bigint, bigint, boolean, boolean); Type: FUNCTION; Schema: bpm; Owner: -
 --
 
-CREATE FUNCTION bpm.fn_task_gantt(p_ws bigint, p_all boolean, p_users bigint[], p_me bigint, p_limit integer) RETURNS TABLE(event_id bigint, reference_no text, title text, start_at timestamp with time zone, due_at timestamp with time zone, completion_percent integer, status_color text, is_closed boolean)
-    LANGUAGE sql STABLE
-    AS $$
-    SELECT te.event_id, te.reference_no, te.title, te.start_at, te.due_at,
-           te.completion_percent, st.color, COALESCE(st.is_closed,false)
-    FROM bpm.task_events te
-    JOIN bpm.events ev ON ev.id = te.event_id AND ev.is_deleted = false
-    LEFT JOIN bpm.event_statuses es ON es.event_id = te.event_id AND es.is_current AND es.is_deleted = false
-    LEFT JOIN bpm.statuses st ON st.id = es.status_id
-    WHERE te.is_deleted = false AND te.workspace_id = p_ws
-      AND (p_all OR te.assignee_id = ANY(p_users) OR te.reporter_id = p_me)
-      AND COALESCE(st.is_closed,false) = false
-      AND (te.start_at IS NOT NULL OR te.due_at IS NOT NULL)
-    ORDER BY COALESCE(te.start_at, te.due_at)
-    LIMIT p_limit;
-$$;
-
-
---
--- Name: fn_task_priority_breakdown(bigint, boolean, bigint[], bigint, timestamp with time zone, bigint, bigint, boolean, boolean); Type: FUNCTION; Schema: bpm; Owner: -
---
-
-CREATE FUNCTION bpm.fn_task_priority_breakdown(p_ws bigint, p_all boolean, p_users bigint[], p_me bigint, p_now timestamp with time zone, p_status bigint, p_priority bigint, p_overdue boolean, p_closed boolean) RETURNS TABLE(id bigint, name text, color text, count integer)
-    LANGUAGE sql STABLE
-    AS $$
-    SELECT pr.id, pr.name, pr.color, count(*)::int
-    FROM bpm.task_events te
-    JOIN bpm.events ev ON ev.id = te.event_id AND ev.is_deleted = false
-    LEFT JOIN bpm.event_statuses es ON es.event_id = te.event_id AND es.is_current AND es.is_deleted = false
-    LEFT JOIN bpm.statuses st ON st.id = es.status_id
-    LEFT JOIN bpm.statuses pr ON pr.id = te.priority_status_id
-    WHERE te.is_deleted = false AND te.workspace_id = p_ws
-      AND (p_all OR te.assignee_id = ANY(p_users) OR te.reporter_id = p_me)
-      AND (p_status IS NULL OR st.id = p_status)
-      AND (p_priority IS NULL OR te.priority_status_id = p_priority)
-      AND (NOT COALESCE(p_overdue,false) OR (te.due_at < p_now AND COALESCE(st.is_closed,false) = false))
-      AND (NOT COALESCE(p_closed,false) OR COALESCE(st.is_closed,false) = true)
-    GROUP BY pr.id, pr.name, pr.color
-    ORDER BY count(*) DESC;
-$$;
-
-
---
--- Name: fn_task_recent_activity(bigint, boolean, bigint[], bigint, integer); Type: FUNCTION; Schema: bpm; Owner: -
---
-
-CREATE FUNCTION bpm.fn_task_recent_activity(p_ws bigint, p_all boolean, p_users bigint[], p_me bigint, p_limit integer) RETURNS TABLE(id bigint, event_id bigint, reference_no text, message text, actor_id bigint, actor_name text, occurred_at timestamp with time zone)
-    LANGUAGE sql STABLE
-    AS $$
-    SELECT a.id, a.event_id, te.reference_no, a.message, a.actor_id, u.display_name, a.occurred_at
-    FROM bpm.event_activities a
-    JOIN bpm.task_events te ON te.event_id = a.event_id AND te.is_deleted = false
-    LEFT JOIN public.users u ON u.id = a.actor_id
-    WHERE a.is_deleted = false AND te.workspace_id = p_ws
-      AND (p_all OR te.assignee_id = ANY(p_users) OR te.reporter_id = p_me)
-    ORDER BY a.occurred_at DESC
-    LIMIT p_limit;
-$$;
-
-
---
--- Name: fn_task_status_breakdown(bigint, boolean, bigint[], bigint, timestamp with time zone, bigint, bigint, boolean, boolean); Type: FUNCTION; Schema: bpm; Owner: -
---
-
-CREATE FUNCTION bpm.fn_task_status_breakdown(p_ws bigint, p_all boolean, p_users bigint[], p_me bigint, p_now timestamp with time zone, p_status bigint, p_priority bigint, p_overdue boolean, p_closed boolean) RETURNS TABLE(id bigint, name text, color text, count integer)
-    LANGUAGE sql STABLE
-    AS $$
-    SELECT st.id, st.name, st.color, count(*)::int
-    FROM bpm.task_events te
-    JOIN bpm.events ev ON ev.id = te.event_id AND ev.is_deleted = false
-    LEFT JOIN bpm.event_statuses es ON es.event_id = te.event_id AND es.is_current AND es.is_deleted = false
-    LEFT JOIN bpm.statuses st ON st.id = es.status_id
-    WHERE te.is_deleted = false AND te.workspace_id = p_ws
-      AND (p_all OR te.assignee_id = ANY(p_users) OR te.reporter_id = p_me)
-      AND (p_status IS NULL OR st.id = p_status)
-      AND (p_priority IS NULL OR te.priority_status_id = p_priority)
-      AND (NOT COALESCE(p_overdue,false) OR (te.due_at < p_now AND COALESCE(st.is_closed,false) = false))
-      AND (NOT COALESCE(p_closed,false) OR COALESCE(st.is_closed,false) = true)
-    GROUP BY st.id, st.name, st.color
-    ORDER BY count(*) DESC;
-$$;
-
-
---
--- Name: fn_task_summary(bigint, boolean, bigint[], bigint, timestamp with time zone, bigint, bigint, boolean, boolean); Type: FUNCTION; Schema: bpm; Owner: -
---
-
-CREATE FUNCTION bpm.fn_task_summary(p_ws bigint, p_all boolean, p_users bigint[], p_me bigint, p_now timestamp with time zone, p_status bigint, p_priority bigint, p_overdue boolean, p_closed boolean) RETURNS TABLE(total integer, open integer, in_progress integer, overdue integer, due_today integer, due_this_week integer, high_priority integer, completed integer, unassigned integer, completed_last7 integer, reports_today integer, avg_completion integer, estimated_total numeric, actual_total numeric)
+CREATE FUNCTION bpm.fn_task_dashboard_summary(p_ws bigint, p_all boolean, p_users bigint[], p_me bigint, p_now timestamp with time zone, p_status bigint, p_priority bigint, p_overdue boolean, p_closed boolean) RETURNS TABLE(total integer, open integer, in_progress integer, overdue integer, due_today integer, due_this_week integer, high_priority integer, completed integer, unassigned integer, completed_last7 integer, reports_today integer, avg_completion integer, estimated_total numeric, actual_total numeric)
     LANGUAGE sql STABLE
     AS $$
     WITH t AS (
@@ -209,6 +122,93 @@ CREATE FUNCTION bpm.fn_task_summary(p_ws bigint, p_all boolean, p_users bigint[]
         COALESCE(sum(estimated_time),0),
         COALESCE(sum(actual_time),0)
     FROM t;
+$$;
+
+
+--
+-- Name: fn_task_gantt_list(bigint, boolean, bigint[], bigint, integer); Type: FUNCTION; Schema: bpm; Owner: -
+--
+
+CREATE FUNCTION bpm.fn_task_gantt_list(p_ws bigint, p_all boolean, p_users bigint[], p_me bigint, p_limit integer) RETURNS TABLE(event_id bigint, reference_no text, title text, start_at timestamp with time zone, due_at timestamp with time zone, completion_percent integer, status_color text, is_closed boolean)
+    LANGUAGE sql STABLE
+    AS $$
+    SELECT te.event_id, te.reference_no, te.title, te.start_at, te.due_at,
+           te.completion_percent, st.color, COALESCE(st.is_closed,false)
+    FROM bpm.task_events te
+    JOIN bpm.events ev ON ev.id = te.event_id AND ev.is_deleted = false
+    LEFT JOIN bpm.event_statuses es ON es.event_id = te.event_id AND es.is_current AND es.is_deleted = false
+    LEFT JOIN bpm.statuses st ON st.id = es.status_id
+    WHERE te.is_deleted = false AND te.workspace_id = p_ws
+      AND (p_all OR te.assignee_id = ANY(p_users) OR te.reporter_id = p_me)
+      AND COALESCE(st.is_closed,false) = false
+      AND (te.start_at IS NOT NULL OR te.due_at IS NOT NULL)
+    ORDER BY COALESCE(te.start_at, te.due_at)
+    LIMIT p_limit;
+$$;
+
+
+--
+-- Name: fn_task_priority_summary(bigint, boolean, bigint[], bigint, timestamp with time zone, bigint, bigint, boolean, boolean); Type: FUNCTION; Schema: bpm; Owner: -
+--
+
+CREATE FUNCTION bpm.fn_task_priority_summary(p_ws bigint, p_all boolean, p_users bigint[], p_me bigint, p_now timestamp with time zone, p_status bigint, p_priority bigint, p_overdue boolean, p_closed boolean) RETURNS TABLE(id bigint, name text, color text, count integer)
+    LANGUAGE sql STABLE
+    AS $$
+    SELECT pr.id, pr.name, pr.color, count(*)::int
+    FROM bpm.task_events te
+    JOIN bpm.events ev ON ev.id = te.event_id AND ev.is_deleted = false
+    LEFT JOIN bpm.event_statuses es ON es.event_id = te.event_id AND es.is_current AND es.is_deleted = false
+    LEFT JOIN bpm.statuses st ON st.id = es.status_id
+    LEFT JOIN bpm.statuses pr ON pr.id = te.priority_status_id
+    WHERE te.is_deleted = false AND te.workspace_id = p_ws
+      AND (p_all OR te.assignee_id = ANY(p_users) OR te.reporter_id = p_me)
+      AND (p_status IS NULL OR st.id = p_status)
+      AND (p_priority IS NULL OR te.priority_status_id = p_priority)
+      AND (NOT COALESCE(p_overdue,false) OR (te.due_at < p_now AND COALESCE(st.is_closed,false) = false))
+      AND (NOT COALESCE(p_closed,false) OR COALESCE(st.is_closed,false) = true)
+    GROUP BY pr.id, pr.name, pr.color
+    ORDER BY count(*) DESC;
+$$;
+
+
+--
+-- Name: fn_task_recent_activity(bigint, boolean, bigint[], bigint, integer); Type: FUNCTION; Schema: bpm; Owner: -
+--
+
+CREATE FUNCTION bpm.fn_task_recent_activity(p_ws bigint, p_all boolean, p_users bigint[], p_me bigint, p_limit integer) RETURNS TABLE(id bigint, event_id bigint, reference_no text, message text, actor_id bigint, actor_name text, occurred_at timestamp with time zone)
+    LANGUAGE sql STABLE
+    AS $$
+    SELECT a.id, a.event_id, te.reference_no, a.message, a.actor_id, u.display_name, a.occurred_at
+    FROM bpm.event_activities a
+    JOIN bpm.task_events te ON te.event_id = a.event_id AND te.is_deleted = false
+    LEFT JOIN public.users u ON u.id = a.actor_id
+    WHERE a.is_deleted = false AND te.workspace_id = p_ws
+      AND (p_all OR te.assignee_id = ANY(p_users) OR te.reporter_id = p_me)
+    ORDER BY a.occurred_at DESC
+    LIMIT p_limit;
+$$;
+
+
+--
+-- Name: fn_task_status_summary(bigint, boolean, bigint[], bigint, timestamp with time zone, bigint, bigint, boolean, boolean); Type: FUNCTION; Schema: bpm; Owner: -
+--
+
+CREATE FUNCTION bpm.fn_task_status_summary(p_ws bigint, p_all boolean, p_users bigint[], p_me bigint, p_now timestamp with time zone, p_status bigint, p_priority bigint, p_overdue boolean, p_closed boolean) RETURNS TABLE(id bigint, name text, color text, count integer)
+    LANGUAGE sql STABLE
+    AS $$
+    SELECT st.id, st.name, st.color, count(*)::int
+    FROM bpm.task_events te
+    JOIN bpm.events ev ON ev.id = te.event_id AND ev.is_deleted = false
+    LEFT JOIN bpm.event_statuses es ON es.event_id = te.event_id AND es.is_current AND es.is_deleted = false
+    LEFT JOIN bpm.statuses st ON st.id = es.status_id
+    WHERE te.is_deleted = false AND te.workspace_id = p_ws
+      AND (p_all OR te.assignee_id = ANY(p_users) OR te.reporter_id = p_me)
+      AND (p_status IS NULL OR st.id = p_status)
+      AND (p_priority IS NULL OR te.priority_status_id = p_priority)
+      AND (NOT COALESCE(p_overdue,false) OR (te.due_at < p_now AND COALESCE(st.is_closed,false) = false))
+      AND (NOT COALESCE(p_closed,false) OR COALESCE(st.is_closed,false) = true)
+    GROUP BY st.id, st.name, st.color
+    ORDER BY count(*) DESC;
 $$;
 
 
@@ -2640,5 +2640,5 @@ ALTER TABLE public.workspace_security_policies ENABLE ROW LEVEL SECURITY;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict Q4lqw6nqVpbl6E2Zd7ThSW3qjV3xnaItd59kEOQi07GBfqipIkZCkdZECJ8yidp
+\unrestrict s3ss44X5BUrFhWO0Y4JhZcehacZZJqwbKtcSAPa67RZJkJParDEkqUyIAxfGY7d
 

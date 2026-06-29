@@ -101,11 +101,11 @@ public sealed class TaskReadRepository(ErpDbContext db, IClock clock) : ITaskRea
         var today = DateOnly.FromDateTime(now.UtcDateTime);
 
         var summary = (await db.Set<TaskSummaryRow>()
-            .FromSqlRaw("SELECT * FROM bpm.fn_task_summary(@p_ws,@p_all,@p_users,@p_me,@p_now,@p_status,@p_priority,@p_overdue,@p_closed)",
+            .FromSqlRaw("SELECT * FROM bpm.fn_task_dashboard_summary(@p_ws,@p_all,@p_users,@p_me,@p_now,@p_status,@p_priority,@p_overdue,@p_closed)",
                 ScopeNowFilters(scope, now, null)).AsNoTracking().ToListAsync(ct)).Single();
 
-        var byStatus = await BucketsAsync("bpm.fn_task_status_breakdown", scope, now, null, ct);
-        var byPriority = await BucketsAsync("bpm.fn_task_priority_breakdown", scope, now, null, ct);
+        var byStatus = await BucketsAsync("bpm.fn_task_status_summary", scope, now, null, ct);
+        var byPriority = await BucketsAsync("bpm.fn_task_priority_summary", scope, now, null, ct);
         var byAssignee = await AssigneesAsync(scope, now, null, ct);
 
         var trend = (await db.Set<TaskTrendRow>()
@@ -120,7 +120,7 @@ public sealed class TaskReadRepository(ErpDbContext db, IClock clock) : ITaskRea
             .Select(r => new TaskRecentActivityDto(r.Id, r.EventId, r.ReferenceNo, r.Message, r.ActorId, r.ActorName, r.OccurredAt)).ToList();
 
         var gantt = (await db.Set<TaskGanttRow>()
-            .FromSqlRaw("SELECT * FROM bpm.fn_task_gantt(@p_ws,@p_all,@p_users,@p_me,@p_limit)",
+            .FromSqlRaw("SELECT * FROM bpm.fn_task_gantt_list(@p_ws,@p_all,@p_users,@p_me,@p_limit)",
                 [.. Scope(scope), Int("p_limit", 25)]).AsNoTracking().ToListAsync(ct))
             .Select(r => new TaskGanttItemDto(r.EventId, r.ReferenceNo, r.Title, r.StartAt, r.DueAt, r.CompletionPercent, r.StatusColor, r.IsClosed)).ToList();
 
@@ -136,11 +136,11 @@ public sealed class TaskReadRepository(ErpDbContext db, IClock clock) : ITaskRea
     {
         var now = clock.UtcNow;
         var summary = (await db.Set<TaskSummaryRow>()
-            .FromSqlRaw("SELECT * FROM bpm.fn_task_summary(@p_ws,@p_all,@p_users,@p_me,@p_now,@p_status,@p_priority,@p_overdue,@p_closed)",
+            .FromSqlRaw("SELECT * FROM bpm.fn_task_dashboard_summary(@p_ws,@p_all,@p_users,@p_me,@p_now,@p_status,@p_priority,@p_overdue,@p_closed)",
                 ScopeNowFilters(scope, now, filters)).AsNoTracking().ToListAsync(ct)).Single();
 
-        var byStatus = await BucketsAsync("bpm.fn_task_status_breakdown", scope, now, filters, ct);
-        var byPriority = await BucketsAsync("bpm.fn_task_priority_breakdown", scope, now, filters, ct);
+        var byStatus = await BucketsAsync("bpm.fn_task_status_summary", scope, now, filters, ct);
+        var byPriority = await BucketsAsync("bpm.fn_task_priority_summary", scope, now, filters, ct);
         var byAssignee = await AssigneesAsync(scope, now, filters, ct);
 
         return new TaskReportDto(summary.Total, summary.Open, summary.Completed, summary.Overdue,
@@ -153,7 +153,7 @@ public sealed class TaskReadRepository(ErpDbContext db, IClock clock) : ITaskRea
         var size = query.PageSize is < 1 or > 200 ? 25 : query.PageSize;
 
         var rows = await db.Set<TaskDailyReportRow>()
-            .FromSqlRaw("SELECT * FROM bpm.fn_task_daily_reports(@p_ws,@p_all,@p_users,@p_me,@p_from,@p_to,@p_author,@p_status,@p_offset,@p_limit)",
+            .FromSqlRaw("SELECT * FROM bpm.fn_task_daily_report_summary(@p_ws,@p_all,@p_users,@p_me,@p_from,@p_to,@p_author,@p_status,@p_offset,@p_limit)",
                 [.. Scope(scope),
                 Date("p_from", query.FromDate), Date("p_to", query.ToDate),
                 NullableLong("p_author", query.AuthorId), NullableLong("p_status", query.StatusId),
@@ -179,7 +179,7 @@ public sealed class TaskReadRepository(ErpDbContext db, IClock clock) : ITaskRea
 
     private async Task<List<TaskAssigneeLoadDto>> AssigneesAsync(VisibleScope scope, DateTimeOffset now, TaskListQuery? filters, CancellationToken ct) =>
         (await db.Set<TaskAssigneeLoadRow>()
-            .FromSqlRaw("SELECT * FROM bpm.fn_task_assignee_load(@p_ws,@p_all,@p_users,@p_me,@p_now,@p_status,@p_priority,@p_overdue,@p_closed)",
+            .FromSqlRaw("SELECT * FROM bpm.fn_task_assignee_workload(@p_ws,@p_all,@p_users,@p_me,@p_now,@p_status,@p_priority,@p_overdue,@p_closed)",
                 ScopeNowFilters(scope, now, filters)).AsNoTracking().ToListAsync(ct))
         .Select(r => new TaskAssigneeLoadDto(r.AssigneeId, r.AssigneeName, r.Open, r.Overdue)).ToList();
 
