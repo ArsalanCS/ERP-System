@@ -40,6 +40,7 @@ public sealed class TaskService(
     IRepository<Employee> employees,
     IRepository<StructureNode> structureNodes,
     IRepository<AuditLog> auditLogs,
+    ITaskReadRepository taskRead,
     IPermissionResolver permissions,
     ICurrentUser currentUser,
     IAuditLogger audit,
@@ -150,182 +151,28 @@ public sealed class TaskService(
 
     public async Task<Result<TaskDashboardDto>> GetDashboardAsync(CancellationToken ct = default)
     {
-        var now = clock.UtcNow;
-        var rows = await SlimRowsAsync(await VisibleRowsAsync(ct), ct);
-
-        var today = DateOnly.FromDateTime(now.UtcDateTime);
-        var weekAgo = now.AddDays(-7);
-        bool Open(SlimRow r) => !r.IsClosed;
-
-        var weekEnd = now.AddDays(7);
-        var highPriorityCodes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "HIGH", "CRITICAL" };
-
-        var total = rows.Count;
-        var completed = rows.Count(r => r.IsClosed);
-        var open = total - completed;
-        var inProgress = rows.Count(r => Open(r) && !r.IsInitial);
-        var overdue = rows.Count(r => Open(r) && r.DueAt is { } d && d < now);
-        var dueToday = rows.Count(r => Open(r) && r.DueAt is { } d && DateOnly.FromDateTime(d.UtcDateTime) == today);
-        var dueThisWeek = rows.Count(r => Open(r) && r.DueAt is { } d && d >= now && d <= weekEnd);
-        var highPriority = rows.Count(r => Open(r) && r.PriorityCode is { } c && highPriorityCodes.Contains(c));
-        var unassigned = rows.Count(r => Open(r) && r.AssigneeId is null);
-        var completedLast7 = rows.Count(r => r.IsClosed && r.StatusSince is { } s && s >= weekAgo);
-        var avg = rows.Count == 0 ? 0 : (int)Math.Round(rows.Average(r => r.CompletionPercent));
-        var estimatedTotal = rows.Sum(r => r.Estimated ?? 0m);
-        var actualTotal = rows.Sum(r => r.Actual ?? 0m);
-
-        var byStatus = rows.GroupBy(r => new { r.StatusId, r.StatusName, r.StatusColor })
-            .Select(g => new TaskBucketDto(g.Key.StatusId, g.Key.StatusName, g.Key.StatusColor, g.Count()))
-            .OrderByDescending(b => b.Count).ToList();
-        var byPriority = rows.GroupBy(r => new { r.PriorityId, r.PriorityName, r.PriorityColor })
-            .Select(g => new TaskBucketDto(g.Key.PriorityId, g.Key.PriorityName, g.Key.PriorityColor, g.Count()))
-            .OrderByDescending(b => b.Count).ToList();
-        var byAssignee = rows.GroupBy(r => new { r.AssigneeId, r.AssigneeName })
-            .Select(g => new TaskAssigneeLoadDto(g.Key.AssigneeId, g.Key.AssigneeName,
-                g.Count(Open), g.Count(r => Open(r) && r.DueAt is { } d && d < now)))
-            .OrderByDescending(a => a.Open).Take(10).ToList();
-
-        var trend = new List<TaskTrendPointDto>();
-        for (var i = 13; i >= 0; i--)
-        {
-            var day = today.AddDays(-i);
-            var created = rows.Count(r => DateOnly.FromDateTime(r.InsertedDate.UtcDateTime) == day);
-            var done = rows.Count(r => r.IsClosed && r.StatusSince is { } s && DateOnly.FromDateTime(s.UtcDateTime) == day);
-            trend.Add(new TaskTrendPointDto(day, created, done));
-        }
-
-        // Restrict the dependent feeds (reports/activity) to the same visible event set.
-        var visibleEventIds = rows.Select(r => r.EventId).ToList();
-        var reportsToday = visibleEventIds.Count == 0 ? 0 : await dailyReports.Query()
-            .CountAsync(dr => visibleEventIds.Contains(dr.EventId) && dr.ReportDate == today, ct);
-
-        var recentActivity = visibleEventIds.Count == 0
-            ? new List<TaskRecentActivityDto>()
-            : await (from a in activities.Query()
-                     where visibleEventIds.Contains(a.EventId)
-                     join te in tasks.Query() on a.EventId equals te.EventId
-                     join u in users.Query() on a.ActorId equals u.Id into ug
-                     from u in ug.DefaultIfEmpty()
-                     orderby a.OccurredAt descending
-                     select new TaskRecentActivityDto(a.Id, a.EventId, te.ReferenceNo, a.Message,
-                         a.ActorId, u != null ? u.DisplayName : null, a.OccurredAt))
-                .Take(15).ToListAsync(ct);
-
-        var gantt = rows
-            .Where(r => Open(r) && (r.StartAt is not null || r.DueAt is not null))
-            .OrderBy(r => r.StartAt ?? r.DueAt)
-            .Take(25)
-            .Select(r => new TaskGanttItemDto(r.EventId, r.ReferenceNo, r.Title, r.StartAt, r.DueAt,
-                r.CompletionPercent, r.StatusColor, r.IsClosed))
-            .ToList();
-
-        return Result.Success(new TaskDashboardDto(total, open, inProgress, overdue, dueToday, dueThisWeek,
-            highPriority, completed, unassigned, completedLast7, reportsToday, avg, estimatedTotal, actualTotal,
-            byStatus, byPriority, byAssignee, trend, recentActivity, gantt));
+        if (await ResolveScopeAsync(ct) is not { } scope) return Result.Failure<TaskDashboardDto>(TaskErrors.NoScope());
+        return Result.Success(await taskRead.GetDashboardAsync(scope, ct));
     }
 
     public async Task<Result<TaskReportDto>> GetReportAsync(TaskListQuery query, CancellationToken ct = default)
     {
-        var now = clock.UtcNow;
-        var rows = await SlimRowsAsync(ApplyFilters(await VisibleRowsAsync(ct), query, now), ct);
-
-        bool Open(SlimRow r) => !r.IsClosed;
-        var completed = rows.Count(r => r.IsClosed);
-        var overdue = rows.Count(r => Open(r) && r.DueAt is { } d && d < now);
-
-        var byStatus = rows.GroupBy(r => new { r.StatusId, r.StatusName, r.StatusColor })
-            .Select(g => new TaskBucketDto(g.Key.StatusId, g.Key.StatusName, g.Key.StatusColor, g.Count()))
-            .OrderByDescending(b => b.Count).ToList();
-        var byPriority = rows.GroupBy(r => new { r.PriorityId, r.PriorityName, r.PriorityColor })
-            .Select(g => new TaskBucketDto(g.Key.PriorityId, g.Key.PriorityName, g.Key.PriorityColor, g.Count()))
-            .OrderByDescending(b => b.Count).ToList();
-        var byAssignee = rows.GroupBy(r => new { r.AssigneeId, r.AssigneeName })
-            .Select(g => new TaskAssigneeLoadDto(g.Key.AssigneeId, g.Key.AssigneeName,
-                g.Count(Open), g.Count(r => Open(r) && r.DueAt is { } d && d < now)))
-            .OrderByDescending(a => a.Open).ToList();
-
-        return Result.Success(new TaskReportDto(rows.Count, rows.Count - completed, completed, overdue,
-            rows.Sum(r => r.Estimated ?? 0m), rows.Sum(r => r.Actual ?? 0m), byStatus, byPriority, byAssignee));
+        if (await ResolveScopeAsync(ct) is not { } scope) return Result.Failure<TaskReportDto>(TaskErrors.NoScope());
+        return Result.Success(await taskRead.GetReportAsync(scope, query, ct));
     }
 
     public async Task<Result<PagedResult<TaskDailyReportRowDto>>> GetDailyReportsReportAsync(TaskDailyReportQuery query, CancellationToken ct = default)
     {
-        // Restrict to the daily reports of tasks the caller may see (DataScope), then filter.
-        var visibleTasks = (await VisibleRowsAsync(ct)).Select(x => x.te.EventId);
-        var q = from dr in dailyReports.Query()
-                where visibleTasks.Contains(dr.EventId)
-                join te in tasks.Query() on dr.EventId equals te.EventId
-                join st in statuses.Query() on dr.StatusId equals st.Id into stg
-                from st in stg.DefaultIfEmpty()
-                join au in users.Query() on dr.UserId equals au.Id into aug
-                from au in aug.DefaultIfEmpty()
-                select new { dr, te, st, au };
-
-        if (query.FromDate is { } from) q = q.Where(x => x.dr.ReportDate >= from);
-        if (query.ToDate is { } to) q = q.Where(x => x.dr.ReportDate <= to);
-        if (query.AuthorId is { } author) q = q.Where(x => x.dr.UserId == author);
-        if (query.StatusId is { } sid) q = q.Where(x => x.dr.StatusId == sid);
-
-        var page = await q
-            .OrderByDescending(x => x.dr.ReportDate).ThenByDescending(x => x.dr.InsertedDate)
-            .Select(x => new TaskDailyReportRowDto(
-                x.dr.Id, x.dr.EventId, x.te.ReferenceNo, x.te.Title, x.dr.ReportDate, x.dr.Description,
-                x.dr.EstimatedTime, x.dr.ActualTime, x.dr.RemainingTime,
-                x.st != null ? x.st.Id : (long?)null, x.st != null ? x.st.Name : null, x.st != null ? x.st.Color : null,
-                x.dr.UserId, x.au != null ? x.au.DisplayName : null, x.dr.InsertedDate))
-            .ToPagedResultAsync(query.Page, query.PageSize, ct);
-        return Result.Success(page);
+        if (await ResolveScopeAsync(ct) is not { } scope) return Result.Failure<PagedResult<TaskDailyReportRowDto>>(TaskErrors.NoScope());
+        return Result.Success(await taskRead.GetDailyReportsAsync(scope, query, ct));
     }
 
-    private static Task<List<SlimRow>> SlimRowsAsync(IQueryable<TaskRow> q, CancellationToken ct) =>
-        q.Select(x => new SlimRow
-        {
-            EventId = x.te.EventId,
-            ReferenceNo = x.te.ReferenceNo,
-            Title = x.te.Title,
-            AssigneeId = x.te.AssigneeId,
-            AssigneeName = x.au != null ? x.au.DisplayName : null,
-            StatusId = x.st != null ? x.st.Id : (long?)null,
-            StatusName = x.st != null ? x.st.Name : null,
-            StatusColor = x.st != null ? x.st.Color : null,
-            IsClosed = x.st != null && x.st.IsClosed,
-            IsInitial = x.st != null && x.st.IsInitial,
-            PriorityId = x.te.PriorityStatusId,
-            PriorityCode = x.pr != null ? x.pr.Code : null,
-            PriorityName = x.pr != null ? x.pr.Name : null,
-            PriorityColor = x.pr != null ? x.pr.Color : null,
-            StartAt = x.te.StartAt,
-            DueAt = x.te.DueAt,
-            InsertedDate = x.te.InsertedDate,
-            CompletionPercent = x.te.CompletionPercent,
-            StatusSince = x.statusSince,
-            Estimated = x.te.EstimatedTime,
-            Actual = x.te.ActualTime,
-        }).ToListAsync(ct);
-
-    private sealed class SlimRow
+    /// <summary>Resolves the caller's visible task scope (workspace + DataScope user set) for the read repository.</summary>
+    private async Task<VisibleScope?> ResolveScopeAsync(CancellationToken ct)
     {
-        public long EventId { get; set; }
-        public string ReferenceNo { get; set; } = "";
-        public string Title { get; set; } = "";
-        public long? AssigneeId { get; set; }
-        public string? AssigneeName { get; set; }
-        public long? StatusId { get; set; }
-        public string? StatusName { get; set; }
-        public string? StatusColor { get; set; }
-        public bool IsClosed { get; set; }
-        public bool IsInitial { get; set; }
-        public long? PriorityId { get; set; }
-        public string? PriorityCode { get; set; }
-        public string? PriorityName { get; set; }
-        public string? PriorityColor { get; set; }
-        public DateTimeOffset? StartAt { get; set; }
-        public DateTimeOffset? DueAt { get; set; }
-        public DateTimeOffset InsertedDate { get; set; }
-        public int CompletionPercent { get; set; }
-        public DateTimeOffset? StatusSince { get; set; }
-        public decimal? Estimated { get; set; }
-        public decimal? Actual { get; set; }
+        if (currentUser.WorkspaceId is not { } ws || currentUser.UserId is not { } me) return null;
+        var scope = (await permissions.ResolveAsync(me, ct)).ScopeFor(PermissionCatalog.TaskView) ?? DataScope.Own;
+        return await taskRead.GetVisibleScopeAsync(ws, me, scope, ct);
     }
 
     public async Task<Result<IReadOnlyList<TaskActivityDto>>> GetActivityAsync(long eventId, CancellationToken ct = default)

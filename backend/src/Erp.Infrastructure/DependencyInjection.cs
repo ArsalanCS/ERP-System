@@ -87,6 +87,7 @@ public static class DependencyInjection
         services.AddScoped<IEmployeeRepository, EmployeeRepository>();
         services.AddScoped<IAuditRepository, AuditRepository>();
         services.AddScoped<Application.Dashboard.IDashboardRepository, DashboardRepository>();
+        services.AddScoped<ITaskReadRepository, TaskReadRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         services.AddScoped<ISecurityPolicyRepository, SecurityPolicyRepository>();

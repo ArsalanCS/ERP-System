@@ -70,6 +70,17 @@ public sealed class ErpDbContext(DbContextOptions<ErpDbContext> options, ITenant
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ErpDbContext).Assembly);
 
+        // Keyless Row Models for the bpm.fn_task_* DB functions: queried only via
+        // FromSqlRaw and mapped to DTOs in TaskReadRepository, so they are excluded
+        // from migrations (no backing table — the function supplies the rows).
+        ConfigureRowModel<ReadModels.TaskSummaryRow>(modelBuilder, "task_summary_row");
+        ConfigureRowModel<ReadModels.TaskBucketRow>(modelBuilder, "task_bucket_row");
+        ConfigureRowModel<ReadModels.TaskAssigneeLoadRow>(modelBuilder, "task_assignee_load_row");
+        ConfigureRowModel<ReadModels.TaskTrendRow>(modelBuilder, "task_trend_row");
+        ConfigureRowModel<ReadModels.TaskRecentActivityRow>(modelBuilder, "task_recent_activity_row");
+        ConfigureRowModel<ReadModels.TaskGanttRow>(modelBuilder, "task_gantt_row");
+        ConfigureRowModel<ReadModels.TaskDailyReportRow>(modelBuilder, "task_daily_report_row");
+
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             var clrType = entityType.ClrType;
@@ -109,6 +120,9 @@ public sealed class ErpDbContext(DbContextOptions<ErpDbContext> options, ITenant
             }
         }
     }
+
+    private static void ConfigureRowModel<T>(ModelBuilder modelBuilder, string name) where T : class =>
+        modelBuilder.Entity<T>().HasNoKey().ToTable(name, t => t.ExcludeFromMigrations());
 
     /// <summary>
     /// Builds <c>e =&gt; !e.IsDeleted &amp;&amp; (BypassTenantFilter || e.WorkspaceId == CurrentWorkspaceId)</c>,
