@@ -1,4 +1,5 @@
 using Erp.Domain.Assets;
+using Erp.Domain.Events;
 using Erp.Domain.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

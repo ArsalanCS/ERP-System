@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace Erp.Domain.Tasks;
+namespace Erp.Domain.Events;
 
 /// <summary>
 /// Global lookup describing the kind of <see cref="Event"/> (Event/Asset architecture §6).

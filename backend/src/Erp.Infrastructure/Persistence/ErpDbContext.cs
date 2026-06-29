@@ -4,6 +4,7 @@ using Erp.Domain.Auditing;
 using Erp.Domain.Assets;
 using Erp.Domain.Authorization;
 using Erp.Domain.Common;
+using Erp.Domain.Events;
 using Erp.Domain.Tasks;
 using Erp.Domain.Identity;
 using Erp.Domain.Mailing;

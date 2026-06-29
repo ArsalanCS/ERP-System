@@ -1,6 +1,7 @@
 using Erp.Application.Abstractions;
 using Erp.Domain.Assets;
 using Erp.Domain.Authorization;
+using Erp.Domain.Events;
 using Erp.Domain.Tasks;
 using Erp.Domain.Identity;
 using Erp.Domain.Mailing;

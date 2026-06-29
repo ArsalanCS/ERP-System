@@ -1,6 +1,6 @@
 using Erp.Domain.Common;
 
-namespace Erp.Domain.Tasks;
+namespace Erp.Domain.Events;
 
 /// <summary>
 /// Base event record (Event/Asset architecture §5): minimal by design — it only
