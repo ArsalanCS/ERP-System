@@ -18,7 +18,7 @@ public sealed class PermissionResolverTests(PostgresFixture fixture)
     public async Task Role_grant_is_effective_and_user_deny_override_wins()
     {
         var code = $"test.view.{Guid.NewGuid():N}";
-        Guid workspaceId, userId, permissionId;
+        long workspaceId, userId, permissionId;
 
         // Seed catalog + role + assignment as platform admin.
         await using (var ctx = fixture.CreateContext(out _, platformAdmin: true))

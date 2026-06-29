@@ -136,5 +136,5 @@ public sealed class UsersEndpointTests : IAsyncLifetime
         Assert.Equal(deptId, detail.PlacementNodeId);
     }
 
-    private sealed record IdHolder(Guid Id);
+    private sealed record IdHolder(long Id);
 }

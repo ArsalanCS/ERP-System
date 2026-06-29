@@ -70,5 +70,5 @@ public sealed class AccessControlEndpointTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
-    private sealed record CreatedId(Guid Id);
+    private sealed record CreatedId(long Id);
 }

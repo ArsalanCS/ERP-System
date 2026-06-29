@@ -32,12 +32,12 @@ public sealed class PostgresFixture : IAsyncLifetime
     /// Creates a context scoped to <paramref name="workspaceId"/> (or platform
     /// admin). The returned <see cref="TenantContext"/> can be re-scoped per test.
     /// </summary>
-    public ErpDbContext CreateContext(out TenantContext tenant, Guid? workspaceId = null, bool platformAdmin = false)
+    public ErpDbContext CreateContext(out TenantContext tenant, long? workspaceId = null, bool platformAdmin = false)
     {
         tenant = new TenantContext();
         if (platformAdmin)
         {
-            tenant.SetScope(Guid.Empty, [], isPlatformAdmin: true);
+            tenant.SetScope(null, [], isPlatformAdmin: true);
         }
         else if (workspaceId is { } id)
         {

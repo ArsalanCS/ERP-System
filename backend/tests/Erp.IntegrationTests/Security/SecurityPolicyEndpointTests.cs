@@ -19,7 +19,7 @@ public sealed class SecurityPolicyEndpointTests : IAsyncLifetime
 
     private const string Password = "Str0ngPass!";
 
-    private async Task<HttpClient> ClientFor(Guid _, string slug, string email, bool owner)
+    private async Task<HttpClient> ClientFor(long _, string slug, string email, bool owner)
     {
         if (owner) await _factory.SeedOwnerUserAsync(slug, email, Password);
         else await _factory.SeedActiveUserAsync(slug, email, Password);
@@ -35,7 +35,7 @@ public sealed class SecurityPolicyEndpointTests : IAsyncLifetime
     public async Task Owner_gets_default_policy_then_updates_it()
     {
         var slug = $"ws-{Guid.NewGuid():N}"[..16];
-        var client = await ClientFor(Guid.Empty, slug, "sec@x.test", owner: true);
+        var client = await ClientFor(0, slug, "sec@x.test", owner: true);
 
         var defaults = await client.GetFromJsonAsync<SecurityPolicyDto>("/api/v1/security/policy");
         Assert.NotNull(defaults);
@@ -61,7 +61,7 @@ public sealed class SecurityPolicyEndpointTests : IAsyncLifetime
     public async Task Non_privileged_user_is_forbidden()
     {
         var slug = $"ws-{Guid.NewGuid():N}"[..16];
-        var client = await ClientFor(Guid.Empty, slug, "plain@x.test", owner: false);
+        var client = await ClientFor(0, slug, "plain@x.test", owner: false);
 
         var res = await client.GetAsync("/api/v1/security/policy");
         Assert.Equal(HttpStatusCode.Forbidden, res.StatusCode);
@@ -71,7 +71,7 @@ public sealed class SecurityPolicyEndpointTests : IAsyncLifetime
     public async Task Validation_rejects_out_of_range_values()
     {
         var slug = $"ws-{Guid.NewGuid():N}"[..16];
-        var client = await ClientFor(Guid.Empty, slug, "val@x.test", owner: true);
+        var client = await ClientFor(0, slug, "val@x.test", owner: true);
 
         var bad = new UpdateSecurityPolicyRequest(
             PasswordMinLength: 2, RequireUppercase: true, RequireLowercase: true, RequireDigit: true,

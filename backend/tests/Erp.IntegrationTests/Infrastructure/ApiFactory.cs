@@ -59,11 +59,11 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     }
 
     /// <summary>Seeds an active workspace + user with a known password.</summary>
-    public async Task<(Guid workspaceId, Guid userId)> SeedActiveUserAsync(string slug, string email, string password)
+    public async Task<(long workspaceId, long userId)> SeedActiveUserAsync(string slug, string email, string password)
     {
         using var scope = Services.CreateScope();
         var tenant = scope.ServiceProvider.GetRequiredService<TenantContext>();
-        tenant.SetScope(Guid.Empty, [], isPlatformAdmin: true);
+        tenant.SetScope(null, [], isPlatformAdmin: true);
 
         var db = scope.ServiceProvider.GetRequiredService<ErpDbContext>();
         var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
@@ -82,7 +82,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     }
 
     /// <summary>Seeds an active user assigned the Workspace Owner role (all permissions).</summary>
-    public async Task<(Guid workspaceId, Guid userId)> SeedOwnerUserAsync(string slug, string email, string password)
+    public async Task<(long workspaceId, long userId)> SeedOwnerUserAsync(string slug, string email, string password)
     {
         var (workspaceId, userId) = await SeedActiveUserAsync(slug, email, password);
 
@@ -105,7 +105,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     }
 
     /// <summary>Seeds an additional active user (with an email) into an existing workspace.</summary>
-    public async Task<Guid> SeedExtraUserAsync(Guid workspaceId, string email, string displayFirst = "Extra")
+    public async Task<long> SeedExtraUserAsync(long workspaceId, string email, string displayFirst = "Extra")
     {
         using var scope = Services.CreateScope();
         var tenant = scope.ServiceProvider.GetRequiredService<TenantContext>();
@@ -124,7 +124,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     {
         using var scope = Services.CreateScope();
         var tenant = scope.ServiceProvider.GetRequiredService<TenantContext>();
-        tenant.SetScope(Guid.Empty, [], isPlatformAdmin: true);
+        tenant.SetScope(null, [], isPlatformAdmin: true);
         var dispatcher = scope.ServiceProvider.GetRequiredService<Erp.Application.Abstractions.IMailDispatcher>();
         return await dispatcher.DispatchDueAsync(ct: default);
     }

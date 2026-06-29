@@ -32,7 +32,7 @@ public sealed class MailOutboxTests : IAsyncLifetime
         return client;
     }
 
-    private static CreateTaskRequest TaskFor(Guid assignee) =>
+    private static CreateTaskRequest TaskFor(long assignee) =>
         new("Notify me", "desc", assignee, null, null, null, null);
 
     private static async Task<SendMailListItemDto?> FindByRefAsync(HttpClient client, string referenceNo)

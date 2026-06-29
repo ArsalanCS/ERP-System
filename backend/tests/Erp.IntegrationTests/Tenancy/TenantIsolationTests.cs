@@ -66,7 +66,7 @@ public sealed class TenantIsolationTests(PostgresFixture fixture)
         Assert.Contains(workspaceB, workspaceIds);
     }
 
-    private async Task<(Guid wsA, Guid wsB, Guid userAId, Guid userBId)> SeedTwoWorkspacesAsync()
+    private async Task<(long wsA, long wsB, long userAId, long userBId)> SeedTwoWorkspacesAsync()
     {
         await using var ctx = fixture.CreateContext(out _, platformAdmin: true);
 

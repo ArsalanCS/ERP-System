@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Erp.Infrastructure.Persistence.Migrations
+namespace Erp.Infrastructure.Migrations
 {
     [DbContext(typeof(ErpDbContext))]
     partial class ErpDbContextModelSnapshot : ModelSnapshot
@@ -24,35 +24,38 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Assets.Asset", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("AssetTypeId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("AssetTypeId")
+                        .HasColumnType("bigint")
                         .HasColumnName("asset_type_id");
+
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("Code")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("code");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("inserted_date");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -63,22 +66,14 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(300)")
                         .HasColumnName("name");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -95,10 +90,17 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Assets.AssetType", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
+
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -106,31 +108,27 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("code");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -150,30 +148,21 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Assets.Document", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("AssetId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("AssetId")
+                        .HasColumnType("bigint")
                         .HasColumnName("asset_id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("FileName")
                         .IsRequired()
@@ -190,6 +179,18 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("file_size");
 
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
@@ -199,22 +200,14 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(150)")
                         .HasColumnName("mime_type");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -229,38 +222,41 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Assets.EventAsset", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("AssetId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("AssetId")
+                        .HasColumnType("bigint")
                         .HasColumnName("asset_id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("Description")
                         .HasColumnType("text")
                         .HasColumnName("description");
 
-                    b.Property<Guid>("EventId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("EventId")
+                        .HasColumnType("bigint")
                         .HasColumnName("event_id");
+
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -272,22 +268,14 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("relation_type");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -309,13 +297,12 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Assets.Note", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<Guid>("AssetId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("AssetId")
+                        .HasColumnType("bigint")
                         .HasColumnName("asset_id");
 
                     b.Property<string>("Body")
@@ -323,21 +310,25 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("body");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("changed_date");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
 
-                    b.Property<DateTimeOffset?>("DeletedAt")
+                    b.Property<DateTimeOffset>("InsertedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
+                        .HasColumnName("inserted_date");
 
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -351,22 +342,14 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_pinned");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -381,9 +364,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Auditing.AuditLog", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
                     b.Property<string>("Action")
@@ -397,12 +379,20 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(256)")
                         .HasColumnName("actor_display_name");
 
-                    b.Property<Guid?>("ActorUserId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("ActorUserId")
+                        .HasColumnType("bigint")
                         .HasColumnName("actor_user_id");
 
-                    b.Property<Guid?>("ClusterId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_date");
+
+                    b.Property<long?>("ClusterId")
+                        .HasColumnType("bigint")
                         .HasColumnName("cluster_id");
 
                     b.Property<string>("CorrelationId")
@@ -411,18 +401,26 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(64)")
                         .HasColumnName("correlation_id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
 
                     b.Property<string>("IpAddress")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
                         .HasColumnName("ip_address");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("Module")
                         .IsRequired()
@@ -442,8 +440,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("old_values");
 
-                    b.Property<Guid?>("OrganizationId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("OrganizationId")
+                        .HasColumnType("bigint")
                         .HasColumnName("organization_id");
 
                     b.Property<string>("Reason")
@@ -474,21 +472,13 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("source");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<string>("UserAgent")
                         .HasMaxLength(512)
                         .HasColumnType("character varying(512)")
                         .HasColumnName("user_agent");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -502,9 +492,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Authorization.Permission", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
                     b.Property<string>("Action")
@@ -513,19 +502,35 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("action");
 
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_date");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("code");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<bool>("IsHighRisk")
                         .HasColumnType("boolean")
@@ -542,14 +547,6 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("resource");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -569,10 +566,17 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Authorization.Role", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
+
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -585,26 +589,18 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("color");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
-
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("description");
+
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
@@ -626,22 +622,14 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("type");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -657,37 +645,40 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Authorization.RolePermission", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("changed_date");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
 
-                    b.Property<DateTimeOffset?>("DeletedAt")
+                    b.Property<DateTimeOffset>("InsertedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
+                        .HasColumnName("inserted_date");
 
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
-                    b.Property<Guid>("PermissionId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("PermissionId")
+                        .HasColumnType("bigint")
                         .HasColumnName("permission_id");
 
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("RoleId")
+                        .HasColumnType("bigint")
                         .HasColumnName("role_id");
 
                     b.Property<string>("Scope")
@@ -696,22 +687,14 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("scope");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -729,26 +712,17 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Authorization.UserPermission", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("Effect")
                         .IsRequired()
@@ -756,12 +730,24 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(10)")
                         .HasColumnName("effect");
 
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
-                    b.Property<Guid>("PermissionId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("PermissionId")
+                        .HasColumnType("bigint")
                         .HasColumnName("permission_id");
 
                     b.Property<string>("Scope")
@@ -770,16 +756,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("scope");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
                         .HasColumnName("user_id");
 
                     b.Property<uint>("Version")
@@ -788,8 +766,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -807,49 +785,44 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Authorization.UserRole", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<Guid?>("ClusterId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_date");
+
+                    b.Property<long?>("ClusterId")
+                        .HasColumnType("bigint")
                         .HasColumnName("cluster_id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("inserted_date");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("RoleId")
+                        .HasColumnType("bigint")
                         .HasColumnName("role_id");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
                         .HasColumnName("user_id");
 
                     b.Property<uint>("Version")
@@ -858,8 +831,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -877,42 +850,37 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Events.Event", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("changed_date");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
-
-                    b.Property<Guid>("EventTypeId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("EventTypeId")
+                        .HasColumnType("bigint")
                         .HasColumnName("event_type_id");
+
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -920,8 +888,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -938,38 +906,41 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Events.EventActivity", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<Guid?>("ActorId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("ActorId")
+                        .HasColumnType("bigint")
                         .HasColumnName("actor_id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("changed_date");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
-
-                    b.Property<Guid>("EventId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("EventId")
+                        .HasColumnType("bigint")
                         .HasColumnName("event_id");
 
-                    b.Property<Guid?>("FromStatusId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("FromStatusId")
+                        .HasColumnType("bigint")
                         .HasColumnName("from_status_id");
+
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -991,17 +962,9 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("occurred_at");
 
-                    b.Property<Guid?>("ToStatusId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("ToStatusId")
+                        .HasColumnType("bigint")
                         .HasColumnName("to_status_id");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -1009,8 +972,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -1024,30 +987,21 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Events.EventDailyReport", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
                     b.Property<decimal?>("ActualTime")
                         .HasColumnType("numeric(9,2)")
                         .HasColumnName("actual_time");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -1058,9 +1012,21 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric(9,2)")
                         .HasColumnName("estimated_time");
 
-                    b.Property<Guid>("EventId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("EventId")
+                        .HasColumnType("bigint")
                         .HasColumnName("event_id");
+
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -1074,20 +1040,12 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("date")
                         .HasColumnName("report_date");
 
-                    b.Property<Guid?>("StatusId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("StatusId")
+                        .HasColumnType("bigint")
                         .HasColumnName("status_id");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("UserId")
+                        .HasColumnType("bigint")
                         .HasColumnName("user_id");
 
                     b.Property<uint>("Version")
@@ -1096,8 +1054,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -1119,34 +1077,37 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Events.EventDependency", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("changed_date");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
-
-                    b.Property<Guid>("DependsOnEventId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("DependsOnEventId")
+                        .HasColumnType("bigint")
                         .HasColumnName("depends_on_event_id");
 
-                    b.Property<Guid>("EventId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("EventId")
+                        .HasColumnType("bigint")
                         .HasColumnName("event_id");
+
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsBlocking")
                         .HasColumnType("boolean")
@@ -1156,22 +1117,14 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -1190,10 +1143,17 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Events.EventType", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
+
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -1201,31 +1161,27 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("code");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
                         .HasColumnName("is_active");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -1245,38 +1201,29 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Events.TaskEvent", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
                     b.Property<decimal?>("ActualTime")
                         .HasColumnType("numeric(9,2)")
                         .HasColumnName("actual_time");
 
-                    b.Property<Guid?>("AssigneeId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("AssigneeId")
+                        .HasColumnType("bigint")
                         .HasColumnName("assignee_id");
+
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_date");
 
                     b.Property<int>("CompletionPercent")
                         .HasColumnType("integer")
                         .HasColumnName("completion_percent");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
 
                     b.Property<string>("Description")
                         .HasColumnType("text")
@@ -1290,20 +1237,32 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("numeric(9,2)")
                         .HasColumnName("estimated_time");
 
-                    b.Property<Guid>("EventId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("EventId")
+                        .HasColumnType("bigint")
                         .HasColumnName("event_id");
+
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
-                    b.Property<Guid?>("ParentEventId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("ParentEventId")
+                        .HasColumnType("bigint")
                         .HasColumnName("parent_event_id");
 
-                    b.Property<Guid?>("PriorityStatusId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("PriorityStatusId")
+                        .HasColumnType("bigint")
                         .HasColumnName("priority_status_id");
 
                     b.Property<string>("ReferenceNo")
@@ -1312,8 +1271,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("reference_no");
 
-                    b.Property<Guid?>("ReporterId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("ReporterId")
+                        .HasColumnType("bigint")
                         .HasColumnName("reporter_id");
 
                     b.Property<DateTimeOffset?>("StartAt")
@@ -1326,22 +1285,14 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(300)")
                         .HasColumnName("title");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -1370,9 +1321,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Events.TaskSettings", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
                     b.Property<bool>("AllowMultipleReportsPerDay")
@@ -1383,13 +1333,13 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("allow_status_change_from_report");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
+                    b.Property<DateTimeOffset?>("ChangedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_date");
 
                     b.Property<bool>("DailyReportRequired")
                         .HasColumnType("boolean")
@@ -1399,13 +1349,17 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("dashboard_default_range_days");
 
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
 
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -1435,22 +1389,14 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("require_estimated_time");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -1466,26 +1412,17 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Identity.Employee", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("EmployeeNumber")
                         .HasMaxLength(40)
@@ -1496,6 +1433,18 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("hire_date");
 
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
@@ -1505,8 +1454,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(150)")
                         .HasColumnName("job_title");
 
-                    b.Property<Guid?>("ManagerId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("ManagerId")
+                        .HasColumnType("bigint")
                         .HasColumnName("manager_id");
 
                     b.Property<string>("Mobile")
@@ -1514,20 +1463,12 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(32)")
                         .HasColumnName("mobile");
 
-                    b.Property<Guid?>("PlacementNodeId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("PlacementNodeId")
+                        .HasColumnType("bigint")
                         .HasColumnName("placement_node_id");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
                         .HasColumnName("user_id");
 
                     b.Property<uint>("Version")
@@ -1536,8 +1477,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -1559,30 +1500,33 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Identity.PasswordResetToken", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                        .HasColumnName("changed_date");
 
                     b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");
+
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -1594,20 +1538,12 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(128)")
                         .HasColumnName("token_hash");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<DateTimeOffset?>("UsedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("used_at");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
                         .HasColumnName("user_id");
 
                     b.Property<uint>("Version")
@@ -1616,8 +1552,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -1635,42 +1571,45 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Identity.RefreshToken", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
+                    b.Property<DateTimeOffset?>("ChangedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("CreatedByIp")
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)")
                         .HasColumnName("created_by_ip");
 
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
-
                     b.Property<DateTimeOffset>("ExpiresAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at");
+
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
-                    b.Property<Guid?>("ReplacedByTokenId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("ReplacedByTokenId")
+                        .HasColumnType("bigint")
                         .HasColumnName("replaced_by_token_id");
 
                     b.Property<DateTimeOffset?>("RevokedAt")
@@ -1683,16 +1622,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(128)")
                         .HasColumnName("token_hash");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint")
                         .HasColumnName("user_id");
 
                     b.Property<uint>("Version")
@@ -1701,8 +1632,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -1720,9 +1651,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Identity.User", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
                     b.Property<DateTimeOffset?>("AccessExpiryDate")
@@ -1742,21 +1672,13 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(1024)")
                         .HasColumnName("avatar_url");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
@@ -1775,6 +1697,18 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("first_name");
+
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -1842,22 +1776,14 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(256)")
                         .HasColumnName("two_factor_secret");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -1876,26 +1802,29 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Identity.WorkspaceSecurityPolicy", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("changed_date");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
 
-                    b.Property<DateTimeOffset?>("DeletedAt")
+                    b.Property<DateTimeOffset>("InsertedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
+                        .HasColumnName("inserted_date");
 
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -1945,22 +1874,14 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("session_idle_timeout_minutes");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -1971,9 +1892,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Mail.MailTemplate", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
                     b.Property<string>("BodyHtmlTemplate")
@@ -1985,27 +1905,27 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("body_text_template");
 
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_date");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("code");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                        .HasColumnName("inserted_date");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
@@ -2027,22 +1947,14 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(300)")
                         .HasColumnName("subject_template");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid?>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -2058,9 +1970,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Mail.SendMail", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
                     b.Property<string>("BodyHtml")
@@ -2072,21 +1983,25 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("body_text");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("changed_date");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
 
-                    b.Property<DateTimeOffset?>("DeletedAt")
+                    b.Property<DateTimeOffset>("InsertedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
+                        .HasColumnName("inserted_date");
 
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -2097,8 +2012,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(2000)")
                         .HasColumnName("last_error");
 
-                    b.Property<Guid?>("MailTemplateId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("MailTemplateId")
+                        .HasColumnType("bigint")
                         .HasColumnName("mail_template_id");
 
                     b.Property<int>("MaxRetries")
@@ -2142,22 +2057,14 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("jsonb")
                         .HasColumnName("template_data_json");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -2171,9 +2078,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Mail.SendMailAttempt", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
                     b.Property<int>("AttemptNo")
@@ -2184,26 +2090,30 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("attempted_at");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("ErrorMessage")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)")
                         .HasColumnName("error_message");
+
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -2213,21 +2123,13 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("provider_response");
 
-                    b.Property<Guid>("SendMailId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("SendMailId")
+                        .HasColumnType("bigint")
                         .HasColumnName("send_mail_id");
 
                     b.Property<bool>("Success")
                         .HasColumnType("boolean")
                         .HasColumnName("success");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -2235,8 +2137,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -2250,9 +2152,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Mail.SendMailRecipient", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
                     b.Property<string>("Address")
@@ -2261,26 +2162,30 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(320)")
                         .HasColumnName("address");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("DisplayName")
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)")
                         .HasColumnName("display_name");
+
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -2292,17 +2197,9 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(10)")
                         .HasColumnName("recipient_type");
 
-                    b.Property<Guid>("SendMailId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("SendMailId")
+                        .HasColumnType("bigint")
                         .HasColumnName("send_mail_id");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -2310,8 +2207,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -2325,10 +2222,17 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Structure.StructureNode", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
+
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -2336,33 +2240,29 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(60)")
                         .HasColumnName("code");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
-
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("description");
 
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
 
-                    b.Property<Guid?>("ManagerId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("ManagerId")
+                        .HasColumnType("bigint")
                         .HasColumnName("manager_id");
 
                     b.Property<string>("Name")
@@ -2377,8 +2277,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("node_type");
 
-                    b.Property<Guid?>("ParentId")
-                        .HasColumnType("uuid")
+                    b.Property<long?>("ParentId")
+                        .HasColumnType("bigint")
                         .HasColumnName("parent_id");
 
                     b.Property<int>("SortOrder")
@@ -2391,22 +2291,14 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("status");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -2425,9 +2317,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Tenancy.Workspace", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
                     b.Property<string>("BaseCurrency")
@@ -2436,18 +2327,18 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(3)")
                         .HasColumnName("base_currency");
 
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_date");
+
                     b.Property<string>("Country")
                         .HasMaxLength(2)
                         .HasColumnType("character varying(2)")
                         .HasColumnName("country");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
 
                     b.Property<string>("DefaultLanguage")
                         .IsRequired()
@@ -2455,13 +2346,17 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(8)")
                         .HasColumnName("default_language");
 
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
 
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -2496,14 +2391,6 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(64)")
                         .HasColumnName("time_zone");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -2525,30 +2412,33 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Workflow.EventStatus", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
+                        .HasColumnName("changed_date");
 
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
-
-                    b.Property<Guid>("EventId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("EventId")
+                        .HasColumnType("bigint")
                         .HasColumnName("event_id");
+
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("inserted_date");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<bool>("IsCurrent")
                         .HasColumnType("boolean")
@@ -2562,17 +2452,9 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("text")
                         .HasColumnName("note");
 
-                    b.Property<Guid>("StatusId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("StatusId")
+                        .HasColumnType("bigint")
                         .HasColumnName("status_id");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -2580,8 +2462,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -2598,10 +2480,17 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Workflow.Status", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
+
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -2614,21 +2503,13 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("color");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                        .HasColumnName("inserted_date");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
@@ -2656,17 +2537,9 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("sort_order");
 
-                    b.Property<Guid>("StatusTypeId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("StatusTypeId")
+                        .HasColumnType("bigint")
                         .HasColumnName("status_type_id");
-
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
 
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
@@ -2674,8 +2547,8 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")
@@ -2692,10 +2565,17 @@ namespace Erp.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Erp.Domain.Workflow.StatusType", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
+                    b.Property<long>("Id")
+                        .HasColumnType("bigint")
                         .HasColumnName("id");
+
+                    b.Property<long?>("ChangedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("changed_by");
+
+                    b.Property<DateTimeOffset?>("ChangedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("changed_date");
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -2703,21 +2583,13 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("code");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<long?>("InsertedBy")
+                        .HasColumnType("bigint")
+                        .HasColumnName("inserted_by");
+
+                    b.Property<DateTimeOffset>("InsertedDate")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid?>("CreatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("created_by");
-
-                    b.Property<DateTimeOffset?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deleted_at");
-
-                    b.Property<Guid?>("DeletedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("deleted_by");
+                        .HasColumnName("inserted_date");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean")
@@ -2733,22 +2605,14 @@ namespace Erp.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(200)")
                         .HasColumnName("name");
 
-                    b.Property<DateTimeOffset?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.Property<Guid?>("UpdatedBy")
-                        .HasColumnType("uuid")
-                        .HasColumnName("updated_by");
-
                     b.Property<uint>("Version")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
                         .HasColumnName("xmin");
 
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uuid")
+                    b.Property<long>("WorkspaceId")
+                        .HasColumnType("bigint")
                         .HasColumnName("workspace_id");
 
                     b.HasKey("Id")

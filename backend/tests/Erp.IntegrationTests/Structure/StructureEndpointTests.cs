@@ -31,9 +31,9 @@ public sealed class StructureEndpointTests : IAsyncLifetime
         return client;
     }
 
-    private sealed record CreatedId(Guid Id);
+    private sealed record CreatedId(long Id);
 
-    private static async Task<Guid> CreateNode(HttpClient client, Guid? parent, StructureNodeType type, string name, string code)
+    private static async Task<long> CreateNode(HttpClient client, long? parent, StructureNodeType type, string name, string code)
     {
         var resp = await client.PostAsJsonAsync("/api/v1/structure/nodes",
             new CreateNodeRequest(parent, type, name, code, null, null, null));
@@ -151,7 +151,7 @@ public sealed class StructureEndpointTests : IAsyncLifetime
             new LoginRequest(slug, "plain@x.test", Password))).Content.ReadFromJsonAsync<AuthTokens>();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokens!.AccessToken);
 
-        var response = await client.GetAsync($"/api/v1/structure/nodes/{Guid.NewGuid()}/members");
+        var response = await client.GetAsync($"/api/v1/structure/nodes/999999999/members");
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 }
