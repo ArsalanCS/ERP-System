@@ -10,10 +10,10 @@ public interface ICurrentUser
     bool IsAuthenticated { get; }
 
     /// <summary>The user account id, or null when unauthenticated.</summary>
-    Guid? UserId { get; }
+    long? UserId { get; }
 
     /// <summary>The workspace the request is scoped to, or null when unauthenticated.</summary>
-    Guid? WorkspaceId { get; }
+    long? WorkspaceId { get; }
 
     string? Email { get; }
 
@@ -21,7 +21,7 @@ public interface ICurrentUser
     bool IsPlatformAdmin { get; }
 
     /// <summary>Clusters the caller may act within, in the active workspace.</summary>
-    IReadOnlySet<Guid> ClusterIds { get; }
+    IReadOnlySet<long> ClusterIds { get; }
 
     /// <summary>Effective allowed actions (e.g. "user.manage"). Deny-wins is pre-applied.</summary>
     IReadOnlySet<string> Actions { get; }

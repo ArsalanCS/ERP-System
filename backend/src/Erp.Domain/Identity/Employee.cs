@@ -12,24 +12,24 @@ public sealed class Employee : TenantEntity
 {
     private Employee() { } // EF
 
-    public Employee(Guid workspaceId, Guid userId)
+    public Employee(long workspaceId, long userId)
     {
         AssignWorkspace(workspaceId);
         UserId = userId;
     }
 
     /// <summary>The auth account this employee record belongs to (unique).</summary>
-    public Guid UserId { get; private set; }
+    public long UserId { get; private set; }
 
     public string? EmployeeNumber { get; private set; }
     public string? JobTitle { get; private set; }
     public string? Mobile { get; private set; }
 
     /// <summary>The structure node the employee is placed under (org/dept/branch/team…).</summary>
-    public Guid? PlacementNodeId { get; private set; }
+    public long? PlacementNodeId { get; private set; }
 
     /// <summary>The user id of this employee's manager.</summary>
-    public Guid? ManagerId { get; private set; }
+    public long? ManagerId { get; private set; }
 
     public DateTimeOffset? HireDate { get; private set; }
 
@@ -48,7 +48,7 @@ public sealed class Employee : TenantEntity
         Mobile = mobile;
     }
 
-    public void PlaceAt(Guid? nodeId) => PlacementNodeId = nodeId;
+    public void PlaceAt(long? nodeId) => PlacementNodeId = nodeId;
 
-    public void SetManager(Guid? managerId) => ManagerId = managerId;
+    public void SetManager(long? managerId) => ManagerId = managerId;
 }

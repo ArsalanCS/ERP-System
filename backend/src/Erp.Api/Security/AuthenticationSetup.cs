@@ -55,7 +55,7 @@ public static class AuthenticationSetup
         var userIdValue = principal?.FindFirst(ErpClaimTypes.UserId)?.Value;
         var workspaceValue = principal?.FindFirst(ErpClaimTypes.WorkspaceId)?.Value;
 
-        if (stampClaim is null || !Guid.TryParse(userIdValue, out var userId) || !Guid.TryParse(workspaceValue, out var workspaceId))
+        if (stampClaim is null || !long.TryParse(userIdValue, out var userId) || !long.TryParse(workspaceValue, out var workspaceId))
         {
             context.Fail("Malformed token.");
             return;

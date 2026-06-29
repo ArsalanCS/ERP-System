@@ -5,7 +5,7 @@ using Erp.Shared.Results;
 
 namespace Erp.Application.Account;
 
-public sealed record MyProfileDto(Guid Id, string Email, string FirstName, string LastName, string DisplayName,
+public sealed record MyProfileDto(long Id, string Email, string FirstName, string LastName, string DisplayName,
     string? Mobile, string PreferredLanguage, string TimeZone, string? JobTitle, bool TwoFactorEnabled);
 
 public sealed record UpdateMyProfileRequest(string FirstName, string LastName, string DisplayName,
@@ -13,7 +13,7 @@ public sealed record UpdateMyProfileRequest(string FirstName, string LastName, s
 
 public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 
-public sealed record SessionDto(Guid Id, string? CreatedByIp, DateTimeOffset CreatedAt, DateTimeOffset ExpiresAt);
+public sealed record SessionDto(long Id, string? CreatedByIp, DateTimeOffset CreatedAt, DateTimeOffset ExpiresAt);
 
 public sealed record TwoFactorSetupDto(string Secret, string OtpAuthUri);
 
@@ -25,7 +25,7 @@ public interface IAccountService
     Task<Result> UpdateProfileAsync(UpdateMyProfileRequest request, CancellationToken ct = default);
     Task<Result> ChangePasswordAsync(ChangePasswordRequest request, CancellationToken ct = default);
     Task<Result<IReadOnlyList<SessionDto>>> ListSessionsAsync(CancellationToken ct = default);
-    Task<Result> RevokeSessionAsync(Guid sessionId, CancellationToken ct = default);
+    Task<Result> RevokeSessionAsync(long sessionId, CancellationToken ct = default);
 
     // ---- Two-factor (TOTP authenticator app, Identity spec §7) -------------
     Task<Result<TwoFactorSetupDto>> SetupTwoFactorAsync(CancellationToken ct = default);
@@ -106,11 +106,11 @@ public sealed class AccountService(
     {
         if (currentUser.UserId is not { } userId) return Result.Failure<IReadOnlyList<SessionDto>>(AccountErrors.Unauthenticated());
         var sessions = await refreshTokens.ListActiveAsync(userId, clock.UtcNow, ct);
-        IReadOnlyList<SessionDto> result = sessions.Select(s => new SessionDto(s.Id, s.CreatedByIp, s.CreatedAt, s.ExpiresAt)).ToList();
+        IReadOnlyList<SessionDto> result = sessions.Select(s => new SessionDto(s.Id, s.CreatedByIp, s.InsertedDate, s.ExpiresAt)).ToList();
         return Result.Success(result);
     }
 
-    public async Task<Result> RevokeSessionAsync(Guid sessionId, CancellationToken ct = default)
+    public async Task<Result> RevokeSessionAsync(long sessionId, CancellationToken ct = default)
     {
         if (currentUser.UserId is not { } userId) return Result.Failure(AccountErrors.Unauthenticated());
         var revoked = await refreshTokens.RevokeByIdAsync(sessionId, userId, clock.UtcNow, ct);

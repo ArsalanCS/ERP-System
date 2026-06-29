@@ -10,7 +10,7 @@ public sealed record OutboxQuery : ListQuery
 }
 
 public sealed record SendMailListItemDto(
-    Guid Id,
+    long Id,
     string Subject,
     SendStatus Status,
     string? TemplateCode,
@@ -24,10 +24,10 @@ public sealed record SendMailListItemDto(
 
 public sealed record SendMailRecipientDto(string Address, string? DisplayName, MailRecipientKind Kind);
 
-public sealed record SendMailAttemptDto(Guid Id, int AttemptNo, bool Success, string? ProviderResponse, string? ErrorMessage, DateTimeOffset AttemptedAt);
+public sealed record SendMailAttemptDto(long Id, int AttemptNo, bool Success, string? ProviderResponse, string? ErrorMessage, DateTimeOffset AttemptedAt);
 
 public sealed record SendMailDetailDto(
-    Guid Id,
+    long Id,
     string Subject,
     string BodyHtml,
     string? BodyText,
@@ -45,7 +45,7 @@ public sealed record SendMailDetailDto(
     IReadOnlyList<SendMailAttemptDto> Attempts);
 
 public sealed record MailTemplateDto(
-    Guid Id,
+    long Id,
     string Code,
     string Name,
     string SubjectTemplate,

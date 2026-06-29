@@ -11,7 +11,7 @@ public sealed class EventDependency : TenantEntity
 {
     private EventDependency() { } // EF
 
-    public EventDependency(Guid workspaceId, Guid eventId, Guid dependsOnEventId, bool isBlocking)
+    public EventDependency(long workspaceId, long eventId, long dependsOnEventId, bool isBlocking)
     {
         AssignWorkspace(workspaceId);
         EventId = eventId;
@@ -19,7 +19,7 @@ public sealed class EventDependency : TenantEntity
         IsBlocking = isBlocking;
     }
 
-    public Guid EventId { get; private set; }
-    public Guid DependsOnEventId { get; private set; }
+    public long EventId { get; private set; }
+    public long DependsOnEventId { get; private set; }
     public bool IsBlocking { get; private set; }
 }

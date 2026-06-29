@@ -11,7 +11,7 @@ public sealed class StatusType : TenantEntity
 {
     private StatusType() { } // EF
 
-    public StatusType(Guid workspaceId, string code, string name)
+    public StatusType(long workspaceId, string code, string name)
     {
         AssignWorkspace(workspaceId);
         Code = code.Trim();
@@ -21,7 +21,6 @@ public sealed class StatusType : TenantEntity
 
     public string Code { get; private set; } = default!;
     public string Name { get; private set; } = default!;
-    public bool IsActive { get; private set; }
 
     public void Rename(string name) => Name = name.Trim();
 }

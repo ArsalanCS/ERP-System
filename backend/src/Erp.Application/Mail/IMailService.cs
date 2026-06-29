@@ -11,10 +11,10 @@ namespace Erp.Application.Mail;
 public interface IMailService
 {
     Task<Result<PagedResult<SendMailListItemDto>>> ListOutboxAsync(OutboxQuery query, CancellationToken ct = default);
-    Task<Result<SendMailDetailDto>> GetAsync(Guid id, CancellationToken ct = default);
-    Task<Result> RetryAsync(Guid id, CancellationToken ct = default);
-    Task<Result> CancelAsync(Guid id, CancellationToken ct = default);
+    Task<Result<SendMailDetailDto>> GetAsync(long id, CancellationToken ct = default);
+    Task<Result> RetryAsync(long id, CancellationToken ct = default);
+    Task<Result> CancelAsync(long id, CancellationToken ct = default);
 
     Task<Result<IReadOnlyList<MailTemplateDto>>> ListTemplatesAsync(CancellationToken ct = default);
-    Task<Result> UpdateTemplateAsync(Guid id, UpdateMailTemplateRequest request, CancellationToken ct = default);
+    Task<Result> UpdateTemplateAsync(long id, UpdateMailTemplateRequest request, CancellationToken ct = default);
 }

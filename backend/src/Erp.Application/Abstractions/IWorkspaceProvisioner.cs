@@ -23,4 +23,4 @@ public sealed record WorkspaceProvisionRequest(
     string PasswordHash,
     bool ActivateImmediately);
 
-public sealed record WorkspaceProvisionResult(Guid WorkspaceId, Guid UserId);
+public sealed record WorkspaceProvisionResult(long WorkspaceId, long UserId);

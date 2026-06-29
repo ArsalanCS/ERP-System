@@ -35,25 +35,25 @@ public sealed class AuditSaveChangesInterceptor(IClock clock, ICurrentUser curre
         var now = clock.UtcNow;
         var userId = currentUser.UserId;
 
-        foreach (var entry in context.ChangeTracker.Entries<Entity>())
+        foreach (var entry in context.ChangeTracker.Entries<BaseEntity>())
         {
             switch (entry.State)
             {
                 case EntityState.Added:
-                    entry.Entity.CreatedAt = now;
-                    entry.Entity.CreatedBy ??= userId;
+                    entry.Entity.InsertedDate = now;
+                    entry.Entity.InsertedBy ??= userId;
                     GuardTenant(entry);
                     break;
                 case EntityState.Modified:
-                    entry.Entity.UpdatedAt = now;
-                    entry.Entity.UpdatedBy = userId;
+                    entry.Entity.ChangedDate = now;
+                    entry.Entity.ChangedBy = userId;
                     GuardTenant(entry);
                     break;
             }
         }
     }
 
-    private void GuardTenant(EntityEntry<Entity> entry)
+    private void GuardTenant(EntityEntry<BaseEntity> entry)
     {
         if (entry.Entity is not ITenantOwned owned) return;
         if (tenant.IsPlatformAdmin || !tenant.HasScope) return;

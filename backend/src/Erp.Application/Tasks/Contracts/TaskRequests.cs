@@ -7,8 +7,8 @@ namespace Erp.Application.Tasks.Contracts;
 public sealed record CreateTaskRequest(
     string Title,
     string? Description,
-    Guid? AssigneeId,
-    Guid? PriorityStatusId,
+    long? AssigneeId,
+    long? PriorityStatusId,
     DateTimeOffset? StartAt,
     DateTimeOffset? DueAt,
     decimal? EstimatedTime);
@@ -22,11 +22,11 @@ public sealed record UpdateTaskRequest(
     decimal? ActualTime,
     int CompletionPercent);
 
-public sealed record ChangeStatusRequest(Guid StatusId, string? Note);
+public sealed record ChangeStatusRequest(long StatusId, string? Note);
 
-public sealed record AssignTaskRequest(Guid? AssigneeId);
+public sealed record AssignTaskRequest(long? AssigneeId);
 
-public sealed record SetPriorityRequest(Guid? PriorityStatusId);
+public sealed record SetPriorityRequest(long? PriorityStatusId);
 
 public sealed record CreateNoteRequest(string Body, bool IsPinned, bool IsInternal);
 
@@ -35,7 +35,7 @@ public sealed record UpdateNoteRequest(string Body, bool IsPinned, bool IsIntern
 /// <summary>Reference-based document (name + URL/path). Real binary upload is a later phase.</summary>
 public sealed record CreateDocumentRequest(string FileName, string FilePath, string? MimeType);
 
-public sealed record CreateDependencyRequest(Guid DependsOnEventId, bool IsBlocking);
+public sealed record CreateDependencyRequest(long DependsOnEventId, bool IsBlocking);
 
 /// <summary>
 /// A daily progress report (architecture §16). Date defaults to today (server) when omitted.
@@ -48,7 +48,7 @@ public sealed record CreateDailyReportRequest(
     decimal? EstimatedTime,
     decimal? ActualTime,
     decimal? RemainingTime,
-    Guid? StatusId);
+    long? StatusId);
 
 public sealed record UpdateDailyReportRequest(
     DateOnly ReportDate,
@@ -56,4 +56,4 @@ public sealed record UpdateDailyReportRequest(
     decimal? EstimatedTime,
     decimal? ActualTime,
     decimal? RemainingTime,
-    Guid? StatusId);
+    long? StatusId);

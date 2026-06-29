@@ -27,7 +27,7 @@ public sealed class JwtTokenService(
     public AccessToken CreateAccessToken(
         User user,
         IReadOnlyCollection<string> actions,
-        IReadOnlyCollection<Guid> clusterIds,
+        IReadOnlyCollection<long> clusterIds,
         bool isPlatformAdmin)
     {
         var now = clock.UtcNow;

@@ -11,7 +11,7 @@ public sealed class Document : TenantEntity
 {
     private Document() { } // EF
 
-    public Document(Guid workspaceId, Guid assetId, string fileName, string filePath, string? mimeType, long? fileSize)
+    public Document(long workspaceId, long assetId, string fileName, string filePath, string? mimeType, long? fileSize)
     {
         AssignWorkspace(workspaceId);
         AssetId = assetId;
@@ -21,7 +21,7 @@ public sealed class Document : TenantEntity
         FileSize = fileSize;
     }
 
-    public Guid AssetId { get; private set; }
+    public long AssetId { get; private set; }
     public string FileName { get; private set; } = default!;
     public string FilePath { get; private set; } = default!;
     public string? MimeType { get; private set; }

@@ -13,7 +13,7 @@ public sealed class TaskEvent : TenantEntity
 {
     private TaskEvent() { } // EF
 
-    public TaskEvent(Guid workspaceId, Guid eventId, string referenceNo, string title, Guid? reporterId)
+    public TaskEvent(long workspaceId, long eventId, string referenceNo, string title, long? reporterId)
     {
         AssignWorkspace(workspaceId);
         EventId = eventId;
@@ -23,19 +23,19 @@ public sealed class TaskEvent : TenantEntity
         CompletionPercent = 0;
     }
 
-    public Guid EventId { get; private set; }
+    public long EventId { get; private set; }
     /// <summary>Human-readable per-workspace number (e.g. TSK-00001).</summary>
     public string ReferenceNo { get; private set; } = default!;
 
     public string Title { get; private set; } = default!;
     public string? Description { get; private set; }
 
-    public Guid? AssigneeId { get; private set; }
-    public Guid? ReporterId { get; private set; }
+    public long? AssigneeId { get; private set; }
+    public long? ReporterId { get; private set; }
     /// <summary>Parent task's <c>event_id</c> for subtasks.</summary>
-    public Guid? ParentEventId { get; private set; }
+    public long? ParentEventId { get; private set; }
     /// <summary>FK to a Status whose StatusType code is TASK_PRIORITY.</summary>
-    public Guid? PriorityStatusId { get; private set; }
+    public long? PriorityStatusId { get; private set; }
 
     public DateTimeOffset? StartAt { get; private set; }
     public DateTimeOffset? DueAt { get; private set; }
@@ -62,7 +62,7 @@ public sealed class TaskEvent : TenantEntity
         ActualTime = actualTime;
     }
 
-    public void Assign(Guid? assigneeId) => AssigneeId = assigneeId;
-    public void SetPriority(Guid? priorityStatusId) => PriorityStatusId = priorityStatusId;
-    public void PlaceUnderParent(Guid? parentEventId) => ParentEventId = parentEventId;
+    public void Assign(long? assigneeId) => AssigneeId = assigneeId;
+    public void SetPriority(long? priorityStatusId) => PriorityStatusId = priorityStatusId;
+    public void PlaceUnderParent(long? parentEventId) => ParentEventId = parentEventId;
 }

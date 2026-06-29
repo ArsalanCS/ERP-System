@@ -12,7 +12,7 @@ public sealed class Status : TenantEntity
 {
     private Status() { } // EF
 
-    public Status(Guid workspaceId, Guid statusTypeId, string code, string name, int sortOrder, bool isInitial, bool isClosed, string? color)
+    public Status(long workspaceId, long statusTypeId, string code, string name, int sortOrder, bool isInitial, bool isClosed, string? color)
     {
         AssignWorkspace(workspaceId);
         StatusTypeId = statusTypeId;
@@ -25,14 +25,13 @@ public sealed class Status : TenantEntity
         IsActive = true;
     }
 
-    public Guid StatusTypeId { get; private set; }
+    public long StatusTypeId { get; private set; }
     public string Code { get; private set; } = default!;
     public string Name { get; private set; } = default!;
     public int SortOrder { get; private set; }
     public bool IsInitial { get; private set; }
     public bool IsClosed { get; private set; }
     public string? Color { get; private set; }
-    public bool IsActive { get; private set; }
 
     public void Update(string name, int sortOrder, bool isInitial, bool isClosed, string? color, bool isActive)
     {

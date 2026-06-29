@@ -28,9 +28,9 @@ public sealed record AuditEntry
     public string? Reason { get; init; }
 
     // Optional overrides for flows where the HTTP principal isn't set yet (e.g. login).
-    public Guid? WorkspaceId { get; init; }
-    public Guid? ActorUserId { get; init; }
+    public long? WorkspaceId { get; init; }
+    public long? ActorUserId { get; init; }
     public string? ActorDisplayName { get; init; }
-    public Guid? OrganizationId { get; init; }
-    public Guid? ClusterId { get; init; }
+    public long? OrganizationId { get; init; }
+    public long? ClusterId { get; init; }
 }

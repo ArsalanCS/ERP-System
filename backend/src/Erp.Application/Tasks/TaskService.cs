@@ -53,7 +53,7 @@ public sealed class TaskService(
     {
         var now = clock.UtcNow;
         var q = ApplyFilters(await VisibleRowsAsync(ct), query, now);
-        var dto = q.OrderByDescending(x => x.te.CreatedAt).Select(Projection(now));
+        var dto = q.OrderByDescending(x => x.te.InsertedDate).Select(Projection(now));
         var page = await dto.ToPagedResultAsync(query.Page, query.PageSize, ct);
         return Result.Success(page);
     }
@@ -85,7 +85,7 @@ public sealed class TaskService(
         return q;
     }
 
-    public async Task<Result<TaskDetailsDto>> GetAsync(Guid eventId, CancellationToken ct = default)
+    public async Task<Result<TaskDetailsDto>> GetAsync(long eventId, CancellationToken ct = default)
     {
         if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<TaskDetailsDto>(TaskErrors.NotFound("Task"));
         var now = clock.UtcNow;
@@ -105,25 +105,25 @@ public sealed class TaskService(
             from rp in rpg.DefaultIfEmpty()
             select new TaskDetailsDto(
                 te.EventId, te.ReferenceNo, te.Title, te.Description,
-                st != null ? st.Id : (Guid?)null, st != null ? st.Name : null, st != null ? st.Color : null, st != null && st.IsClosed,
+                st != null ? st.Id : (long?)null, st != null ? st.Name : null, st != null ? st.Color : null, st != null && st.IsClosed,
                 te.PriorityStatusId, pr != null ? pr.Name : null, pr != null ? pr.Color : null,
                 te.AssigneeId, au != null ? au.DisplayName : null,
                 te.ReporterId, rp != null ? rp.DisplayName : null,
                 te.ParentEventId,
                 te.StartAt, te.DueAt, te.EstimatedTime, te.ActualTime,
                 te.CompletionPercent, te.DueAt != null && te.DueAt < now && (st == null || !st.IsClosed),
-                te.CreatedAt, te.UpdatedAt))
+                te.InsertedDate, te.ChangedDate))
             .FirstOrDefaultAsync(ct);
 
         return dto is null ? Result.Failure<TaskDetailsDto>(TaskErrors.NotFound("Task")) : Result.Success(dto);
     }
 
-    public async Task<Result<IReadOnlyList<TaskListItemDto>>> ListSubtasksAsync(Guid eventId, CancellationToken ct = default)
+    public async Task<Result<IReadOnlyList<TaskListItemDto>>> ListSubtasksAsync(long eventId, CancellationToken ct = default)
     {
         if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<IReadOnlyList<TaskListItemDto>>(TaskErrors.NotFound("Task"));
         var now = clock.UtcNow;
         var list = await BaseQuery().Where(x => x.te.ParentEventId == eventId)
-            .OrderBy(x => x.te.CreatedAt).Select(Projection(now)).ToListAsync(ct);
+            .OrderBy(x => x.te.InsertedDate).Select(Projection(now)).ToListAsync(ct);
         return Result.Success<IReadOnlyList<TaskListItemDto>>(list);
     }
 
@@ -189,7 +189,7 @@ public sealed class TaskService(
         for (var i = 13; i >= 0; i--)
         {
             var day = today.AddDays(-i);
-            var created = rows.Count(r => DateOnly.FromDateTime(r.CreatedAt.UtcDateTime) == day);
+            var created = rows.Count(r => DateOnly.FromDateTime(r.InsertedDate.UtcDateTime) == day);
             var done = rows.Count(r => r.IsClosed && r.StatusSince is { } s && DateOnly.FromDateTime(s.UtcDateTime) == day);
             trend.Add(new TaskTrendPointDto(day, created, done));
         }
@@ -267,12 +267,12 @@ public sealed class TaskService(
         if (query.StatusId is { } sid) q = q.Where(x => x.dr.StatusId == sid);
 
         var page = await q
-            .OrderByDescending(x => x.dr.ReportDate).ThenByDescending(x => x.dr.CreatedAt)
+            .OrderByDescending(x => x.dr.ReportDate).ThenByDescending(x => x.dr.InsertedDate)
             .Select(x => new TaskDailyReportRowDto(
                 x.dr.Id, x.dr.EventId, x.te.ReferenceNo, x.te.Title, x.dr.ReportDate, x.dr.Description,
                 x.dr.EstimatedTime, x.dr.ActualTime, x.dr.RemainingTime,
-                x.st != null ? x.st.Id : (Guid?)null, x.st != null ? x.st.Name : null, x.st != null ? x.st.Color : null,
-                x.dr.UserId, x.au != null ? x.au.DisplayName : null, x.dr.CreatedAt))
+                x.st != null ? x.st.Id : (long?)null, x.st != null ? x.st.Name : null, x.st != null ? x.st.Color : null,
+                x.dr.UserId, x.au != null ? x.au.DisplayName : null, x.dr.InsertedDate))
             .ToPagedResultAsync(query.Page, query.PageSize, ct);
         return Result.Success(page);
     }
@@ -285,7 +285,7 @@ public sealed class TaskService(
             Title = x.te.Title,
             AssigneeId = x.te.AssigneeId,
             AssigneeName = x.au != null ? x.au.DisplayName : null,
-            StatusId = x.st != null ? x.st.Id : (Guid?)null,
+            StatusId = x.st != null ? x.st.Id : (long?)null,
             StatusName = x.st != null ? x.st.Name : null,
             StatusColor = x.st != null ? x.st.Color : null,
             IsClosed = x.st != null && x.st.IsClosed,
@@ -296,7 +296,7 @@ public sealed class TaskService(
             PriorityColor = x.pr != null ? x.pr.Color : null,
             StartAt = x.te.StartAt,
             DueAt = x.te.DueAt,
-            CreatedAt = x.te.CreatedAt,
+            InsertedDate = x.te.InsertedDate,
             CompletionPercent = x.te.CompletionPercent,
             StatusSince = x.statusSince,
             Estimated = x.te.EstimatedTime,
@@ -305,30 +305,30 @@ public sealed class TaskService(
 
     private sealed class SlimRow
     {
-        public Guid EventId { get; set; }
+        public long EventId { get; set; }
         public string ReferenceNo { get; set; } = "";
         public string Title { get; set; } = "";
-        public Guid? AssigneeId { get; set; }
+        public long? AssigneeId { get; set; }
         public string? AssigneeName { get; set; }
-        public Guid? StatusId { get; set; }
+        public long? StatusId { get; set; }
         public string? StatusName { get; set; }
         public string? StatusColor { get; set; }
         public bool IsClosed { get; set; }
         public bool IsInitial { get; set; }
-        public Guid? PriorityId { get; set; }
+        public long? PriorityId { get; set; }
         public string? PriorityCode { get; set; }
         public string? PriorityName { get; set; }
         public string? PriorityColor { get; set; }
         public DateTimeOffset? StartAt { get; set; }
         public DateTimeOffset? DueAt { get; set; }
-        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset InsertedDate { get; set; }
         public int CompletionPercent { get; set; }
         public DateTimeOffset? StatusSince { get; set; }
         public decimal? Estimated { get; set; }
         public decimal? Actual { get; set; }
     }
 
-    public async Task<Result<IReadOnlyList<TaskActivityDto>>> GetActivityAsync(Guid eventId, CancellationToken ct = default)
+    public async Task<Result<IReadOnlyList<TaskActivityDto>>> GetActivityAsync(long eventId, CancellationToken ct = default)
     {
         if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<IReadOnlyList<TaskActivityDto>>(TaskErrors.NotFound("Task"));
         var list = await (
@@ -342,7 +342,7 @@ public sealed class TaskService(
         return Result.Success<IReadOnlyList<TaskActivityDto>>(list);
     }
 
-    public async Task<Result<IReadOnlyList<TaskAuditDto>>> GetAuditAsync(Guid eventId, CancellationToken ct = default)
+    public async Task<Result<IReadOnlyList<TaskAuditDto>>> GetAuditAsync(long eventId, CancellationToken ct = default)
     {
         if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<IReadOnlyList<TaskAuditDto>>(TaskErrors.NotFound("Task"));
         var id = eventId.ToString();
@@ -371,7 +371,7 @@ public sealed class TaskService(
     public Task<Result<CreateTaskResult>> CreateAsync(CreateTaskRequest request, CancellationToken ct = default)
         => CreateInternalAsync(request, parentEventId: null, ct);
 
-    public async Task<Result<CreateTaskResult>> CreateSubtaskAsync(Guid parentEventId, CreateTaskRequest request, CancellationToken ct = default)
+    public async Task<Result<CreateTaskResult>> CreateSubtaskAsync(long parentEventId, CreateTaskRequest request, CancellationToken ct = default)
     {
         var parent = await GetVisibleTaskAsync(parentEventId, ct);
         if (parent is null) return Result.Failure<CreateTaskResult>(TaskErrors.NotFound("Parent task"));
@@ -379,12 +379,12 @@ public sealed class TaskService(
         return await CreateInternalAsync(request, parentEventId, ct);
     }
 
-    private async Task<Result<CreateTaskResult>> CreateInternalAsync(CreateTaskRequest request, Guid? parentEventId, CancellationToken ct)
+    private async Task<Result<CreateTaskResult>> CreateInternalAsync(CreateTaskRequest request, long? parentEventId, CancellationToken ct)
     {
         if (currentUser.WorkspaceId is not { } ws) return Result.Failure<CreateTaskResult>(TaskErrors.NoScope());
 
         var eventTypeId = await eventTypes.Query()
-            .Where(t => t.Code == EventTypeCodes.TaskManagement).Select(t => (Guid?)t.Id).FirstOrDefaultAsync(ct);
+            .Where(t => t.Code == EventTypeCodes.TaskManagement).Select(t => (long?)t.Id).FirstOrDefaultAsync(ct);
         if (eventTypeId is null) return Result.Failure<CreateTaskResult>(TaskErrors.NoStatuses());
 
         var initial = await (from s in statuses.Query()
@@ -420,7 +420,7 @@ public sealed class TaskService(
         return Result.Success(new CreateTaskResult(ev.Id, reference));
     }
 
-    public async Task<Result> UpdateAsync(Guid eventId, UpdateTaskRequest request, CancellationToken ct = default)
+    public async Task<Result> UpdateAsync(long eventId, UpdateTaskRequest request, CancellationToken ct = default)
     {
         var te = await GetVisibleTaskAsync(eventId, ct);
         if (te is null) return Result.Failure(TaskErrors.NotFound("Task"));
@@ -435,7 +435,7 @@ public sealed class TaskService(
         return Result.Success();
     }
 
-    public async Task<Result> ChangeStatusAsync(Guid eventId, ChangeStatusRequest request, CancellationToken ct = default)
+    public async Task<Result> ChangeStatusAsync(long eventId, ChangeStatusRequest request, CancellationToken ct = default)
     {
         var te = await GetVisibleTaskAsync(eventId, ct);
         if (te is null) return Result.Failure(TaskErrors.NotFound("Task"));
@@ -460,12 +460,12 @@ public sealed class TaskService(
     }
 
     /// <summary>Effective task settings for the workspace (a transient default when none is saved yet).</summary>
-    private async Task<TaskSettings> GetSettingsAsync(Guid workspaceId, CancellationToken ct) =>
+    private async Task<TaskSettings> GetSettingsAsync(long workspaceId, CancellationToken ct) =>
         await taskSettings.Query().FirstOrDefaultAsync(s => s.WorkspaceId == workspaceId, ct)
         ?? new TaskSettings(workspaceId);
 
     /// <summary>Supersedes the current event status (if any) and inserts the new one as current. Returns the previous Status.</summary>
-    private async Task<Status?> SupersedeStatusAsync(Guid eventId, Guid ws, Guid newStatusId, string? note, CancellationToken ct)
+    private async Task<Status?> SupersedeStatusAsync(long eventId, long ws, long newStatusId, string? note, CancellationToken ct)
     {
         var current = await eventStatuses.Query().FirstOrDefaultAsync(es => es.EventId == eventId && es.IsCurrent, ct);
         Status? from = null;
@@ -492,7 +492,7 @@ public sealed class TaskService(
         return (code, extras);
     }
 
-    public async Task<Result> AssignAsync(Guid eventId, AssignTaskRequest request, CancellationToken ct = default)
+    public async Task<Result> AssignAsync(long eventId, AssignTaskRequest request, CancellationToken ct = default)
     {
         var te = await GetVisibleTaskAsync(eventId, ct);
         if (te is null) return Result.Failure(TaskErrors.NotFound("Task"));
@@ -508,7 +508,7 @@ public sealed class TaskService(
         return Result.Success();
     }
 
-    public async Task<Result> SetPriorityAsync(Guid eventId, SetPriorityRequest request, CancellationToken ct = default)
+    public async Task<Result> SetPriorityAsync(long eventId, SetPriorityRequest request, CancellationToken ct = default)
     {
         var te = await GetVisibleTaskAsync(eventId, ct);
         if (te is null) return Result.Failure(TaskErrors.NotFound("Task"));
@@ -522,7 +522,7 @@ public sealed class TaskService(
         return Result.Success();
     }
 
-    public async Task<Result> ArchiveAsync(Guid eventId, CancellationToken ct = default)
+    public async Task<Result> ArchiveAsync(long eventId, CancellationToken ct = default)
     {
         var te = await GetVisibleTaskAsync(eventId, ct);
         if (te is null) return Result.Failure(TaskErrors.NotFound("Task"));
@@ -539,27 +539,27 @@ public sealed class TaskService(
 
     // ---- Notes (Asset pattern) -------------------------------------------
 
-    public async Task<Result<IReadOnlyList<TaskNoteDto>>> ListNotesAsync(Guid eventId, CancellationToken ct = default)
+    public async Task<Result<IReadOnlyList<TaskNoteDto>>> ListNotesAsync(long eventId, CancellationToken ct = default)
     {
         if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<IReadOnlyList<TaskNoteDto>>(TaskErrors.NotFound("Task"));
         var list = await (
             from ea in eventAssets.Query()
             where ea.EventId == eventId && ea.RelationType == EventAssetRelationTypes.Note
             join n in notes.Query() on ea.AssetId equals n.AssetId
-            join u in users.Query() on n.CreatedBy equals u.Id into ug
+            join u in users.Query() on n.InsertedBy equals u.Id into ug
             from u in ug.DefaultIfEmpty()
-            orderby n.IsPinned descending, n.CreatedAt descending
-            select new TaskNoteDto(n.Id, n.Body, n.IsPinned, n.IsInternal, n.CreatedBy, u != null ? u.DisplayName : null, n.CreatedAt))
+            orderby n.IsPinned descending, n.InsertedDate descending
+            select new TaskNoteDto(n.Id, n.Body, n.IsPinned, n.IsInternal, n.InsertedBy, u != null ? u.DisplayName : null, n.InsertedDate))
             .ToListAsync(ct);
         return Result.Success<IReadOnlyList<TaskNoteDto>>(list);
     }
 
-    public async Task<Result<Guid>> AddNoteAsync(Guid eventId, CreateNoteRequest request, CancellationToken ct = default)
+    public async Task<Result<long>> AddNoteAsync(long eventId, CreateNoteRequest request, CancellationToken ct = default)
     {
         var te = await GetVisibleTaskAsync(eventId, ct);
-        if (te is null) return Result.Failure<Guid>(TaskErrors.NotFound("Task"));
+        if (te is null) return Result.Failure<long>(TaskErrors.NotFound("Task"));
         var assetTypeId = await AssetTypeIdAsync(AssetTypeCodes.Note, ct);
-        if (assetTypeId is null) return Result.Failure<Guid>(TaskErrors.NotFound("Asset type"));
+        if (assetTypeId is null) return Result.Failure<long>(TaskErrors.NotFound("Asset type"));
 
         var asset = new Asset(te.WorkspaceId, assetTypeId.Value, "Note", null);
         assets.Add(asset);
@@ -572,7 +572,7 @@ public sealed class TaskService(
         return Result.Success(note.Id);
     }
 
-    public async Task<Result> UpdateNoteAsync(Guid eventId, Guid noteId, UpdateNoteRequest request, CancellationToken ct = default)
+    public async Task<Result> UpdateNoteAsync(long eventId, long noteId, UpdateNoteRequest request, CancellationToken ct = default)
     {
         if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
         var note = await NoteForEventAsync(eventId, noteId, ct);
@@ -582,7 +582,7 @@ public sealed class TaskService(
         return Result.Success();
     }
 
-    public async Task<Result> RemoveNoteAsync(Guid eventId, Guid noteId, CancellationToken ct = default)
+    public async Task<Result> RemoveNoteAsync(long eventId, long noteId, CancellationToken ct = default)
     {
         if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
         var note = await NoteForEventAsync(eventId, noteId, ct);
@@ -595,27 +595,27 @@ public sealed class TaskService(
 
     // ---- Documents (Asset pattern) ---------------------------------------
 
-    public async Task<Result<IReadOnlyList<TaskDocumentDto>>> ListDocumentsAsync(Guid eventId, CancellationToken ct = default)
+    public async Task<Result<IReadOnlyList<TaskDocumentDto>>> ListDocumentsAsync(long eventId, CancellationToken ct = default)
     {
         if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<IReadOnlyList<TaskDocumentDto>>(TaskErrors.NotFound("Task"));
         var list = await (
             from ea in eventAssets.Query()
             where ea.EventId == eventId && ea.RelationType == EventAssetRelationTypes.Document
             join d in documents.Query() on ea.AssetId equals d.AssetId
-            join u in users.Query() on d.CreatedBy equals u.Id into ug
+            join u in users.Query() on d.InsertedBy equals u.Id into ug
             from u in ug.DefaultIfEmpty()
-            orderby d.CreatedAt descending
-            select new TaskDocumentDto(d.Id, d.FileName, d.FilePath, d.MimeType, d.CreatedBy, u != null ? u.DisplayName : null, d.CreatedAt))
+            orderby d.InsertedDate descending
+            select new TaskDocumentDto(d.Id, d.FileName, d.FilePath, d.MimeType, d.InsertedBy, u != null ? u.DisplayName : null, d.InsertedDate))
             .ToListAsync(ct);
         return Result.Success<IReadOnlyList<TaskDocumentDto>>(list);
     }
 
-    public async Task<Result<Guid>> AddDocumentAsync(Guid eventId, CreateDocumentRequest request, CancellationToken ct = default)
+    public async Task<Result<long>> AddDocumentAsync(long eventId, CreateDocumentRequest request, CancellationToken ct = default)
     {
         var te = await GetVisibleTaskAsync(eventId, ct);
-        if (te is null) return Result.Failure<Guid>(TaskErrors.NotFound("Task"));
+        if (te is null) return Result.Failure<long>(TaskErrors.NotFound("Task"));
         var assetTypeId = await AssetTypeIdAsync(AssetTypeCodes.Document, ct);
-        if (assetTypeId is null) return Result.Failure<Guid>(TaskErrors.NotFound("Asset type"));
+        if (assetTypeId is null) return Result.Failure<long>(TaskErrors.NotFound("Asset type"));
 
         var asset = new Asset(te.WorkspaceId, assetTypeId.Value, request.FileName, null);
         assets.Add(asset);
@@ -628,7 +628,7 @@ public sealed class TaskService(
         return Result.Success(doc.Id);
     }
 
-    public async Task<Result> RemoveDocumentAsync(Guid eventId, Guid documentId, CancellationToken ct = default)
+    public async Task<Result> RemoveDocumentAsync(long eventId, long documentId, CancellationToken ct = default)
     {
         if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
         var doc = await (from ea in eventAssets.Query()
@@ -645,7 +645,7 @@ public sealed class TaskService(
 
     // ---- Dependencies -----------------------------------------------------
 
-    public async Task<Result<IReadOnlyList<TaskDependencyDto>>> ListDependenciesAsync(Guid eventId, CancellationToken ct = default)
+    public async Task<Result<IReadOnlyList<TaskDependencyDto>>> ListDependenciesAsync(long eventId, CancellationToken ct = default)
     {
         if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<IReadOnlyList<TaskDependencyDto>>(TaskErrors.NotFound("Task"));
         var list = await (
@@ -657,16 +657,16 @@ public sealed class TaskService(
         return Result.Success<IReadOnlyList<TaskDependencyDto>>(list);
     }
 
-    public async Task<Result<Guid>> AddDependencyAsync(Guid eventId, CreateDependencyRequest request, CancellationToken ct = default)
+    public async Task<Result<long>> AddDependencyAsync(long eventId, CreateDependencyRequest request, CancellationToken ct = default)
     {
         var te = await GetVisibleTaskAsync(eventId, ct);
-        if (te is null) return Result.Failure<Guid>(TaskErrors.NotFound("Task"));
-        if (await IsClosedAsync(eventId, ct)) return Result.Failure<Guid>(TaskErrors.Closed());
-        if (request.DependsOnEventId == eventId) return Result.Failure<Guid>(TaskErrors.SelfDependency());
+        if (te is null) return Result.Failure<long>(TaskErrors.NotFound("Task"));
+        if (await IsClosedAsync(eventId, ct)) return Result.Failure<long>(TaskErrors.Closed());
+        if (request.DependsOnEventId == eventId) return Result.Failure<long>(TaskErrors.SelfDependency());
         if (!await tasks.Query().AnyAsync(t => t.EventId == request.DependsOnEventId, ct))
-            return Result.Failure<Guid>(TaskErrors.NotFound("Dependency task"));
+            return Result.Failure<long>(TaskErrors.NotFound("Dependency task"));
         if (await dependencies.Query().AnyAsync(d => d.EventId == eventId && d.DependsOnEventId == request.DependsOnEventId, ct))
-            return Result.Failure<Guid>(TaskErrors.DuplicateLink());
+            return Result.Failure<long>(TaskErrors.DuplicateLink());
 
         var dep = new EventDependency(te.WorkspaceId, eventId, request.DependsOnEventId, request.IsBlocking);
         dependencies.Add(dep);
@@ -676,7 +676,7 @@ public sealed class TaskService(
         return Result.Success(dep.Id);
     }
 
-    public async Task<Result> RemoveDependencyAsync(Guid eventId, Guid dependencyId, CancellationToken ct = default)
+    public async Task<Result> RemoveDependencyAsync(long eventId, long dependencyId, CancellationToken ct = default)
     {
         if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
         var dep = await dependencies.Query().FirstOrDefaultAsync(d => d.Id == dependencyId && d.EventId == eventId, ct);
@@ -688,7 +688,7 @@ public sealed class TaskService(
 
     // ---- Daily reports ----------------------------------------------------
 
-    public async Task<Result<IReadOnlyList<TaskDailyReportDto>>> ListDailyReportsAsync(Guid eventId, CancellationToken ct = default)
+    public async Task<Result<IReadOnlyList<TaskDailyReportDto>>> ListDailyReportsAsync(long eventId, CancellationToken ct = default)
     {
         if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure<IReadOnlyList<TaskDailyReportDto>>(TaskErrors.NotFound("Task"));
         var list = await (
@@ -698,28 +698,28 @@ public sealed class TaskService(
             from u in ug.DefaultIfEmpty()
             join s in statuses.Query() on r.StatusId equals s.Id into sg
             from s in sg.DefaultIfEmpty()
-            orderby r.ReportDate descending, r.CreatedAt descending
+            orderby r.ReportDate descending, r.InsertedDate descending
             select new TaskDailyReportDto(r.Id, r.ReportDate, r.Description, r.EstimatedTime, r.ActualTime, r.RemainingTime,
                 r.StatusId, s != null ? s.Name : null, s != null ? s.Color : null,
-                r.UserId, u != null ? u.DisplayName : null, r.CreatedAt))
+                r.UserId, u != null ? u.DisplayName : null, r.InsertedDate))
             .ToListAsync(ct);
         return Result.Success<IReadOnlyList<TaskDailyReportDto>>(list);
     }
 
-    public async Task<Result<Guid>> AddDailyReportAsync(Guid eventId, CreateDailyReportRequest request, CancellationToken ct = default)
+    public async Task<Result<long>> AddDailyReportAsync(long eventId, CreateDailyReportRequest request, CancellationToken ct = default)
     {
         var te = await GetVisibleTaskAsync(eventId, ct);
-        if (te is null) return Result.Failure<Guid>(TaskErrors.NotFound("Task"));
+        if (te is null) return Result.Failure<long>(TaskErrors.NotFound("Task"));
 
         var settings = await GetSettingsAsync(te.WorkspaceId, ct);
-        if (settings.RequireEstimatedTime && request.EstimatedTime is null) return Result.Failure<Guid>(TaskErrors.ReportTimeRequired("estimated"));
-        if (settings.RequireActualTime && request.ActualTime is null) return Result.Failure<Guid>(TaskErrors.ReportTimeRequired("actual"));
+        if (settings.RequireEstimatedTime && request.EstimatedTime is null) return Result.Failure<long>(TaskErrors.ReportTimeRequired("estimated"));
+        if (settings.RequireActualTime && request.ActualTime is null) return Result.Failure<long>(TaskErrors.ReportTimeRequired("actual"));
 
         var author = currentUser.UserId;
         var date = request.ReportDate ?? DateOnly.FromDateTime(clock.UtcNow.UtcDateTime);
         if (!settings.AllowMultipleReportsPerDay &&
             await dailyReports.Query().AnyAsync(r => r.EventId == eventId && r.ReportDate == date && r.UserId == author, ct))
-            return Result.Failure<Guid>(TaskErrors.DuplicateReport());
+            return Result.Failure<long>(TaskErrors.DuplicateReport());
 
         // Validate any selected status belongs to TASK_STATUS.
         Status? selected = null;
@@ -729,7 +729,7 @@ public sealed class TaskService(
                               join t in statusTypes.Query() on s.StatusTypeId equals t.Id
                               where s.Id == sid && t.Code == StatusTypeCodes.TaskStatus
                               select s).FirstOrDefaultAsync(ct);
-            if (selected is null) return Result.Failure<Guid>(TaskErrors.StatusInvalid());
+            if (selected is null) return Result.Failure<long>(TaskErrors.StatusInvalid());
         }
 
         var report = new EventDailyReport(te.WorkspaceId, eventId, author, date, request.Description,
@@ -772,7 +772,7 @@ public sealed class TaskService(
         return Result.Success(report.Id);
     }
 
-    public async Task<Result> UpdateDailyReportAsync(Guid eventId, Guid reportId, UpdateDailyReportRequest request, CancellationToken ct = default)
+    public async Task<Result> UpdateDailyReportAsync(long eventId, long reportId, UpdateDailyReportRequest request, CancellationToken ct = default)
     {
         if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
         var report = await dailyReports.Query().FirstOrDefaultAsync(r => r.Id == reportId && r.EventId == eventId, ct);
@@ -789,7 +789,7 @@ public sealed class TaskService(
         return Result.Success();
     }
 
-    public async Task<Result> RemoveDailyReportAsync(Guid eventId, Guid reportId, CancellationToken ct = default)
+    public async Task<Result> RemoveDailyReportAsync(long eventId, long reportId, CancellationToken ct = default)
     {
         if (await GetVisibleTaskAsync(eventId, ct) is null) return Result.Failure(TaskErrors.NotFound("Task"));
         var report = await dailyReports.Query().FirstOrDefaultAsync(r => r.Id == reportId && r.EventId == eventId, ct);
@@ -812,16 +812,16 @@ public sealed class TaskService(
         from pr in prg.DefaultIfEmpty()
         join au in users.Query() on te.AssigneeId equals au.Id into aug
         from au in aug.DefaultIfEmpty()
-        select new TaskRow { te = te, st = st, pr = pr, au = au, statusSince = (DateTimeOffset?)esCur.CreatedAt };
+        select new TaskRow { te = te, st = st, pr = pr, au = au, statusSince = (DateTimeOffset?)esCur.InsertedDate };
 
     private static System.Linq.Expressions.Expression<Func<TaskRow, TaskListItemDto>> Projection(DateTimeOffset now) =>
         x => new TaskListItemDto(
             x.te.EventId, x.te.ReferenceNo, x.te.Title,
-            x.st != null ? x.st.Id : (Guid?)null, x.st != null ? x.st.Name : null, x.st != null ? x.st.Color : null, x.st != null && x.st.IsClosed,
+            x.st != null ? x.st.Id : (long?)null, x.st != null ? x.st.Name : null, x.st != null ? x.st.Color : null, x.st != null && x.st.IsClosed,
             x.te.PriorityStatusId, x.pr != null ? x.pr.Name : null, x.pr != null ? x.pr.Color : null,
             x.te.AssigneeId, x.au != null ? x.au.DisplayName : null,
             x.te.DueAt, x.te.DueAt != null && x.te.DueAt < now && (x.st == null || !x.st.IsClosed),
-            x.te.CompletionPercent, x.te.CreatedAt);
+            x.te.CompletionPercent, x.te.InsertedDate);
 
     private sealed class TaskRow
     {
@@ -833,7 +833,7 @@ public sealed class TaskService(
         public DateTimeOffset? statusSince { get; set; }
     }
 
-    private async Task<TaskEvent?> GetVisibleTaskAsync(Guid eventId, CancellationToken ct)
+    private async Task<TaskEvent?> GetVisibleTaskAsync(long eventId, CancellationToken ct)
     {
         var te = await tasks.Query().FirstOrDefaultAsync(x => x.EventId == eventId, ct);
         if (te is null) return null;
@@ -844,29 +844,29 @@ public sealed class TaskService(
         return ok ? te : null;
     }
 
-    private async Task<bool> IsClosedAsync(Guid eventId, CancellationToken ct) =>
+    private async Task<bool> IsClosedAsync(long eventId, CancellationToken ct) =>
         await (from es in eventStatuses.Query()
                where es.EventId == eventId && es.IsCurrent
                join s in statuses.Query() on es.StatusId equals s.Id
                select s.IsClosed).FirstOrDefaultAsync(ct);
 
-    private async Task<bool> IsPriorityAsync(Guid statusId, CancellationToken ct) =>
+    private async Task<bool> IsPriorityAsync(long statusId, CancellationToken ct) =>
         await (from s in statuses.Query()
                join t in statusTypes.Query() on s.StatusTypeId equals t.Id
                where s.Id == statusId && t.Code == StatusTypeCodes.TaskPriority
                select s.Id).AnyAsync(ct);
 
-    private async Task<Guid?> AssetTypeIdAsync(string code, CancellationToken ct) =>
-        await assetTypes.Query().Where(a => a.Code == code).Select(a => (Guid?)a.Id).FirstOrDefaultAsync(ct);
+    private async Task<long?> AssetTypeIdAsync(string code, CancellationToken ct) =>
+        await assetTypes.Query().Where(a => a.Code == code).Select(a => (long?)a.Id).FirstOrDefaultAsync(ct);
 
-    private Task<Note?> NoteForEventAsync(Guid eventId, Guid noteId, CancellationToken ct) =>
+    private Task<Note?> NoteForEventAsync(long eventId, long noteId, CancellationToken ct) =>
         (from ea in eventAssets.Query()
          where ea.EventId == eventId && ea.RelationType == EventAssetRelationTypes.Note
          join n in notes.Query() on ea.AssetId equals n.AssetId
          where n.Id == noteId
          select n).FirstOrDefaultAsync(ct);
 
-    private async Task RemoveAssetLinkAsync(Guid eventId, Guid assetId, CancellationToken ct)
+    private async Task RemoveAssetLinkAsync(long eventId, long assetId, CancellationToken ct)
     {
         var when = clock.UtcNow;
         var actor = currentUser.UserId;
@@ -882,7 +882,7 @@ public sealed class TaskService(
         return $"TSK-{seq:D5}";
     }
 
-    private void AddActivity(Guid ws, Guid eventId, EventActivityKind kind, string message, Guid? fromStatusId = null, Guid? toStatusId = null)
+    private void AddActivity(long ws, long eventId, EventActivityKind kind, string message, long? fromStatusId = null, long? toStatusId = null)
     {
         var act = new EventActivity(ws, eventId, kind, message, currentUser.UserId, clock.UtcNow);
         if (fromStatusId is not null || toStatusId is not null) act.WithStatusChange(fromStatusId, toStatusId);
@@ -894,7 +894,7 @@ public sealed class TaskService(
     /// Recipients are resolved to their email addresses, excluding the acting user. Persisted by
     /// the caller's SaveChanges and delivered later by the dispatcher worker.
     /// </summary>
-    private async Task NotifyAsync(TaskEvent te, string templateCode, IEnumerable<Guid?> recipientUserIds,
+    private async Task NotifyAsync(TaskEvent te, string templateCode, IEnumerable<long?> recipientUserIds,
         IReadOnlyDictionary<string, string> extraPlaceholders, CancellationToken ct)
     {
         try
@@ -957,7 +957,7 @@ public sealed class TaskService(
     private static readonly IReadOnlyDictionary<string, string> NoExtras =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-    private static AuditEntry Entry(string action, Guid eventId, Guid ws, string? newValues = null) => new()
+    private static AuditEntry Entry(string action, long eventId, long ws, string? newValues = null) => new()
     {
         Action = action,
         Module = "Tasks",
@@ -971,7 +971,7 @@ public sealed class TaskService(
 
     // ---- DataScope visibility (own/team/department/broader) ----------------
 
-    private async Task<HashSet<Guid>?> VisibleAssigneeFilterAsync(CancellationToken ct)
+    private async Task<HashSet<long>?> VisibleAssigneeFilterAsync(CancellationToken ct)
     {
         if (currentUser.UserId is not { } me) return [];
         var scope = (await permissions.ResolveAsync(me, ct)).ScopeFor(PermissionCatalog.TaskView) ?? DataScope.Own;
@@ -992,9 +992,9 @@ public sealed class TaskService(
         return set;
     }
 
-    private readonly record struct NodeRef(Guid Id, Guid? ParentId, StructureNodeType NodeType);
+    private readonly record struct NodeRef(long Id, long? ParentId, StructureNodeType NodeType);
 
-    private static Guid NearestDepartment(List<NodeRef> all, Guid start)
+    private static long NearestDepartment(List<NodeRef> all, long start)
     {
         var byId = all.ToDictionary(n => n.Id);
         var current = byId.TryGetValue(start, out var node) ? (NodeRef?)node : null;
@@ -1006,13 +1006,13 @@ public sealed class TaskService(
         return start;
     }
 
-    private static HashSet<Guid> Descendants(List<NodeRef> all, Guid root)
+    private static HashSet<long> Descendants(List<NodeRef> all, long root)
     {
         var childrenByParent = all.Where(n => n.ParentId is not null)
             .GroupBy(n => n.ParentId!.Value)
             .ToDictionary(g => g.Key, g => g.Select(n => n.Id).ToList());
-        var result = new HashSet<Guid> { root };
-        var stack = new Stack<Guid>();
+        var result = new HashSet<long> { root };
+        var stack = new Stack<long>();
         stack.Push(root);
         while (stack.Count > 0)
         {

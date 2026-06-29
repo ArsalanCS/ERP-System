@@ -11,7 +11,7 @@ public sealed class Asset : TenantEntity
 {
     private Asset() { } // EF
 
-    public Asset(Guid workspaceId, Guid assetTypeId, string? name, string? code)
+    public Asset(long workspaceId, long assetTypeId, string? name, string? code)
     {
         AssignWorkspace(workspaceId);
         AssetTypeId = assetTypeId;
@@ -19,7 +19,7 @@ public sealed class Asset : TenantEntity
         Code = string.IsNullOrWhiteSpace(code) ? null : code.Trim();
     }
 
-    public Guid AssetTypeId { get; private set; }
+    public long AssetTypeId { get; private set; }
     public string? Name { get; private set; }
     public string? Code { get; private set; }
 }

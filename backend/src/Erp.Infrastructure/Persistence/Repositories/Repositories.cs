@@ -17,7 +17,7 @@ public sealed class WorkspaceRepository(ErpDbContext context) : IWorkspaceReposi
     public Task<Workspace?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
         => context.Workspaces.FirstOrDefaultAsync(w => w.Slug == slug, cancellationToken);
 
-    public Task<Workspace?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<Workspace?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
         => context.Workspaces.FirstOrDefaultAsync(w => w.Id == id, cancellationToken);
 
     public void Add(Workspace workspace) => context.Workspaces.Add(workspace);
@@ -25,7 +25,7 @@ public sealed class WorkspaceRepository(ErpDbContext context) : IWorkspaceReposi
 
 public sealed class UserRepository(ErpDbContext context) : IUserRepository
 {
-    public Task<User?> GetByEmailAsync(Guid workspaceId, string email, CancellationToken cancellationToken = default)
+    public Task<User?> GetByEmailAsync(long workspaceId, string email, CancellationToken cancellationToken = default)
     {
         var normalized = email.Trim().ToUpperInvariant();
         // Explicit workspace filter in addition to the global filter + RLS (CONVENTIONS).
@@ -33,10 +33,10 @@ public sealed class UserRepository(ErpDbContext context) : IUserRepository
             u => u.WorkspaceId == workspaceId && u.NormalizedEmail == normalized, cancellationToken);
     }
 
-    public Task<User?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<User?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
         => context.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 
-    public Task<bool> EmailExistsAsync(Guid workspaceId, string email, CancellationToken cancellationToken = default)
+    public Task<bool> EmailExistsAsync(long workspaceId, string email, CancellationToken cancellationToken = default)
     {
         var normalized = email.Trim().ToUpperInvariant();
         return context.Users.AnyAsync(
@@ -71,17 +71,17 @@ public sealed class UserRepository(ErpDbContext context) : IUserRepository
             "-email" => query.OrderByDescending(u => u.Email),
             "name" => query.OrderBy(u => u.DisplayName),
             "-lastLogin" => query.OrderByDescending(u => u.LastLoginAt),
-            _ => query.OrderByDescending(u => u.CreatedAt),
+            _ => query.OrderByDescending(u => u.InsertedDate),
         };
 
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(cancellationToken);
         return (items, total);
     }
 
-    public async Task<IReadOnlyList<Guid>> GetRoleIdsAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<long>> GetRoleIdsAsync(long userId, CancellationToken cancellationToken = default)
         => await context.UserRoles.Where(ur => ur.UserId == userId).Select(ur => ur.RoleId).Distinct().ToListAsync(cancellationToken);
 
-    public Task<int> CountActiveByRoleAsync(Guid roleId, CancellationToken cancellationToken = default)
+    public Task<int> CountActiveByRoleAsync(long roleId, CancellationToken cancellationToken = default)
         => context.UserRoles
             .Where(ur => ur.RoleId == roleId)
             .Join(context.Users.Where(u => u.Status == UserStatus.Active), ur => ur.UserId, u => u.Id, (ur, u) => u.Id)
@@ -91,16 +91,16 @@ public sealed class UserRepository(ErpDbContext context) : IUserRepository
 
 public sealed class RoleRepository(ErpDbContext context) : IRoleRepository
 {
-    public Task<Role?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public Task<Role?> GetByIdAsync(long id, CancellationToken cancellationToken = default)
         => context.Roles.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
 
-    public async Task<IReadOnlyList<PermissionGrantData>> GetRolePermissionsAsync(Guid roleId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<PermissionGrantData>> GetRolePermissionsAsync(long roleId, CancellationToken cancellationToken = default)
         => await context.RolePermissions
             .Where(rp => rp.RoleId == roleId)
             .Select(rp => new PermissionGrantData(rp.PermissionId, rp.Scope))
             .ToListAsync(cancellationToken);
 
-    public async Task ReplaceRolePermissionsAsync(Guid workspaceId, Guid roleId, IReadOnlyCollection<PermissionGrantData> grants, CancellationToken cancellationToken = default)
+    public async Task ReplaceRolePermissionsAsync(long workspaceId, long roleId, IReadOnlyCollection<PermissionGrantData> grants, CancellationToken cancellationToken = default)
     {
         var existing = await context.RolePermissions.Where(rp => rp.RoleId == roleId).ToListAsync(cancellationToken);
         context.RolePermissions.RemoveRange(existing);
@@ -113,14 +113,14 @@ public sealed class RoleRepository(ErpDbContext context) : IRoleRepository
     public async Task<IReadOnlyList<Role>> ListAsync(CancellationToken cancellationToken = default)
         => await context.Roles.AsNoTracking().OrderBy(r => r.Name).ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<Guid>> FilterExistingIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<long>> FilterExistingIdsAsync(IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default)
         => await context.Roles.Where(r => ids.Contains(r.Id)).Select(r => r.Id).ToListAsync(cancellationToken);
 
     public void Add(Role role) => context.Roles.Add(role);
 
     public void Remove(Role role) => context.Roles.Remove(role);
 
-    public async Task SetUserRolesAsync(Guid workspaceId, Guid userId, IReadOnlyCollection<Guid> roleIds, CancellationToken cancellationToken = default)
+    public async Task SetUserRolesAsync(long workspaceId, long userId, IReadOnlyCollection<long> roleIds, CancellationToken cancellationToken = default)
     {
         var existing = await context.UserRoles.Where(ur => ur.UserId == userId).ToListAsync(cancellationToken);
         context.UserRoles.RemoveRange(existing);
@@ -133,7 +133,7 @@ public sealed class RoleRepository(ErpDbContext context) : IRoleRepository
     public Task<bool> CodeExistsAsync(string code, CancellationToken cancellationToken = default)
         => context.Roles.AnyAsync(r => r.Code == code, cancellationToken);
 
-    public Task<int> CountAssignmentsAsync(Guid roleId, CancellationToken cancellationToken = default)
+    public Task<int> CountAssignmentsAsync(long roleId, CancellationToken cancellationToken = default)
         => context.UserRoles.Where(ur => ur.RoleId == roleId).Select(ur => ur.UserId).Distinct().CountAsync(cancellationToken);
 }
 
@@ -142,15 +142,15 @@ public sealed class PermissionRepository(ErpDbContext context) : IPermissionRepo
     public async Task<IReadOnlyList<Permission>> ListAsync(CancellationToken cancellationToken = default)
         => await context.Permissions.AsNoTracking().OrderBy(p => p.Module).ThenBy(p => p.Code).ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<Guid>> FilterExistingIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<long>> FilterExistingIdsAsync(IReadOnlyCollection<long> ids, CancellationToken cancellationToken = default)
         => await context.Permissions.Where(p => ids.Contains(p.Id)).Select(p => p.Id).ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<UserPermission>> ListUserOverridesAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<UserPermission>> ListUserOverridesAsync(long userId, CancellationToken cancellationToken = default)
         => await context.UserPermissions.Where(up => up.UserId == userId).ToListAsync(cancellationToken);
 
     public void AddUserOverride(UserPermission overrideEntry) => context.UserPermissions.Add(overrideEntry);
 
-    public async Task RemoveUserOverridesAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task RemoveUserOverridesAsync(long userId, CancellationToken cancellationToken = default)
     {
         var existing = await context.UserPermissions.Where(up => up.UserId == userId).ToListAsync(cancellationToken);
         context.UserPermissions.RemoveRange(existing);
@@ -162,7 +162,7 @@ public sealed class RefreshTokenRepository(ErpDbContext context) : IRefreshToken
     public Task<RefreshToken?> GetByHashAsync(string tokenHash, CancellationToken cancellationToken = default)
         => context.RefreshTokens.FirstOrDefaultAsync(t => t.TokenHash == tokenHash, cancellationToken);
 
-    public async Task RevokeAllForUserAsync(Guid userId, DateTimeOffset now, CancellationToken cancellationToken = default)
+    public async Task RevokeAllForUserAsync(long userId, DateTimeOffset now, CancellationToken cancellationToken = default)
     {
         var tokens = await context.RefreshTokens
             .Where(t => t.UserId == userId && t.RevokedAt == null)
@@ -176,13 +176,13 @@ public sealed class RefreshTokenRepository(ErpDbContext context) : IRefreshToken
 
     public void Add(RefreshToken token) => context.RefreshTokens.Add(token);
 
-    public async Task<IReadOnlyList<RefreshToken>> ListActiveAsync(Guid userId, DateTimeOffset now, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<RefreshToken>> ListActiveAsync(long userId, DateTimeOffset now, CancellationToken cancellationToken = default)
         => await context.RefreshTokens
             .Where(t => t.UserId == userId && t.RevokedAt == null && t.ExpiresAt > now)
-            .OrderByDescending(t => t.CreatedAt)
+            .OrderByDescending(t => t.InsertedDate)
             .ToListAsync(cancellationToken);
 
-    public async Task<bool> RevokeByIdAsync(Guid id, Guid userId, DateTimeOffset now, CancellationToken cancellationToken = default)
+    public async Task<bool> RevokeByIdAsync(long id, long userId, DateTimeOffset now, CancellationToken cancellationToken = default)
     {
         var token = await context.RefreshTokens.FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId, cancellationToken);
         if (token is null) return false;
@@ -201,7 +201,7 @@ public sealed class PasswordResetTokenRepository(ErpDbContext context) : IPasswo
 
 public sealed class SecurityPolicyRepository(ErpDbContext context) : ISecurityPolicyRepository
 {
-    public Task<WorkspaceSecurityPolicy?> GetForWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+    public Task<WorkspaceSecurityPolicy?> GetForWorkspaceAsync(long workspaceId, CancellationToken cancellationToken = default)
         => context.WorkspaceSecurityPolicies.FirstOrDefaultAsync(p => p.WorkspaceId == workspaceId, cancellationToken);
 
     public void Add(WorkspaceSecurityPolicy policy) => context.WorkspaceSecurityPolicies.Add(policy);

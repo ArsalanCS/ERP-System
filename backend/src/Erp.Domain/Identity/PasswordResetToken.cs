@@ -11,7 +11,7 @@ public sealed class PasswordResetToken : TenantEntity
 {
     private PasswordResetToken() { } // EF
 
-    public PasswordResetToken(Guid workspaceId, Guid userId, string tokenHash, DateTimeOffset expiresAt)
+    public PasswordResetToken(long workspaceId, long userId, string tokenHash, DateTimeOffset expiresAt)
     {
         AssignWorkspace(workspaceId);
         UserId = userId;
@@ -19,7 +19,7 @@ public sealed class PasswordResetToken : TenantEntity
         ExpiresAt = expiresAt;
     }
 
-    public Guid UserId { get; private set; }
+    public long UserId { get; private set; }
     public string TokenHash { get; private set; } = null!;
     public DateTimeOffset ExpiresAt { get; private set; }
     public DateTimeOffset? UsedAt { get; private set; }

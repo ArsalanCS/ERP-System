@@ -10,11 +10,11 @@ namespace Erp.Infrastructure.Persistence.Repositories;
 /// context's global query filters (tenant isolation + soft-delete) and RLS apply.
 /// </summary>
 public sealed class EfRepository<TEntity>(ErpDbContext db) : IRepository<TEntity>
-    where TEntity : Entity
+    where TEntity : BaseEntity
 {
     public IQueryable<TEntity> Query() => db.Set<TEntity>();
 
-    public Task<TEntity?> GetByIdAsync(Guid id, CancellationToken ct = default)
+    public Task<TEntity?> GetByIdAsync(long id, CancellationToken ct = default)
         => db.Set<TEntity>().FirstOrDefaultAsync(x => x.Id == id, ct);
 
     public void Add(TEntity entity) => db.Set<TEntity>().Add(entity);

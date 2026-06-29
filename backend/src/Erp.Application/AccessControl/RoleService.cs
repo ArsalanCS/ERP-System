@@ -10,13 +10,13 @@ public interface IRoleService
 {
     Task<IReadOnlyList<PermissionDto>> ListPermissionsAsync(CancellationToken ct = default);
     Task<IReadOnlyList<RoleListItem>> ListRolesAsync(CancellationToken ct = default);
-    Task<Result<RoleDetail>> GetRoleAsync(Guid id, CancellationToken ct = default);
-    Task<Result<Guid>> CreateRoleAsync(CreateRoleRequest request, CancellationToken ct = default);
-    Task<Result> UpdateRoleAsync(Guid id, UpdateRoleRequest request, CancellationToken ct = default);
-    Task<Result> SetPermissionsAsync(Guid id, SetRolePermissionsRequest request, CancellationToken ct = default);
-    Task<Result> DeleteRoleAsync(Guid id, CancellationToken ct = default);
-    Task<Result<IReadOnlyList<UserOverrideDto>>> GetUserOverridesAsync(Guid userId, CancellationToken ct = default);
-    Task<Result> SetUserOverridesAsync(Guid userId, SetUserOverridesRequest request, CancellationToken ct = default);
+    Task<Result<RoleDetail>> GetRoleAsync(long id, CancellationToken ct = default);
+    Task<Result<long>> CreateRoleAsync(CreateRoleRequest request, CancellationToken ct = default);
+    Task<Result> UpdateRoleAsync(long id, UpdateRoleRequest request, CancellationToken ct = default);
+    Task<Result> SetPermissionsAsync(long id, SetRolePermissionsRequest request, CancellationToken ct = default);
+    Task<Result> DeleteRoleAsync(long id, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<UserOverrideDto>>> GetUserOverridesAsync(long userId, CancellationToken ct = default);
+    Task<Result> SetUserOverridesAsync(long userId, SetUserOverridesRequest request, CancellationToken ct = default);
 }
 
 /// <summary>Access Control (Identity spec §5): roles, permission matrix, user overrides.</summary>
@@ -43,7 +43,7 @@ public sealed class RoleService(
         return result;
     }
 
-    public async Task<Result<RoleDetail>> GetRoleAsync(Guid id, CancellationToken ct = default)
+    public async Task<Result<RoleDetail>> GetRoleAsync(long id, CancellationToken ct = default)
     {
         var role = await roles.GetByIdAsync(id, ct);
         if (role is null) return AccessErrors.RoleNotFound();
@@ -55,10 +55,10 @@ public sealed class RoleService(
         return new RoleDetail(role.Id, role.Name, role.Code, role.Description, role.Type, role.Color, role.IsActive, perms);
     }
 
-    public async Task<Result<Guid>> CreateRoleAsync(CreateRoleRequest request, CancellationToken ct = default)
+    public async Task<Result<long>> CreateRoleAsync(CreateRoleRequest request, CancellationToken ct = default)
     {
-        if (tenant.WorkspaceId is not { } workspaceId) return Result.Failure<Guid>(AccessErrors.NoScope());
-        if (await roles.CodeExistsAsync(request.Code, ct)) return Result.Failure<Guid>(AccessErrors.CodeTaken());
+        if (tenant.WorkspaceId is not { } workspaceId) return Result.Failure<long>(AccessErrors.NoScope());
+        if (await roles.CodeExistsAsync(request.Code, ct)) return Result.Failure<long>(AccessErrors.CodeTaken());
 
         var role = new Role(workspaceId, request.Name, request.Code, RoleType.Custom, request.Description);
         role.Update(request.Name, request.Description, request.Color);
@@ -69,7 +69,7 @@ public sealed class RoleService(
         return role.Id;
     }
 
-    public async Task<Result> UpdateRoleAsync(Guid id, UpdateRoleRequest request, CancellationToken ct = default)
+    public async Task<Result> UpdateRoleAsync(long id, UpdateRoleRequest request, CancellationToken ct = default)
     {
         var role = await roles.GetByIdAsync(id, ct);
         if (role is null) return Result.Failure(AccessErrors.RoleNotFound());
@@ -81,7 +81,7 @@ public sealed class RoleService(
         return Result.Success();
     }
 
-    public async Task<Result> SetPermissionsAsync(Guid id, SetRolePermissionsRequest request, CancellationToken ct = default)
+    public async Task<Result> SetPermissionsAsync(long id, SetRolePermissionsRequest request, CancellationToken ct = default)
     {
         var role = await roles.GetByIdAsync(id, ct);
         if (role is null) return Result.Failure(AccessErrors.RoleNotFound());
@@ -99,7 +99,7 @@ public sealed class RoleService(
         return Result.Success();
     }
 
-    public async Task<Result> DeleteRoleAsync(Guid id, CancellationToken ct = default)
+    public async Task<Result> DeleteRoleAsync(long id, CancellationToken ct = default)
     {
         var role = await roles.GetByIdAsync(id, ct);
         if (role is null) return Result.Failure(AccessErrors.RoleNotFound());
@@ -112,7 +112,7 @@ public sealed class RoleService(
         return Result.Success();
     }
 
-    public async Task<Result<IReadOnlyList<UserOverrideDto>>> GetUserOverridesAsync(Guid userId, CancellationToken ct = default)
+    public async Task<Result<IReadOnlyList<UserOverrideDto>>> GetUserOverridesAsync(long userId, CancellationToken ct = default)
     {
         if (await users.GetByIdAsync(userId, ct) is null) return Result.Failure<IReadOnlyList<UserOverrideDto>>(AccessErrors.UserNotFound());
         var catalog = (await permissions.ListAsync(ct)).ToDictionary(p => p.Id, p => p.Code);
@@ -123,7 +123,7 @@ public sealed class RoleService(
         return Result.Success(result);
     }
 
-    public async Task<Result> SetUserOverridesAsync(Guid userId, SetUserOverridesRequest request, CancellationToken ct = default)
+    public async Task<Result> SetUserOverridesAsync(long userId, SetUserOverridesRequest request, CancellationToken ct = default)
     {
         if (tenant.WorkspaceId is not { } workspaceId) return Result.Failure(AccessErrors.NoScope());
         if (await users.GetByIdAsync(userId, ct) is null) return Result.Failure(AccessErrors.UserNotFound());
@@ -147,7 +147,7 @@ public sealed class RoleService(
         return Result.Success();
     }
 
-    private static AuditEntry RoleAudit(string action, Guid roleId, Guid workspaceId) => new()
+    private static AuditEntry RoleAudit(string action, long roleId, long workspaceId) => new()
     {
         Action = action, Module = "AccessControl", ResourceType = "Role",
         ResourceId = roleId.ToString(), WorkspaceId = workspaceId,

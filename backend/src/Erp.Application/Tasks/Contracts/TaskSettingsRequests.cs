@@ -16,7 +16,7 @@ public sealed record UpdateStatusRequest(
     bool IsActive);
 
 /// <summary>Sets the display order of statuses within a type to match the given id sequence.</summary>
-public sealed record ReorderStatusesRequest(string StatusTypeCode, IReadOnlyList<Guid> OrderedIds);
+public sealed record ReorderStatusesRequest(string StatusTypeCode, IReadOnlyList<long> OrderedIds);
 
 /// <summary>Workspace-level Task Management config (daily-report rules, notifications, dashboard defaults).</summary>
 public sealed record TaskSettingsDto(

@@ -5,13 +5,13 @@ namespace Erp.Application.Structure;
 
 /// <summary>A single business-structure node (Identity spec §6).</summary>
 public sealed record StructureNodeDto(
-    Guid Id,
-    Guid? ParentId,
+    long Id,
+    long? ParentId,
     StructureNodeType NodeType,
     string Name,
     string Code,
     string? Description,
-    Guid? ManagerId,
+    long? ManagerId,
     int SortOrder,
     StructureStatus Status,
     int MemberCount);
@@ -20,25 +20,25 @@ public sealed record StructureNodeDto(
 public sealed record StructureTree(IReadOnlyList<StructureNodeDto> Nodes);
 
 public sealed record CreateNodeRequest(
-    Guid? ParentId,
+    long? ParentId,
     StructureNodeType NodeType,
     string Name,
     string Code,
     string? Description,
-    Guid? ManagerId,
+    long? ManagerId,
     int? SortOrder);
 
 public sealed record UpdateNodeRequest(
     string Name,
     string? Description,
-    Guid? ManagerId,
+    long? ManagerId,
     int? SortOrder);
 
-public sealed record MoveNodeRequest(Guid? ParentId);
+public sealed record MoveNodeRequest(long? ParentId);
 
 /// <summary>A user placed directly on a structure node (Identity spec §6 "members").</summary>
 public sealed record StructureMemberDto(
-    Guid UserId,
+    long UserId,
     string DisplayName,
     string Email,
     string? JobTitle,

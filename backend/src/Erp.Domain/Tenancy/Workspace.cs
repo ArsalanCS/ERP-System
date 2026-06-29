@@ -7,7 +7,7 @@ namespace Erp.Domain.Tenancy;
 /// tenant-owned record hangs off via <c>workspace_id</c>. A workspace is the
 /// tenant registry entry itself, so it is not <see cref="ITenantOwned"/>.
 /// </summary>
-public sealed class Workspace : Entity, ISoftDeletable
+public sealed class Workspace : BaseEntity, ISoftDeletable
 {
     private Workspace() { } // EF
 
@@ -35,10 +35,6 @@ public sealed class Workspace : Entity, ISoftDeletable
 
     public WorkspaceStatus Status { get; private set; }
 
-    public bool IsDeleted { get; private set; }
-    public DateTimeOffset? DeletedAt { get; private set; }
-    public Guid? DeletedBy { get; private set; }
-
     public bool AllowsLogin => Status is WorkspaceStatus.Trial or WorkspaceStatus.Active && !IsDeleted;
 
     public void Activate() => Status = WorkspaceStatus.Active;
@@ -54,11 +50,9 @@ public sealed class Workspace : Entity, ISoftDeletable
         Country = country;
     }
 
-    public void Archive(Guid? by, DateTimeOffset when)
+    public void Archive(long? by, DateTimeOffset when)
     {
         Status = WorkspaceStatus.Archived;
-        IsDeleted = true;
-        DeletedAt = when;
-        DeletedBy = by;
+        SoftDelete(by, when);
     }
 }

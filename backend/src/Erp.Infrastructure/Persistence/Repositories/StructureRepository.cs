@@ -12,21 +12,21 @@ public sealed class StructureRepository(ErpDbContext context) : IStructureReposi
             .OrderBy(n => n.NodeType).ThenBy(n => n.SortOrder).ThenBy(n => n.Name)
             .ToListAsync(ct);
 
-    public Task<StructureNode?> GetNodeAsync(Guid id, CancellationToken ct = default)
+    public Task<StructureNode?> GetNodeAsync(long id, CancellationToken ct = default)
         => context.StructureNodes.FirstOrDefaultAsync(n => n.Id == id, ct);
 
     public void AddNode(StructureNode node) => context.StructureNodes.Add(node);
 
-    public Task<bool> NodeExistsAsync(Guid id, CancellationToken ct = default)
+    public Task<bool> NodeExistsAsync(long id, CancellationToken ct = default)
         => context.StructureNodes.AnyAsync(n => n.Id == id, ct);
 
-    public Task<bool> NodeHasChildrenAsync(Guid id, CancellationToken ct = default)
+    public Task<bool> NodeHasChildrenAsync(long id, CancellationToken ct = default)
         => context.StructureNodes.AnyAsync(n => n.ParentId == id, ct);
 
     public Task<bool> CodeExistsAsync(string code, CancellationToken ct = default)
         => context.StructureNodes.AnyAsync(n => n.Code == code, ct);
 
-    public async Task<IReadOnlyDictionary<Guid, int>> MemberCountsAsync(CancellationToken ct = default)
+    public async Task<IReadOnlyDictionary<long, int>> MemberCountsAsync(CancellationToken ct = default)
     {
         var counts = await context.Employees.AsNoTracking()
             .Where(e => e.PlacementNodeId != null)
@@ -36,7 +36,7 @@ public sealed class StructureRepository(ErpDbContext context) : IStructureReposi
         return counts.ToDictionary(x => x.NodeId, x => x.Count);
     }
 
-    public async Task<IReadOnlyList<StructureMemberDto>> ListMembersAsync(Guid nodeId, CancellationToken ct = default)
+    public async Task<IReadOnlyList<StructureMemberDto>> ListMembersAsync(long nodeId, CancellationToken ct = default)
     {
         var query =
             from e in context.Employees.AsNoTracking()

@@ -11,11 +11,11 @@ namespace Erp.Domain.Mail;
 /// defaults can be shared across workspaces — flagged to the client. Workspace scoping is applied
 /// explicitly in queries (<c>WorkspaceId == null || WorkspaceId == current</c>).
 /// </summary>
-public sealed class MailTemplate : Entity, ISoftDeletable
+public sealed class MailTemplate : BaseEntity, ISoftDeletable
 {
     private MailTemplate() { } // EF
 
-    public MailTemplate(Guid? workspaceId, string code, string name, string subjectTemplate,
+    public MailTemplate(long? workspaceId, string code, string name, string subjectTemplate,
         string bodyHtmlTemplate, string? bodyTextTemplate)
     {
         WorkspaceId = workspaceId;
@@ -28,18 +28,13 @@ public sealed class MailTemplate : Entity, ISoftDeletable
     }
 
     /// <summary>Owning workspace; null = shared global default.</summary>
-    public Guid? WorkspaceId { get; private set; }
+    public long? WorkspaceId { get; private set; }
     public bool IsGlobal => WorkspaceId is null;
     public string Code { get; private set; } = default!;
     public string Name { get; private set; } = default!;
     public string SubjectTemplate { get; private set; } = default!;
     public string BodyHtmlTemplate { get; private set; } = default!;
     public string? BodyTextTemplate { get; private set; }
-    public bool IsActive { get; private set; }
-
-    public bool IsDeleted { get; private set; }
-    public DateTimeOffset? DeletedAt { get; private set; }
-    public Guid? DeletedBy { get; private set; }
 
     public void Update(string name, string subjectTemplate, string bodyHtmlTemplate, string? bodyTextTemplate, bool isActive)
     {
@@ -50,15 +45,7 @@ public sealed class MailTemplate : Entity, ISoftDeletable
         IsActive = isActive;
     }
 
-    public void SoftDelete(Guid? deletedBy, DateTimeOffset when)
-    {
-        if (IsDeleted) return;
-        IsDeleted = true;
-        DeletedAt = when;
-        DeletedBy = deletedBy;
-    }
-
     /// <summary>Creates a workspace-specific override copy of this (global) template.</summary>
-    public MailTemplate CreateOverride(Guid workspaceId) =>
+    public MailTemplate CreateOverride(long workspaceId) =>
         new(workspaceId, Code, Name, SubjectTemplate, BodyHtmlTemplate, BodyTextTemplate);
 }

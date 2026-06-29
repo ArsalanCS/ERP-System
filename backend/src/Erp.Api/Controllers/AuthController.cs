@@ -117,11 +117,11 @@ public sealed class AuthController(
 
         return Ok(new MeResponse(
             currentUser.UserId.Value,
-            currentUser.WorkspaceId ?? Guid.Empty,
+            currentUser.WorkspaceId ?? 0,
             currentUser.Email ?? string.Empty,
             currentUser.IsPlatformAdmin,
             currentUser.Actions.ToArray()));
     }
 }
 
-public sealed record MeResponse(Guid Id, Guid WorkspaceId, string Email, bool IsPlatformAdmin, IReadOnlyCollection<string> Actions);
+public sealed record MeResponse(long Id, long WorkspaceId, string Email, bool IsPlatformAdmin, IReadOnlyCollection<string> Actions);

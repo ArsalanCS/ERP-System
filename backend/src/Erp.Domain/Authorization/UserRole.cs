@@ -11,7 +11,7 @@ public sealed class UserRole : TenantEntity
 {
     private UserRole() { } // EF
 
-    public UserRole(Guid workspaceId, Guid userId, Guid roleId, Guid? clusterId = null)
+    public UserRole(long workspaceId, long userId, long roleId, long? clusterId = null)
     {
         AssignWorkspace(workspaceId);
         UserId = userId;
@@ -19,7 +19,7 @@ public sealed class UserRole : TenantEntity
         ClusterId = clusterId;
     }
 
-    public Guid UserId { get; private set; }
-    public Guid RoleId { get; private set; }
-    public Guid? ClusterId { get; private set; }
+    public long UserId { get; private set; }
+    public long RoleId { get; private set; }
+    public long? ClusterId { get; private set; }
 }

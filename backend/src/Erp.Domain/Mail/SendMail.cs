@@ -13,10 +13,10 @@ public sealed class SendMail : TenantEntity
 {
     private SendMail() { } // EF
 
-    public SendMail(Guid? workspaceId, Guid? mailTemplateId, string? templateCode, string subject,
+    public SendMail(long workspaceId, long? mailTemplateId, string? templateCode, string subject,
         string bodyHtml, string? bodyText, string? templateDataJson, DateTimeOffset scheduledAt, int maxRetries = 5)
     {
-        AssignWorkspace(workspaceId ?? Guid.Empty);
+        AssignWorkspace(workspaceId);
         MailTemplateId = mailTemplateId;
         TemplateCode = templateCode;
         Subject = subject;
@@ -29,7 +29,7 @@ public sealed class SendMail : TenantEntity
         Status = SendStatus.Pending;
     }
 
-    public Guid? MailTemplateId { get; private set; }
+    public long? MailTemplateId { get; private set; }
     /// <summary>The template code that produced this mail (traceability; the doc allows code or id).</summary>
     public string? TemplateCode { get; private set; }
     public string Subject { get; private set; } = default!;

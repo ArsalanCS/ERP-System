@@ -11,8 +11,8 @@ namespace Erp.Application.Abstractions;
 /// </summary>
 public interface ITenantContext
 {
-    Guid? WorkspaceId { get; }
-    IReadOnlySet<Guid> ClusterIds { get; }
+    long? WorkspaceId { get; }
+    IReadOnlySet<long> ClusterIds { get; }
 
     /// <summary>Platform super admin bypasses tenant scoping (cross-tenant ops).</summary>
     bool IsPlatformAdmin { get; }
@@ -20,11 +20,11 @@ public interface ITenantContext
     bool HasScope { get; }
 
     /// <summary>Establishes the tenant scope for this request/unit of work.</summary>
-    void SetScope(Guid workspaceId, IEnumerable<Guid> clusterIds, bool isPlatformAdmin = false);
+    void SetScope(long? workspaceId, IEnumerable<long> clusterIds, bool isPlatformAdmin = false);
 
     /// <summary>
     /// Temporarily overrides the scope (e.g. the login flow targeting a workspace
     /// before the caller is authenticated). Restores the previous scope on dispose.
     /// </summary>
-    IDisposable BeginScope(Guid workspaceId, IEnumerable<Guid>? clusterIds = null, bool isPlatformAdmin = false);
+    IDisposable BeginScope(long? workspaceId, IEnumerable<long>? clusterIds = null, bool isPlatformAdmin = false);
 }

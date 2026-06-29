@@ -7,7 +7,7 @@ public sealed class RolePermission : TenantEntity
 {
     private RolePermission() { } // EF
 
-    public RolePermission(Guid workspaceId, Guid roleId, Guid permissionId, DataScope scope)
+    public RolePermission(long workspaceId, long roleId, long permissionId, DataScope scope)
     {
         AssignWorkspace(workspaceId);
         RoleId = roleId;
@@ -15,8 +15,8 @@ public sealed class RolePermission : TenantEntity
         Scope = scope;
     }
 
-    public Guid RoleId { get; private set; }
-    public Guid PermissionId { get; private set; }
+    public long RoleId { get; private set; }
+    public long PermissionId { get; private set; }
     public DataScope Scope { get; private set; }
 
     public void ChangeScope(DataScope scope) => Scope = scope;

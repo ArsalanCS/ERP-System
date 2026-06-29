@@ -23,7 +23,7 @@ public interface IIdentitySeeder
     /// Ensures a workspace has the standard "Workspace Owner" system role granting
     /// every permission at workspace scope. Requires a tenant scope to be active.
     /// </summary>
-    Task<Role> EnsureWorkspaceOwnerRoleAsync(Guid workspaceId, CancellationToken cancellationToken = default);
+    Task<Role> EnsureWorkspaceOwnerRoleAsync(long workspaceId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Development convenience: creates a demo workspace + owner user (assigned the
@@ -36,7 +36,7 @@ public interface IIdentitySeeder
     /// Seeds a workspace's default TASK_STATUS (New/In Progress/Done/Cancelled) and
     /// TASK_PRIORITY (Low/Medium/High/Critical) status types if it has none.
     /// </summary>
-    Task SeedDefaultStatusesAsync(Guid workspaceId, CancellationToken cancellationToken = default);
+    Task SeedDefaultStatusesAsync(long workspaceId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Upserts the GLOBAL mail-template catalogue (workspace_id NULL = shared defaults) for all task
@@ -116,7 +116,7 @@ public sealed class IdentitySeeder(ErpDbContext context, ITenantContext tenant, 
         }
     }
 
-    public async Task<Role> EnsureWorkspaceOwnerRoleAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+    public async Task<Role> EnsureWorkspaceOwnerRoleAsync(long workspaceId, CancellationToken cancellationToken = default)
     {
         using var _ = tenant.BeginScope(workspaceId, [], isPlatformAdmin: true);
 
@@ -151,7 +151,7 @@ public sealed class IdentitySeeder(ErpDbContext context, ITenantContext tenant, 
     public async Task EnsureDemoWorkspaceAsync(string slug, string email, string password, CancellationToken cancellationToken = default)
     {
         // Already seeded? Bail (idempotent). Platform-admin scope bypasses RLS for the insert.
-        using (tenant.BeginScope(Guid.Empty, [], isPlatformAdmin: true))
+        using (tenant.BeginScope(null, [], isPlatformAdmin: true))
         {
             if (await context.Workspaces.AnyAsync(w => w.Slug == slug, cancellationToken))
             {
@@ -178,7 +178,7 @@ public sealed class IdentitySeeder(ErpDbContext context, ITenantContext tenant, 
         await SeedDefaultStatusesAsync(demoWorkspaceId, cancellationToken);
     }
 
-    public async Task SeedDefaultStatusesAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+    public async Task SeedDefaultStatusesAsync(long workspaceId, CancellationToken cancellationToken = default)
     {
         using var _ = tenant.BeginScope(workspaceId, [], isPlatformAdmin: true);
 
@@ -213,7 +213,7 @@ public sealed class IdentitySeeder(ErpDbContext context, ITenantContext tenant, 
     public async Task SeedMailTemplatesCatalogAsync(CancellationToken cancellationToken = default)
     {
         // Global defaults (workspace_id NULL). No tenant scope; platform-admin bypasses RLS for the read/insert.
-        using var _ = tenant.BeginScope(Guid.Empty, [], isPlatformAdmin: true);
+        using var _ = tenant.BeginScope(null, [], isPlatformAdmin: true);
 
         var existing = (await context.MailTemplates
             .Where(t => t.WorkspaceId == null)
@@ -233,8 +233,8 @@ public sealed class IdentitySeeder(ErpDbContext context, ITenantContext tenant, 
 
     public async Task SyncExistingWorkspacesAsync(CancellationToken cancellationToken = default)
     {
-        List<Guid> ids;
-        using (tenant.BeginScope(Guid.Empty, [], isPlatformAdmin: true))
+        List<long> ids;
+        using (tenant.BeginScope(null, [], isPlatformAdmin: true))
         {
             ids = await context.Workspaces.Select(w => w.Id).ToListAsync(cancellationToken);
         }
@@ -271,10 +271,10 @@ public sealed class IdentitySeeder(ErpDbContext context, ITenantContext tenant, 
             "<p>{{Actor}} filed a daily report on <strong>{{TaskRef}} — {{TaskTitle}}</strong> for {{Date}} and changed status from {{OldStatus}} to <strong>{{Status}}</strong>.</p><p>{{DailyReportDescription}}</p>"),
     ];
 
-    private async Task<Guid?> GetWorkspaceIdAsync(string slug, CancellationToken cancellationToken)
+    private async Task<long?> GetWorkspaceIdAsync(string slug, CancellationToken cancellationToken)
     {
-        using var _ = tenant.BeginScope(Guid.Empty, [], isPlatformAdmin: true);
-        return await context.Workspaces.Where(w => w.Slug == slug).Select(w => (Guid?)w.Id)
+        using var _ = tenant.BeginScope(null, [], isPlatformAdmin: true);
+        return await context.Workspaces.Where(w => w.Slug == slug).Select(w => (long?)w.Id)
             .FirstOrDefaultAsync(cancellationToken);
     }
 }

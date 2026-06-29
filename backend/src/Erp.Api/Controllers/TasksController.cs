@@ -52,24 +52,24 @@ public sealed class TasksController(
     public async Task<IActionResult> Statuses([FromQuery] string code, CancellationToken ct)
         => FromResult(await tasks.ListStatusesAsync(code, ct), Ok);
 
-    [HttpGet("{eventId:guid}")]
+    [HttpGet("{eventId:long}")]
     [RequirePermission(PermissionCatalog.TaskView)]
-    public async Task<IActionResult> Get(Guid eventId, CancellationToken ct)
+    public async Task<IActionResult> Get(long eventId, CancellationToken ct)
         => FromResult(await tasks.GetAsync(eventId, ct), Ok);
 
-    [HttpGet("{eventId:guid}/activity")]
+    [HttpGet("{eventId:long}/activity")]
     [RequirePermission(PermissionCatalog.TaskView)]
-    public async Task<IActionResult> Activity(Guid eventId, CancellationToken ct)
+    public async Task<IActionResult> Activity(long eventId, CancellationToken ct)
         => FromResult(await tasks.GetActivityAsync(eventId, ct), Ok);
 
-    [HttpGet("{eventId:guid}/audit")]
+    [HttpGet("{eventId:long}/audit")]
     [RequirePermission(PermissionCatalog.TaskAuditView)]
-    public async Task<IActionResult> Audit(Guid eventId, CancellationToken ct)
+    public async Task<IActionResult> Audit(long eventId, CancellationToken ct)
         => FromResult(await tasks.GetAuditAsync(eventId, ct), Ok);
 
-    [HttpGet("{eventId:guid}/subtasks")]
+    [HttpGet("{eventId:long}/subtasks")]
     [RequirePermission(PermissionCatalog.TaskView)]
-    public async Task<IActionResult> Subtasks(Guid eventId, CancellationToken ct)
+    public async Task<IActionResult> Subtasks(long eventId, CancellationToken ct)
         => FromResult(await tasks.ListSubtasksAsync(eventId, ct), Ok);
 
     [HttpPost]
@@ -80,120 +80,120 @@ public sealed class TasksController(
         return FromResult(await tasks.CreateAsync(request, ct), r => Created($"/api/v1/tasks/{r.EventId}", r));
     }
 
-    [HttpPost("{eventId:guid}/subtasks")]
+    [HttpPost("{eventId:long}/subtasks")]
     [RequirePermission(PermissionCatalog.TaskCreate)]
-    public async Task<IActionResult> CreateSubtask(Guid eventId, [FromBody] CreateTaskRequest request, CancellationToken ct)
+    public async Task<IActionResult> CreateSubtask(long eventId, [FromBody] CreateTaskRequest request, CancellationToken ct)
     {
         if (await ValidateAsync(createValidator, request, ct) is { } invalid) return invalid;
         return FromResult(await tasks.CreateSubtaskAsync(eventId, request, ct), r => Created($"/api/v1/tasks/{r.EventId}", r));
     }
 
-    [HttpPut("{eventId:guid}")]
+    [HttpPut("{eventId:long}")]
     [RequirePermission(PermissionCatalog.TaskUpdate)]
-    public async Task<IActionResult> Update(Guid eventId, [FromBody] UpdateTaskRequest request, CancellationToken ct)
+    public async Task<IActionResult> Update(long eventId, [FromBody] UpdateTaskRequest request, CancellationToken ct)
     {
         if (await ValidateAsync(updateValidator, request, ct) is { } invalid) return invalid;
         return FromResult(await tasks.UpdateAsync(eventId, request, ct), NoContent);
     }
 
-    [HttpPost("{eventId:guid}/status")]
+    [HttpPost("{eventId:long}/status")]
     [RequirePermission(PermissionCatalog.TaskChangeStatus)]
-    public async Task<IActionResult> ChangeStatus(Guid eventId, [FromBody] ChangeStatusRequest request, CancellationToken ct)
+    public async Task<IActionResult> ChangeStatus(long eventId, [FromBody] ChangeStatusRequest request, CancellationToken ct)
         => FromResult(await tasks.ChangeStatusAsync(eventId, request, ct), NoContent);
 
-    [HttpPost("{eventId:guid}/assign")]
+    [HttpPost("{eventId:long}/assign")]
     [RequirePermission(PermissionCatalog.TaskAssign)]
-    public async Task<IActionResult> Assign(Guid eventId, [FromBody] AssignTaskRequest request, CancellationToken ct)
+    public async Task<IActionResult> Assign(long eventId, [FromBody] AssignTaskRequest request, CancellationToken ct)
         => FromResult(await tasks.AssignAsync(eventId, request, ct), NoContent);
 
-    [HttpPost("{eventId:guid}/priority")]
+    [HttpPost("{eventId:long}/priority")]
     [RequirePermission(PermissionCatalog.TaskUpdate)]
-    public async Task<IActionResult> SetPriority(Guid eventId, [FromBody] SetPriorityRequest request, CancellationToken ct)
+    public async Task<IActionResult> SetPriority(long eventId, [FromBody] SetPriorityRequest request, CancellationToken ct)
         => FromResult(await tasks.SetPriorityAsync(eventId, request, ct), NoContent);
 
-    [HttpDelete("{eventId:guid}")]
+    [HttpDelete("{eventId:long}")]
     [RequirePermission(PermissionCatalog.TaskArchive)]
-    public async Task<IActionResult> Archive(Guid eventId, CancellationToken ct)
+    public async Task<IActionResult> Archive(long eventId, CancellationToken ct)
         => FromResult(await tasks.ArchiveAsync(eventId, ct), NoContent);
 
     // ---- Notes ----
-    [HttpGet("{eventId:guid}/notes")]
+    [HttpGet("{eventId:long}/notes")]
     [RequirePermission(PermissionCatalog.TaskView)]
-    public async Task<IActionResult> Notes(Guid eventId, CancellationToken ct)
+    public async Task<IActionResult> Notes(long eventId, CancellationToken ct)
         => FromResult(await tasks.ListNotesAsync(eventId, ct), Ok);
 
-    [HttpPost("{eventId:guid}/notes")]
+    [HttpPost("{eventId:long}/notes")]
     [RequirePermission(PermissionCatalog.TaskNoteManage)]
-    public async Task<IActionResult> AddNote(Guid eventId, [FromBody] CreateNoteRequest request, CancellationToken ct)
+    public async Task<IActionResult> AddNote(long eventId, [FromBody] CreateNoteRequest request, CancellationToken ct)
         => FromResult(await tasks.AddNoteAsync(eventId, request, ct), id => Created($"/api/v1/tasks/{eventId}/notes/{id}", new { id }));
 
-    [HttpPut("{eventId:guid}/notes/{noteId:guid}")]
+    [HttpPut("{eventId:long}/notes/{noteId:long}")]
     [RequirePermission(PermissionCatalog.TaskNoteManage)]
-    public async Task<IActionResult> UpdateNote(Guid eventId, Guid noteId, [FromBody] UpdateNoteRequest request, CancellationToken ct)
+    public async Task<IActionResult> UpdateNote(long eventId, long noteId, [FromBody] UpdateNoteRequest request, CancellationToken ct)
         => FromResult(await tasks.UpdateNoteAsync(eventId, noteId, request, ct), NoContent);
 
-    [HttpDelete("{eventId:guid}/notes/{noteId:guid}")]
+    [HttpDelete("{eventId:long}/notes/{noteId:long}")]
     [RequirePermission(PermissionCatalog.TaskNoteManage)]
-    public async Task<IActionResult> RemoveNote(Guid eventId, Guid noteId, CancellationToken ct)
+    public async Task<IActionResult> RemoveNote(long eventId, long noteId, CancellationToken ct)
         => FromResult(await tasks.RemoveNoteAsync(eventId, noteId, ct), NoContent);
 
     // ---- Documents ----
-    [HttpGet("{eventId:guid}/documents")]
+    [HttpGet("{eventId:long}/documents")]
     [RequirePermission(PermissionCatalog.TaskView)]
-    public async Task<IActionResult> Documents(Guid eventId, CancellationToken ct)
+    public async Task<IActionResult> Documents(long eventId, CancellationToken ct)
         => FromResult(await tasks.ListDocumentsAsync(eventId, ct), Ok);
 
-    [HttpPost("{eventId:guid}/documents")]
+    [HttpPost("{eventId:long}/documents")]
     [RequirePermission(PermissionCatalog.TaskDocumentManage)]
-    public async Task<IActionResult> AddDocument(Guid eventId, [FromBody] CreateDocumentRequest request, CancellationToken ct)
+    public async Task<IActionResult> AddDocument(long eventId, [FromBody] CreateDocumentRequest request, CancellationToken ct)
         => FromResult(await tasks.AddDocumentAsync(eventId, request, ct), id => Created($"/api/v1/tasks/{eventId}/documents/{id}", new { id }));
 
-    [HttpDelete("{eventId:guid}/documents/{documentId:guid}")]
+    [HttpDelete("{eventId:long}/documents/{documentId:long}")]
     [RequirePermission(PermissionCatalog.TaskDocumentManage)]
-    public async Task<IActionResult> RemoveDocument(Guid eventId, Guid documentId, CancellationToken ct)
+    public async Task<IActionResult> RemoveDocument(long eventId, long documentId, CancellationToken ct)
         => FromResult(await tasks.RemoveDocumentAsync(eventId, documentId, ct), NoContent);
 
     // ---- Dependencies ----
-    [HttpGet("{eventId:guid}/dependencies")]
+    [HttpGet("{eventId:long}/dependencies")]
     [RequirePermission(PermissionCatalog.TaskView)]
-    public async Task<IActionResult> Dependencies(Guid eventId, CancellationToken ct)
+    public async Task<IActionResult> Dependencies(long eventId, CancellationToken ct)
         => FromResult(await tasks.ListDependenciesAsync(eventId, ct), Ok);
 
-    [HttpPost("{eventId:guid}/dependencies")]
+    [HttpPost("{eventId:long}/dependencies")]
     [RequirePermission(PermissionCatalog.TaskUpdate)]
-    public async Task<IActionResult> AddDependency(Guid eventId, [FromBody] CreateDependencyRequest request, CancellationToken ct)
+    public async Task<IActionResult> AddDependency(long eventId, [FromBody] CreateDependencyRequest request, CancellationToken ct)
         => FromResult(await tasks.AddDependencyAsync(eventId, request, ct), id => Created($"/api/v1/tasks/{eventId}/dependencies/{id}", new { id }));
 
-    [HttpDelete("{eventId:guid}/dependencies/{dependencyId:guid}")]
+    [HttpDelete("{eventId:long}/dependencies/{dependencyId:long}")]
     [RequirePermission(PermissionCatalog.TaskUpdate)]
-    public async Task<IActionResult> RemoveDependency(Guid eventId, Guid dependencyId, CancellationToken ct)
+    public async Task<IActionResult> RemoveDependency(long eventId, long dependencyId, CancellationToken ct)
         => FromResult(await tasks.RemoveDependencyAsync(eventId, dependencyId, ct), NoContent);
 
     // ---- Daily reports ----
-    [HttpGet("{eventId:guid}/daily-reports")]
+    [HttpGet("{eventId:long}/daily-reports")]
     [RequirePermission(PermissionCatalog.TaskView)]
-    public async Task<IActionResult> DailyReports(Guid eventId, CancellationToken ct)
+    public async Task<IActionResult> DailyReports(long eventId, CancellationToken ct)
         => FromResult(await tasks.ListDailyReportsAsync(eventId, ct), Ok);
 
-    [HttpPost("{eventId:guid}/daily-reports")]
+    [HttpPost("{eventId:long}/daily-reports")]
     [RequirePermission(PermissionCatalog.TaskDailyReportManage)]
-    public async Task<IActionResult> AddDailyReport(Guid eventId, [FromBody] CreateDailyReportRequest request, CancellationToken ct)
+    public async Task<IActionResult> AddDailyReport(long eventId, [FromBody] CreateDailyReportRequest request, CancellationToken ct)
     {
         if (await ValidateAsync(createReportValidator, request, ct) is { } invalid) return invalid;
         return FromResult(await tasks.AddDailyReportAsync(eventId, request, ct), id => Created($"/api/v1/tasks/{eventId}/daily-reports/{id}", new { id }));
     }
 
-    [HttpPut("{eventId:guid}/daily-reports/{reportId:guid}")]
+    [HttpPut("{eventId:long}/daily-reports/{reportId:long}")]
     [RequirePermission(PermissionCatalog.TaskDailyReportManage)]
-    public async Task<IActionResult> UpdateDailyReport(Guid eventId, Guid reportId, [FromBody] UpdateDailyReportRequest request, CancellationToken ct)
+    public async Task<IActionResult> UpdateDailyReport(long eventId, long reportId, [FromBody] UpdateDailyReportRequest request, CancellationToken ct)
     {
         if (await ValidateAsync(updateReportValidator, request, ct) is { } invalid) return invalid;
         return FromResult(await tasks.UpdateDailyReportAsync(eventId, reportId, request, ct), NoContent);
     }
 
-    [HttpDelete("{eventId:guid}/daily-reports/{reportId:guid}")]
+    [HttpDelete("{eventId:long}/daily-reports/{reportId:long}")]
     [RequirePermission(PermissionCatalog.TaskDailyReportManage)]
-    public async Task<IActionResult> RemoveDailyReport(Guid eventId, Guid reportId, CancellationToken ct)
+    public async Task<IActionResult> RemoveDailyReport(long eventId, long reportId, CancellationToken ct)
         => FromResult(await tasks.RemoveDailyReportAsync(eventId, reportId, ct), NoContent);
 
     // ---- Settings: statuses & priorities ----
@@ -210,9 +210,9 @@ public sealed class TasksController(
         return FromResult(await settings.CreateStatusAsync(request, ct), id => Created($"/api/v1/tasks/settings/statuses/{id}", new { id }));
     }
 
-    [HttpPut("settings/statuses/{id:guid}")]
+    [HttpPut("settings/statuses/{id:long}")]
     [RequirePermission(PermissionCatalog.TaskWorkflowManage)]
-    public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusRequest request, CancellationToken ct)
+    public async Task<IActionResult> UpdateStatus(long id, [FromBody] UpdateStatusRequest request, CancellationToken ct)
     {
         if (await ValidateAsync(updateStatusValidator, request, ct) is { } invalid) return invalid;
         return FromResult(await settings.UpdateStatusAsync(id, request, ct), NoContent);
@@ -223,9 +223,9 @@ public sealed class TasksController(
     public async Task<IActionResult> ReorderStatuses([FromBody] ReorderStatusesRequest request, CancellationToken ct)
         => FromResult(await settings.ReorderAsync(request, ct), NoContent);
 
-    [HttpDelete("settings/statuses/{id:guid}")]
+    [HttpDelete("settings/statuses/{id:long}")]
     [RequirePermission(PermissionCatalog.TaskWorkflowManage)]
-    public async Task<IActionResult> DeleteStatus(Guid id, CancellationToken ct)
+    public async Task<IActionResult> DeleteStatus(long id, CancellationToken ct)
         => FromResult(await settings.DeleteStatusAsync(id, ct), NoContent);
 
     // ---- Settings: workspace config (daily-report rules / notifications / dashboard defaults) ----

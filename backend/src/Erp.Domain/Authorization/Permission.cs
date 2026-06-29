@@ -8,7 +8,7 @@ namespace Erp.Domain.Authorization;
 /// all tenants, so it is NOT tenant-owned. <see cref="Code"/> (e.g. "user.manage")
 /// is the stable key carried in JWT action claims.
 /// </summary>
-public sealed class Permission : Entity
+public sealed class Permission : BaseEntity
 {
     private Permission() { } // EF
 

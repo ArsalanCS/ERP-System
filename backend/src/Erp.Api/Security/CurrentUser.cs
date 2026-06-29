@@ -15,22 +15,22 @@ public sealed class CurrentUser(IHttpContextAccessor accessor) : ICurrentUser
 
     public bool IsAuthenticated => Principal?.Identity?.IsAuthenticated ?? false;
 
-    public Guid? UserId =>
-        Guid.TryParse(Principal?.FindFirstValue(ErpClaimTypes.UserId) ?? Principal?.FindFirstValue(ClaimTypes.NameIdentifier), out var id)
+    public long? UserId =>
+        long.TryParse(Principal?.FindFirstValue(ErpClaimTypes.UserId) ?? Principal?.FindFirstValue(ClaimTypes.NameIdentifier), out var id)
             ? id
             : null;
 
-    public Guid? WorkspaceId =>
-        Guid.TryParse(Principal?.FindFirstValue(ErpClaimTypes.WorkspaceId), out var id) ? id : null;
+    public long? WorkspaceId =>
+        long.TryParse(Principal?.FindFirstValue(ErpClaimTypes.WorkspaceId), out var id) ? id : null;
 
     public string? Email => Principal?.FindFirstValue(ClaimTypes.Email) ?? Principal?.FindFirstValue(ErpClaimTypes.Email);
 
     public bool IsPlatformAdmin =>
         string.Equals(Principal?.FindFirstValue(ErpClaimTypes.PlatformAdmin), "true", StringComparison.OrdinalIgnoreCase);
 
-    public IReadOnlySet<Guid> ClusterIds =>
+    public IReadOnlySet<long> ClusterIds =>
         Principal?.FindAll(ErpClaimTypes.Cluster)
-            .Select(c => Guid.TryParse(c.Value, out var id) ? id : (Guid?)null)
+            .Select(c => long.TryParse(c.Value, out var id) ? id : (long?)null)
             .Where(id => id.HasValue)
             .Select(id => id!.Value)
             .ToHashSet() ?? [];

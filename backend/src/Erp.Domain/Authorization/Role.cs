@@ -12,7 +12,7 @@ public sealed class Role : TenantEntity
 
     private Role() { } // EF
 
-    public Role(Guid workspaceId, string name, string code, RoleType type, string? description = null)
+    public Role(long workspaceId, string name, string code, RoleType type, string? description = null)
     {
         AssignWorkspace(workspaceId);
         Name = name;
@@ -26,7 +26,6 @@ public sealed class Role : TenantEntity
     public string? Description { get; private set; }
     public RoleType Type { get; private set; }
     public string? Color { get; private set; }
-    public bool IsActive { get; private set; } = true;
 
     public IReadOnlyCollection<RolePermission> Permissions => _permissions;
 
@@ -40,7 +39,7 @@ public sealed class Role : TenantEntity
         Color = color;
     }
 
-    public void Grant(Guid permissionId, DataScope scope)
+    public void Grant(long permissionId, DataScope scope)
     {
         EnsureMutable();
         var existing = _permissions.FirstOrDefault(p => p.PermissionId == permissionId);
@@ -54,7 +53,7 @@ public sealed class Role : TenantEntity
         }
     }
 
-    public void Revoke(Guid permissionId)
+    public void Revoke(long permissionId)
     {
         EnsureMutable();
         _permissions.RemoveAll(p => p.PermissionId == permissionId);

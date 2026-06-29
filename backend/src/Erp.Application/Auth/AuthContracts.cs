@@ -36,8 +36,8 @@ public sealed record AuthTokens(
     AuthUser User);
 
 public sealed record AuthUser(
-    Guid Id,
-    Guid WorkspaceId,
+    long Id,
+    long WorkspaceId,
     string Email,
     string DisplayName,
     string PreferredLanguage,

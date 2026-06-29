@@ -4,7 +4,7 @@ using Erp.Domain.Identity;
 namespace Erp.Application.Users;
 
 public sealed record UserListItem(
-    Guid Id,
+    long Id,
     string Email,
     string DisplayName,
     string? Mobile,
@@ -15,8 +15,8 @@ public sealed record UserListItem(
     DateTimeOffset CreatedAt);
 
 public sealed record UserDetail(
-    Guid Id,
-    Guid WorkspaceId,
+    long Id,
+    long WorkspaceId,
     string Email,
     string FirstName,
     string LastName,
@@ -26,8 +26,8 @@ public sealed record UserDetail(
     string TimeZone,
     string? JobTitle,
     string? EmployeeNumber,
-    Guid? PlacementNodeId,
-    Guid? ManagerId,
+    long? PlacementNodeId,
+    long? ManagerId,
     DateTimeOffset? HireDate,
     UserStatus Status,
     bool TwoFactorEnabled,
@@ -36,7 +36,7 @@ public sealed record UserDetail(
     DateTimeOffset? AccessExpiryDate,
     DateTimeOffset? LastLoginAt,
     DateTimeOffset CreatedAt,
-    IReadOnlyList<Guid> RoleIds);
+    IReadOnlyList<long> RoleIds);
 
 /// <summary>List query with user-specific filters.</summary>
 public sealed record UserListQuery : ListQuery
@@ -53,10 +53,10 @@ public sealed record CreateUserRequest(
     string PreferredLanguage,
     string? TimeZone,
     string? EmployeeNumber,
-    Guid? PlacementNodeId,
-    Guid? ManagerId,
+    long? PlacementNodeId,
+    long? ManagerId,
     DateTimeOffset? HireDate,
-    IReadOnlyList<Guid>? RoleIds,
+    IReadOnlyList<long>? RoleIds,
     bool SendInvitation);
 
 public sealed record UpdateUserRequest(
@@ -68,14 +68,14 @@ public sealed record UpdateUserRequest(
     string PreferredLanguage,
     string TimeZone,
     string? EmployeeNumber,
-    Guid? PlacementNodeId,
-    Guid? ManagerId,
+    long? PlacementNodeId,
+    long? ManagerId,
     DateTimeOffset? HireDate,
     DateTimeOffset? AccessStartDate,
     DateTimeOffset? AccessExpiryDate,
-    IReadOnlyList<Guid>? RoleIds);
+    IReadOnlyList<long>? RoleIds);
 
 public sealed record SuspendUserRequest(string Reason);
 
 /// <summary>Result of creating/inviting a user; the invite token is for the mailer only.</summary>
-public sealed record CreateUserResult(Guid UserId, string? InvitationToken);
+public sealed record CreateUserResult(long UserId, string? InvitationToken);

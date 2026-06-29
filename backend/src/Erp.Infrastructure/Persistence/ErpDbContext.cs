@@ -23,7 +23,7 @@ public sealed class ErpDbContext(DbContextOptions<ErpDbContext> options, ITenant
     : DbContext(options)
 {
     /// <summary>Workspace the queries are scoped to (read by the global query filter).</summary>
-    public Guid CurrentWorkspaceId => tenant.WorkspaceId ?? Guid.Empty;
+    public long CurrentWorkspaceId => tenant.WorkspaceId ?? 0;
 
     /// <summary>Platform super admin bypasses the tenant filter (cross-tenant reads).</summary>
     public bool BypassTenantFilter => tenant.IsPlatformAdmin;
@@ -73,23 +73,29 @@ public sealed class ErpDbContext(DbContextOptions<ErpDbContext> options, ITenant
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             var clrType = entityType.ClrType;
-            if (!typeof(Entity).IsAssignableFrom(clrType))
+            if (!typeof(BaseEntity).IsAssignableFrom(clrType))
             {
                 continue;
             }
+
+            // BigInt keys are assigned client-side by IdGenerator (known pre-save),
+            // so the database must not try to generate them.
+            modelBuilder.Entity(clrType)
+                .Property(nameof(BaseEntity.Id))
+                .ValueGeneratedNever();
 
             // Append-only audit rows live on a partitioned table that cannot
             // RETURN the xmin system column on insert, and are never updated —
             // so they don't carry a concurrency token.
             if (clrType == typeof(AuditLog))
             {
-                modelBuilder.Entity(clrType).Ignore(nameof(Entity.Version));
+                modelBuilder.Entity(clrType).Ignore(nameof(BaseEntity.Version));
             }
             else
             {
                 // xmin optimistic-concurrency token for every other entity.
                 modelBuilder.Entity(clrType)
-                    .Property(nameof(Entity.Version))
+                    .Property(nameof(BaseEntity.Version))
                     .HasColumnName("xmin")
                     .HasColumnType("xid")
                     .ValueGeneratedOnAddOrUpdate()

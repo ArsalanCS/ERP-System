@@ -6,7 +6,7 @@ using Erp.Domain.Auditing;
 namespace Erp.Application.Auditing;
 
 public sealed record AuditLogDto(
-    Guid Id, DateTimeOffset OccurredAt, Guid? ActorUserId, string? ActorDisplayName,
+    long Id, DateTimeOffset OccurredAt, long? ActorUserId, string? ActorDisplayName,
     string Action, string Module, string ResourceType, string? ResourceId,
     AuditResult Result, AuditSource Source, string? IpAddress, string CorrelationId,
     string? Reason, string? OldValues, string? NewValues);
@@ -15,7 +15,7 @@ public sealed record AuditSearchQuery : ListQuery
 {
     public DateTimeOffset? From { get; init; }
     public DateTimeOffset? To { get; init; }
-    public Guid? ActorUserId { get; init; }
+    public long? ActorUserId { get; init; }
     public string? Action { get; init; }
     public string? Module { get; init; }
     public AuditResult? Result { get; init; }

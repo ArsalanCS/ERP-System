@@ -11,7 +11,7 @@ public sealed class WorkspaceSecurityPolicy : TenantEntity
 {
     private WorkspaceSecurityPolicy() { } // EF
 
-    public WorkspaceSecurityPolicy(Guid workspaceId)
+    public WorkspaceSecurityPolicy(long workspaceId)
     {
         AssignWorkspace(workspaceId);
     }

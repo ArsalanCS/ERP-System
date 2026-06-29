@@ -1,27 +1,27 @@
 namespace Erp.Application.Tasks.Contracts;
 
 /// <summary>A status/priority breakdown bucket (id may be null for "no status/priority").</summary>
-public sealed record TaskBucketDto(Guid? Id, string? Name, string? Color, int Count);
+public sealed record TaskBucketDto(long? Id, string? Name, string? Color, int Count);
 
 /// <summary>Open-task load per assignee (null id = unassigned).</summary>
-public sealed record TaskAssigneeLoadDto(Guid? AssigneeId, string? AssigneeName, int Open, int Overdue);
+public sealed record TaskAssigneeLoadDto(long? AssigneeId, string? AssigneeName, int Open, int Overdue);
 
 /// <summary>A single day's created/completed counts for the activity trend.</summary>
 public sealed record TaskTrendPointDto(DateOnly Date, int Created, int Completed);
 
 /// <summary>A recent activity feed entry across the visible task set.</summary>
 public sealed record TaskRecentActivityDto(
-    Guid Id,
-    Guid EventId,
+    long Id,
+    long EventId,
     string ReferenceNo,
     string Message,
-    Guid? ActorId,
+    long? ActorId,
     string? ActorName,
     DateTimeOffset OccurredAt);
 
 /// <summary>A schedule bar for the dashboard mini-gantt (open tasks that have start/due dates).</summary>
 public sealed record TaskGanttItemDto(
-    Guid EventId,
+    long EventId,
     string ReferenceNo,
     string Title,
     DateTimeOffset? StartAt,

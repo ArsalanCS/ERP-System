@@ -13,42 +13,42 @@ namespace Erp.Application.Tasks;
 public interface ITaskService
 {
     Task<Result<PagedResult<TaskListItemDto>>> ListAsync(TaskListQuery query, CancellationToken ct = default);
-    Task<Result<TaskDetailsDto>> GetAsync(Guid eventId, CancellationToken ct = default);
+    Task<Result<TaskDetailsDto>> GetAsync(long eventId, CancellationToken ct = default);
     Task<Result<MyTasksGroups>> GetMyTasksAsync(CancellationToken ct = default);
-    Task<Result<IReadOnlyList<TaskListItemDto>>> ListSubtasksAsync(Guid eventId, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<TaskListItemDto>>> ListSubtasksAsync(long eventId, CancellationToken ct = default);
 
     Task<Result<TaskDashboardDto>> GetDashboardAsync(CancellationToken ct = default);
     Task<Result<TaskReportDto>> GetReportAsync(TaskListQuery query, CancellationToken ct = default);
     Task<Result<PagedResult<TaskDailyReportRowDto>>> GetDailyReportsReportAsync(TaskDailyReportQuery query, CancellationToken ct = default);
 
     Task<Result<CreateTaskResult>> CreateAsync(CreateTaskRequest request, CancellationToken ct = default);
-    Task<Result<CreateTaskResult>> CreateSubtaskAsync(Guid parentEventId, CreateTaskRequest request, CancellationToken ct = default);
-    Task<Result> UpdateAsync(Guid eventId, UpdateTaskRequest request, CancellationToken ct = default);
-    Task<Result> ChangeStatusAsync(Guid eventId, ChangeStatusRequest request, CancellationToken ct = default);
-    Task<Result> AssignAsync(Guid eventId, AssignTaskRequest request, CancellationToken ct = default);
-    Task<Result> SetPriorityAsync(Guid eventId, SetPriorityRequest request, CancellationToken ct = default);
-    Task<Result> ArchiveAsync(Guid eventId, CancellationToken ct = default);
+    Task<Result<CreateTaskResult>> CreateSubtaskAsync(long parentEventId, CreateTaskRequest request, CancellationToken ct = default);
+    Task<Result> UpdateAsync(long eventId, UpdateTaskRequest request, CancellationToken ct = default);
+    Task<Result> ChangeStatusAsync(long eventId, ChangeStatusRequest request, CancellationToken ct = default);
+    Task<Result> AssignAsync(long eventId, AssignTaskRequest request, CancellationToken ct = default);
+    Task<Result> SetPriorityAsync(long eventId, SetPriorityRequest request, CancellationToken ct = default);
+    Task<Result> ArchiveAsync(long eventId, CancellationToken ct = default);
 
-    Task<Result<IReadOnlyList<TaskActivityDto>>> GetActivityAsync(Guid eventId, CancellationToken ct = default);
-    Task<Result<IReadOnlyList<TaskAuditDto>>> GetAuditAsync(Guid eventId, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<TaskActivityDto>>> GetActivityAsync(long eventId, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<TaskAuditDto>>> GetAuditAsync(long eventId, CancellationToken ct = default);
 
     Task<Result<IReadOnlyList<StatusDto>>> ListStatusesAsync(string statusTypeCode, CancellationToken ct = default);
 
-    Task<Result<IReadOnlyList<TaskNoteDto>>> ListNotesAsync(Guid eventId, CancellationToken ct = default);
-    Task<Result<Guid>> AddNoteAsync(Guid eventId, CreateNoteRequest request, CancellationToken ct = default);
-    Task<Result> UpdateNoteAsync(Guid eventId, Guid noteId, UpdateNoteRequest request, CancellationToken ct = default);
-    Task<Result> RemoveNoteAsync(Guid eventId, Guid noteId, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<TaskNoteDto>>> ListNotesAsync(long eventId, CancellationToken ct = default);
+    Task<Result<long>> AddNoteAsync(long eventId, CreateNoteRequest request, CancellationToken ct = default);
+    Task<Result> UpdateNoteAsync(long eventId, long noteId, UpdateNoteRequest request, CancellationToken ct = default);
+    Task<Result> RemoveNoteAsync(long eventId, long noteId, CancellationToken ct = default);
 
-    Task<Result<IReadOnlyList<TaskDocumentDto>>> ListDocumentsAsync(Guid eventId, CancellationToken ct = default);
-    Task<Result<Guid>> AddDocumentAsync(Guid eventId, CreateDocumentRequest request, CancellationToken ct = default);
-    Task<Result> RemoveDocumentAsync(Guid eventId, Guid documentId, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<TaskDocumentDto>>> ListDocumentsAsync(long eventId, CancellationToken ct = default);
+    Task<Result<long>> AddDocumentAsync(long eventId, CreateDocumentRequest request, CancellationToken ct = default);
+    Task<Result> RemoveDocumentAsync(long eventId, long documentId, CancellationToken ct = default);
 
-    Task<Result<IReadOnlyList<TaskDependencyDto>>> ListDependenciesAsync(Guid eventId, CancellationToken ct = default);
-    Task<Result<Guid>> AddDependencyAsync(Guid eventId, CreateDependencyRequest request, CancellationToken ct = default);
-    Task<Result> RemoveDependencyAsync(Guid eventId, Guid dependencyId, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<TaskDependencyDto>>> ListDependenciesAsync(long eventId, CancellationToken ct = default);
+    Task<Result<long>> AddDependencyAsync(long eventId, CreateDependencyRequest request, CancellationToken ct = default);
+    Task<Result> RemoveDependencyAsync(long eventId, long dependencyId, CancellationToken ct = default);
 
-    Task<Result<IReadOnlyList<TaskDailyReportDto>>> ListDailyReportsAsync(Guid eventId, CancellationToken ct = default);
-    Task<Result<Guid>> AddDailyReportAsync(Guid eventId, CreateDailyReportRequest request, CancellationToken ct = default);
-    Task<Result> UpdateDailyReportAsync(Guid eventId, Guid reportId, UpdateDailyReportRequest request, CancellationToken ct = default);
-    Task<Result> RemoveDailyReportAsync(Guid eventId, Guid reportId, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<TaskDailyReportDto>>> ListDailyReportsAsync(long eventId, CancellationToken ct = default);
+    Task<Result<long>> AddDailyReportAsync(long eventId, CreateDailyReportRequest request, CancellationToken ct = default);
+    Task<Result> UpdateDailyReportAsync(long eventId, long reportId, UpdateDailyReportRequest request, CancellationToken ct = default);
+    Task<Result> RemoveDailyReportAsync(long eventId, long reportId, CancellationToken ct = default);
 }

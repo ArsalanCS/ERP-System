@@ -71,12 +71,12 @@ public sealed class TaskSettingsService(
         return Result.Success<IReadOnlyList<StatusDto>>(list);
     }
 
-    public async Task<Result<Guid>> CreateStatusAsync(CreateStatusRequest request, CancellationToken ct = default)
+    public async Task<Result<long>> CreateStatusAsync(CreateStatusRequest request, CancellationToken ct = default)
     {
-        if (currentUser.WorkspaceId is not { } ws) return Result.Failure<Guid>(TaskErrors.NoScope());
+        if (currentUser.WorkspaceId is not { } ws) return Result.Failure<long>(TaskErrors.NoScope());
 
         var type = await statusTypes.Query().FirstOrDefaultAsync(t => t.Code == request.StatusTypeCode, ct);
-        if (type is null) return Result.Failure<Guid>(TaskErrors.StatusTypeNotFound());
+        if (type is null) return Result.Failure<long>(TaskErrors.StatusTypeNotFound());
 
         var isStatusWorkflow = type.Code == StatusTypeCodes.TaskStatus;
         var isInitial = isStatusWorkflow && request.IsInitial;
@@ -96,7 +96,7 @@ public sealed class TaskSettingsService(
         return Result.Success(status.Id);
     }
 
-    public async Task<Result> UpdateStatusAsync(Guid id, UpdateStatusRequest request, CancellationToken ct = default)
+    public async Task<Result> UpdateStatusAsync(long id, UpdateStatusRequest request, CancellationToken ct = default)
     {
         var status = await statuses.Query().FirstOrDefaultAsync(s => s.Id == id, ct);
         if (status is null) return Result.Failure(TaskErrors.NotFound("Status"));
@@ -126,7 +126,7 @@ public sealed class TaskSettingsService(
         return Result.Success();
     }
 
-    public async Task<Result> DeleteStatusAsync(Guid id, CancellationToken ct = default)
+    public async Task<Result> DeleteStatusAsync(long id, CancellationToken ct = default)
     {
         var status = await statuses.Query().FirstOrDefaultAsync(s => s.Id == id, ct);
         if (status is null) return Result.Failure(TaskErrors.NotFound("Status"));
@@ -142,7 +142,7 @@ public sealed class TaskSettingsService(
         return Result.Success();
     }
 
-    private async Task ClearInitialAsync(Guid statusTypeId, CancellationToken ct)
+    private async Task ClearInitialAsync(long statusTypeId, CancellationToken ct)
     {
         var current = await statuses.Query().Where(s => s.StatusTypeId == statusTypeId && s.IsInitial).ToListAsync(ct);
         foreach (var s in current) s.ClearInitial();
@@ -162,7 +162,7 @@ public sealed class TaskSettingsService(
         }
     }
 
-    private static AuditEntry Entry(string action, Guid statusId, Guid ws) => new()
+    private static AuditEntry Entry(string action, long statusId, long ws) => new()
     {
         Action = action,
         Module = "Tasks",

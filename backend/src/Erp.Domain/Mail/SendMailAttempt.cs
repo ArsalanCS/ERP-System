@@ -7,7 +7,7 @@ public sealed class SendMailAttempt : TenantEntity
 {
     private SendMailAttempt() { } // EF
 
-    public SendMailAttempt(Guid workspaceId, Guid sendMailId, int attemptNo, bool success,
+    public SendMailAttempt(long workspaceId, long sendMailId, int attemptNo, bool success,
         string? providerResponse, string? errorMessage, DateTimeOffset attemptedAt)
     {
         AssignWorkspace(workspaceId);
@@ -19,7 +19,7 @@ public sealed class SendMailAttempt : TenantEntity
         AttemptedAt = attemptedAt;
     }
 
-    public Guid SendMailId { get; private set; }
+    public long SendMailId { get; private set; }
     public int AttemptNo { get; private set; }
     public bool Success { get; private set; }
     public string? ProviderResponse { get; private set; }

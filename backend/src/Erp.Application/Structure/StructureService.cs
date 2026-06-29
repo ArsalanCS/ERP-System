@@ -9,11 +9,11 @@ namespace Erp.Application.Structure;
 public interface IStructureService
 {
     Task<StructureTree> GetTreeAsync(CancellationToken ct = default);
-    Task<Result<IReadOnlyList<StructureMemberDto>>> ListMembersAsync(Guid nodeId, CancellationToken ct = default);
-    Task<Result<Guid>> CreateNodeAsync(CreateNodeRequest request, CancellationToken ct = default);
-    Task<Result> UpdateNodeAsync(Guid id, UpdateNodeRequest request, CancellationToken ct = default);
-    Task<Result> MoveNodeAsync(Guid id, MoveNodeRequest request, CancellationToken ct = default);
-    Task<Result> ArchiveNodeAsync(Guid id, CancellationToken ct = default);
+    Task<Result<IReadOnlyList<StructureMemberDto>>> ListMembersAsync(long nodeId, CancellationToken ct = default);
+    Task<Result<long>> CreateNodeAsync(CreateNodeRequest request, CancellationToken ct = default);
+    Task<Result> UpdateNodeAsync(long id, UpdateNodeRequest request, CancellationToken ct = default);
+    Task<Result> MoveNodeAsync(long id, MoveNodeRequest request, CancellationToken ct = default);
+    Task<Result> ArchiveNodeAsync(long id, CancellationToken ct = default);
 }
 
 /// <summary>
@@ -40,7 +40,7 @@ public sealed class StructureService(
         return new StructureTree(dtos);
     }
 
-    public async Task<Result<IReadOnlyList<StructureMemberDto>>> ListMembersAsync(Guid nodeId, CancellationToken ct = default)
+    public async Task<Result<IReadOnlyList<StructureMemberDto>>> ListMembersAsync(long nodeId, CancellationToken ct = default)
     {
         var node = await repo.GetNodeAsync(nodeId, ct);
         if (node is null) return Result.Failure<IReadOnlyList<StructureMemberDto>>(StructureErrors.NotFound("Node"));
@@ -54,24 +54,24 @@ public sealed class StructureService(
         return Result.Success(members);
     }
 
-    public async Task<Result<Guid>> CreateNodeAsync(CreateNodeRequest request, CancellationToken ct = default)
+    public async Task<Result<long>> CreateNodeAsync(CreateNodeRequest request, CancellationToken ct = default)
     {
-        if (tenant.WorkspaceId is not { } ws) return Result.Failure<Guid>(StructureErrors.NoScope());
+        if (tenant.WorkspaceId is not { } ws) return Result.Failure<long>(StructureErrors.NoScope());
 
         if (request.NodeType == StructureNodeType.Organization)
         {
-            if (request.ParentId is not null) return Result.Failure<Guid>(StructureErrors.OrgMustBeRoot());
+            if (request.ParentId is not null) return Result.Failure<long>(StructureErrors.OrgMustBeRoot());
         }
         else
         {
             if (request.ParentId is not { } parentId)
-                return Result.Failure<Guid>(StructureErrors.ParentRequired());
+                return Result.Failure<long>(StructureErrors.ParentRequired());
             if (!await repo.NodeExistsAsync(parentId, ct))
-                return Result.Failure<Guid>(StructureErrors.NotFound("Parent node"));
+                return Result.Failure<long>(StructureErrors.NotFound("Parent node"));
         }
 
         if (await repo.CodeExistsAsync(request.Code.Trim(), ct))
-            return Result.Failure<Guid>(StructureErrors.CodeTaken());
+            return Result.Failure<long>(StructureErrors.CodeTaken());
 
         var node = new StructureNode(ws, request.ParentId, request.NodeType, request.Name.Trim(), request.Code.Trim());
         node.Update(request.Name.Trim(), request.Description, request.ManagerId, request.SortOrder ?? 0);
@@ -87,7 +87,7 @@ public sealed class StructureService(
         return node.Id;
     }
 
-    public async Task<Result> UpdateNodeAsync(Guid id, UpdateNodeRequest request, CancellationToken ct = default)
+    public async Task<Result> UpdateNodeAsync(long id, UpdateNodeRequest request, CancellationToken ct = default)
     {
         var node = await repo.GetNodeAsync(id, ct);
         if (node is null) return Result.Failure(StructureErrors.NotFound("Node"));
@@ -96,7 +96,7 @@ public sealed class StructureService(
         return await CommitAsync(AuditActions.Update, node.Id, node.WorkspaceId, ct);
     }
 
-    public async Task<Result> MoveNodeAsync(Guid id, MoveNodeRequest request, CancellationToken ct = default)
+    public async Task<Result> MoveNodeAsync(long id, MoveNodeRequest request, CancellationToken ct = default)
     {
         var node = await repo.GetNodeAsync(id, ct);
         if (node is null) return Result.Failure(StructureErrors.NotFound("Node"));
@@ -119,7 +119,7 @@ public sealed class StructureService(
         return await CommitAsync(AuditActions.Update, node.Id, node.WorkspaceId, ct);
     }
 
-    public async Task<Result> ArchiveNodeAsync(Guid id, CancellationToken ct = default)
+    public async Task<Result> ArchiveNodeAsync(long id, CancellationToken ct = default)
     {
         var node = await repo.GetNodeAsync(id, ct);
         if (node is null) return Result.Failure(StructureErrors.NotFound("Node"));
@@ -130,13 +130,13 @@ public sealed class StructureService(
     }
 
     // ---- helpers -----------------------------------------------------------
-    private static HashSet<Guid> DescendantIds(IReadOnlyList<StructureNode> all, Guid rootId)
+    private static HashSet<long> DescendantIds(IReadOnlyList<StructureNode> all, long rootId)
     {
         var byParent = all.Where(n => n.ParentId is not null)
             .GroupBy(n => n.ParentId!.Value)
             .ToDictionary(g => g.Key, g => g.Select(n => n.Id).ToList());
-        var result = new HashSet<Guid>();
-        var stack = new Stack<Guid>([rootId]);
+        var result = new HashSet<long>();
+        var stack = new Stack<long>([rootId]);
         while (stack.Count > 0)
         {
             var current = stack.Pop();
@@ -149,7 +149,7 @@ public sealed class StructureService(
         return result;
     }
 
-    private async Task<Result> CommitAsync(string action, Guid id, Guid ws, CancellationToken ct)
+    private async Task<Result> CommitAsync(string action, long id, long ws, CancellationToken ct)
     {
         await audit.LogAsync(new AuditEntry
         {

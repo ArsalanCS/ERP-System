@@ -7,7 +7,7 @@ namespace Erp.Domain.Events;
 /// Code-driven (resolve by <see cref="Code"/>, never hard-coded ids); seeded once at startup.
 /// Not tenant-owned — the catalogue is identical for every workspace.
 /// </summary>
-public sealed class EventType : Entity
+public sealed class EventType : BaseEntity
 {
     private EventType() { } // EF
 
@@ -20,7 +20,6 @@ public sealed class EventType : Entity
 
     public string Code { get; private set; } = default!;
     public string Name { get; private set; } = default!;
-    public bool IsActive { get; private set; }
 }
 
 /// <summary>Stable event-type codes. Only TASK_MANAGEMENT is active this phase.</summary>

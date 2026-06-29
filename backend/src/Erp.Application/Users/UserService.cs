@@ -37,12 +37,12 @@ public sealed class UserService(
         {
             var emp = emps.GetValueOrDefault(u.Id);
             return new UserListItem(u.Id, u.Email, u.DisplayName, emp?.Mobile, emp?.JobTitle,
-                u.Status, u.TwoFactorEnabled, u.LastLoginAt, u.CreatedAt);
+                u.Status, u.TwoFactorEnabled, u.LastLoginAt, u.InsertedDate);
         }).ToList();
         return Result.Success(new PagedResult<UserListItem>(mapped, query.Page, query.PageSize, total));
     }
 
-    public async Task<Result<UserDetail>> GetAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Result<UserDetail>> GetAsync(long id, CancellationToken cancellationToken = default)
     {
         var user = await users.GetByIdAsync(id, cancellationToken);
         if (user is null) return UserErrors.NotFound();
@@ -115,7 +115,7 @@ public sealed class UserService(
         return new CreateUserResult(user.Id, null);
     }
 
-    public async Task<Result> UpdateAsync(Guid id, UpdateUserRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result> UpdateAsync(long id, UpdateUserRequest request, CancellationToken cancellationToken = default)
     {
         if (tenant.WorkspaceId is not { } workspaceId) return Result.Failure(UserErrors.NoWorkspaceScope());
 
@@ -157,7 +157,7 @@ public sealed class UserService(
         return Result.Success();
     }
 
-    public async Task<Result> SuspendAsync(Guid id, SuspendUserRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result> SuspendAsync(long id, SuspendUserRequest request, CancellationToken cancellationToken = default)
     {
         if (tenant.WorkspaceId is not { } workspaceId) return Result.Failure(UserErrors.NoWorkspaceScope());
 
@@ -174,7 +174,7 @@ public sealed class UserService(
         return Result.Success();
     }
 
-    public async Task<Result> ReactivateAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Result> ReactivateAsync(long id, CancellationToken cancellationToken = default)
     {
         if (tenant.WorkspaceId is not { } workspaceId) return Result.Failure(UserErrors.NoWorkspaceScope());
 
@@ -187,7 +187,7 @@ public sealed class UserService(
         return Result.Success();
     }
 
-    public async Task<Result> ArchiveAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<Result> ArchiveAsync(long id, CancellationToken cancellationToken = default)
     {
         if (tenant.WorkspaceId is not { } workspaceId) return Result.Failure(UserErrors.NoWorkspaceScope());
 
@@ -204,14 +204,14 @@ public sealed class UserService(
         return Result.Success();
     }
 
-    private async Task<Error?> ValidateRolesAsync(IReadOnlyList<Guid>? roleIds, CancellationToken cancellationToken)
+    private async Task<Error?> ValidateRolesAsync(IReadOnlyList<long>? roleIds, CancellationToken cancellationToken)
     {
         if (roleIds is not { Count: > 0 }) return null;
         var existing = await roles.FilterExistingIdsAsync(roleIds, cancellationToken);
         return existing.Count == roleIds.Distinct().Count() ? null : UserErrors.UnknownRole();
     }
 
-    private async Task<bool> WouldRemoveLastOwnerAsync(Guid userId, CancellationToken cancellationToken)
+    private async Task<bool> WouldRemoveLastOwnerAsync(long userId, CancellationToken cancellationToken)
     {
         var ownerRole = (await roles.ListAsync(cancellationToken)).FirstOrDefault(r => r.Code == OwnerRoleCode);
         if (ownerRole is null) return false;
@@ -223,16 +223,16 @@ public sealed class UserService(
         return activeOwners <= 1;
     }
 
-    private static AuditEntry Entry(string action, User user, Guid workspaceId, string? reason = null) => new()
+    private static AuditEntry Entry(string action, User user, long workspaceId, string? reason = null) => new()
     {
         Action = action, Module = "Identity", ResourceType = "User",
         ResourceId = user.Id.ToString(), WorkspaceId = workspaceId, Reason = reason,
         NewValues = $"{{\"status\":\"{user.Status}\"}}",
     };
 
-    private static UserDetail Map(User u, Employee? e, IReadOnlyList<Guid> roleIds) => new(
+    private static UserDetail Map(User u, Employee? e, IReadOnlyList<long> roleIds) => new(
         u.Id, u.WorkspaceId, u.Email, u.FirstName, u.LastName, u.DisplayName, e?.Mobile,
         u.PreferredLanguage, u.TimeZone, e?.JobTitle, e?.EmployeeNumber, e?.PlacementNodeId, e?.ManagerId, e?.HireDate,
         u.Status, u.TwoFactorEnabled, u.RequirePasswordChange,
-        u.AccessStartDate, u.AccessExpiryDate, u.LastLoginAt, u.CreatedAt, roleIds);
+        u.AccessStartDate, u.AccessExpiryDate, u.LastLoginAt, u.InsertedDate, roleIds);
 }

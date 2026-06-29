@@ -8,7 +8,7 @@ namespace Erp.Application.Abstractions;
 /// </summary>
 public interface IPermissionResolver
 {
-    Task<EffectivePermissions> ResolveAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<EffectivePermissions> ResolveAsync(long userId, CancellationToken cancellationToken = default);
 }
 
 /// <summary>

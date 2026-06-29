@@ -7,7 +7,7 @@ namespace Erp.Domain.Assets;
 /// NOTE, DOCUMENT, CUSTOMER, etc. Code-driven; seeded once at startup. Only NOTE and
 /// DOCUMENT are used this phase — the rest are placeholders for future modules.
 /// </summary>
-public sealed class AssetType : Entity
+public sealed class AssetType : BaseEntity
 {
     private AssetType() { } // EF
 
@@ -20,7 +20,6 @@ public sealed class AssetType : Entity
 
     public string Code { get; private set; } = default!;
     public string Name { get; private set; } = default!;
-    public bool IsActive { get; private set; }
 }
 
 /// <summary>Stable asset-type codes. NOTE and DOCUMENT are active this phase.</summary>

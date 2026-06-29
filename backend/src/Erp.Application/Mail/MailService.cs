@@ -31,16 +31,16 @@ public sealed class MailService(
             q = q.Where(m => m.Subject.Contains(term));
         }
 
-        var projected = q.OrderByDescending(m => m.CreatedAt).Select(m => new SendMailListItemDto(
+        var projected = q.OrderByDescending(m => m.InsertedDate).Select(m => new SendMailListItemDto(
             m.Id, m.Subject, m.Status, m.TemplateCode,
             recipients.Query().Count(r => r.SendMailId == m.Id),
-            m.RetryCount, m.ScheduledAt, m.SentAt, m.NextAttemptAt, m.LastError, m.CreatedAt));
+            m.RetryCount, m.ScheduledAt, m.SentAt, m.NextAttemptAt, m.LastError, m.InsertedDate));
 
         var page = await projected.ToPagedResultAsync(query.Page, query.PageSize, ct);
         return Result.Success(page);
     }
 
-    public async Task<Result<SendMailDetailDto>> GetAsync(Guid id, CancellationToken ct = default)
+    public async Task<Result<SendMailDetailDto>> GetAsync(long id, CancellationToken ct = default)
     {
         var mail = await sendMails.Query().FirstOrDefaultAsync(m => m.Id == id, ct);
         if (mail is null) return Result.Failure<SendMailDetailDto>(MailErrors.NotFound("Message"));
@@ -53,10 +53,10 @@ public sealed class MailService(
         return Result.Success(new SendMailDetailDto(
             mail.Id, mail.Subject, mail.BodyHtml, mail.BodyText, mail.TemplateDataJson, mail.Status, mail.TemplateCode,
             mail.RetryCount, mail.MaxRetries, mail.ScheduledAt, mail.SentAt, mail.NextAttemptAt, mail.LastError,
-            mail.CreatedAt, recips, atts));
+            mail.InsertedDate, recips, atts));
     }
 
-    public async Task<Result> RetryAsync(Guid id, CancellationToken ct = default)
+    public async Task<Result> RetryAsync(long id, CancellationToken ct = default)
     {
         var mail = await sendMails.Query().FirstOrDefaultAsync(m => m.Id == id, ct);
         if (mail is null) return Result.Failure(MailErrors.NotFound("Message"));
@@ -66,7 +66,7 @@ public sealed class MailService(
         return Result.Success();
     }
 
-    public async Task<Result> CancelAsync(Guid id, CancellationToken ct = default)
+    public async Task<Result> CancelAsync(long id, CancellationToken ct = default)
     {
         var mail = await sendMails.Query().FirstOrDefaultAsync(m => m.Id == id, ct);
         if (mail is null) return Result.Failure(MailErrors.NotFound("Message"));
@@ -86,12 +86,12 @@ public sealed class MailService(
             .Select(g => g.FirstOrDefault(t => t.WorkspaceId == ws) ?? g.First(t => t.WorkspaceId == null))
             .OrderBy(t => t.Code)
             .Select(t => new MailTemplateDto(t.Id, t.Code, t.Name, t.SubjectTemplate, t.BodyHtmlTemplate,
-                t.BodyTextTemplate, t.IsActive, t.IsGlobal, t.UpdatedAt))
+                t.BodyTextTemplate, t.IsActive, t.IsGlobal, t.ChangedDate))
             .ToList();
         return Result.Success<IReadOnlyList<MailTemplateDto>>(effective);
     }
 
-    public async Task<Result> UpdateTemplateAsync(Guid id, UpdateMailTemplateRequest request, CancellationToken ct = default)
+    public async Task<Result> UpdateTemplateAsync(long id, UpdateMailTemplateRequest request, CancellationToken ct = default)
     {
         if (currentUser.WorkspaceId is not { } ws) return Result.Failure(MailErrors.NoScope());
         var template = await templates.Query().FirstOrDefaultAsync(t => t.Id == id, ct);

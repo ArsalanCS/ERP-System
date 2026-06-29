@@ -5,7 +5,7 @@ using Erp.Shared.Results;
 
 namespace Erp.Application.Settings;
 
-public sealed record WorkspaceSettingsDto(Guid Id, string Name, string? LegalName, string Slug,
+public sealed record WorkspaceSettingsDto(long Id, string Name, string? LegalName, string Slug,
     string DefaultLanguage, string TimeZone, string BaseCurrency, string? Country, string Status);
 
 public sealed record UpdateWorkspaceSettingsRequest(string Name, string? LegalName,

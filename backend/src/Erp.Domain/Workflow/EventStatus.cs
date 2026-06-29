@@ -11,7 +11,7 @@ public sealed class EventStatus : TenantEntity
 {
     private EventStatus() { } // EF
 
-    public EventStatus(Guid workspaceId, Guid eventId, Guid statusId, string? note)
+    public EventStatus(long workspaceId, long eventId, long statusId, string? note)
     {
         AssignWorkspace(workspaceId);
         EventId = eventId;
@@ -20,8 +20,8 @@ public sealed class EventStatus : TenantEntity
         IsCurrent = true;
     }
 
-    public Guid EventId { get; private set; }
-    public Guid StatusId { get; private set; }
+    public long EventId { get; private set; }
+    public long StatusId { get; private set; }
     public bool IsCurrent { get; private set; }
     public string? Note { get; private set; }
 

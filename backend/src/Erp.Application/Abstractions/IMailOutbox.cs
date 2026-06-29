@@ -24,7 +24,7 @@ public sealed record MailRecipientInput(string Address, string? DisplayName, Mai
 
 /// <summary>A request to enqueue a templated notification. Carries no event/asset FK (Mail doc §7).</summary>
 public sealed record MailRequest(
-    Guid WorkspaceId,
+    long WorkspaceId,
     string TemplateCode,
     string FallbackSubject,
     string FallbackBody,

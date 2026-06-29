@@ -7,7 +7,7 @@ public sealed class SendMailRecipient : TenantEntity
 {
     private SendMailRecipient() { } // EF
 
-    public SendMailRecipient(Guid workspaceId, Guid sendMailId, string address, string? displayName, MailRecipientKind kind)
+    public SendMailRecipient(long workspaceId, long sendMailId, string address, string? displayName, MailRecipientKind kind)
     {
         AssignWorkspace(workspaceId);
         SendMailId = sendMailId;
@@ -16,7 +16,7 @@ public sealed class SendMailRecipient : TenantEntity
         Kind = kind;
     }
 
-    public Guid SendMailId { get; private set; }
+    public long SendMailId { get; private set; }
     public string Address { get; private set; } = default!;
     public string? DisplayName { get; private set; }
     public MailRecipientKind Kind { get; private set; }

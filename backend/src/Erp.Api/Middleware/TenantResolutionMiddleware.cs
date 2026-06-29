@@ -16,7 +16,7 @@ public sealed class TenantResolutionMiddleware(RequestDelegate next)
         {
             if (currentUser.IsPlatformAdmin)
             {
-                tenantContext.SetScope(currentUser.WorkspaceId ?? Guid.Empty, currentUser.ClusterIds, isPlatformAdmin: true);
+                tenantContext.SetScope(currentUser.WorkspaceId, currentUser.ClusterIds, isPlatformAdmin: true);
             }
             else if (currentUser.WorkspaceId is { } workspaceId)
             {

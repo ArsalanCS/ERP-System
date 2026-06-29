@@ -18,7 +18,7 @@ public sealed class WorkspaceProvisioner(ErpDbContext context, ITenantContext te
     public async Task<WorkspaceProvisionResult> ProvisionAsync(
         WorkspaceProvisionRequest request, CancellationToken cancellationToken = default)
     {
-        using (tenant.BeginScope(Guid.Empty, [], isPlatformAdmin: true))
+        using (tenant.BeginScope(null, [], isPlatformAdmin: true))
         {
             var workspace = new Workspace(
                 request.WorkspaceName, request.Slug, request.DefaultLanguage, request.TimeZone, request.BaseCurrency);

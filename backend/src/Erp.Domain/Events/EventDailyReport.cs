@@ -13,8 +13,8 @@ public sealed class EventDailyReport : TenantEntity
     private EventDailyReport() { } // EF
 
     public EventDailyReport(
-        Guid workspaceId, Guid eventId, Guid? userId, DateOnly reportDate, string description,
-        decimal? estimatedTime, decimal? actualTime, decimal? remainingTime, Guid? statusId)
+        long workspaceId, long eventId, long? userId, DateOnly reportDate, string description,
+        decimal? estimatedTime, decimal? actualTime, decimal? remainingTime, long? statusId)
     {
         AssignWorkspace(workspaceId);
         EventId = eventId;
@@ -27,19 +27,19 @@ public sealed class EventDailyReport : TenantEntity
         StatusId = statusId;
     }
 
-    public Guid EventId { get; private set; }
+    public long EventId { get; private set; }
     /// <summary>The user who wrote the report.</summary>
-    public Guid? UserId { get; private set; }
+    public long? UserId { get; private set; }
     public DateOnly ReportDate { get; private set; }
     public string Description { get; private set; } = default!;
     public decimal? EstimatedTime { get; private set; }
     public decimal? ActualTime { get; private set; }
     public decimal? RemainingTime { get; private set; }
     /// <summary>Status selected at report time (a Status under TASK_STATUS), or null.</summary>
-    public Guid? StatusId { get; private set; }
+    public long? StatusId { get; private set; }
 
     public void Update(DateOnly reportDate, string description, decimal? estimatedTime,
-        decimal? actualTime, decimal? remainingTime, Guid? statusId)
+        decimal? actualTime, decimal? remainingTime, long? statusId)
     {
         ReportDate = reportDate;
         Description = description.Trim();

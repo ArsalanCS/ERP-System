@@ -11,7 +11,7 @@ public sealed class UserPermission : TenantEntity
 {
     private UserPermission() { } // EF
 
-    public UserPermission(Guid workspaceId, Guid userId, Guid permissionId, PermissionEffect effect, DataScope scope = DataScope.Own)
+    public UserPermission(long workspaceId, long userId, long permissionId, PermissionEffect effect, DataScope scope = DataScope.Own)
     {
         AssignWorkspace(workspaceId);
         UserId = userId;
@@ -20,8 +20,8 @@ public sealed class UserPermission : TenantEntity
         Scope = scope;
     }
 
-    public Guid UserId { get; private set; }
-    public Guid PermissionId { get; private set; }
+    public long UserId { get; private set; }
+    public long PermissionId { get; private set; }
     public PermissionEffect Effect { get; private set; }
     public DataScope Scope { get; private set; }
 

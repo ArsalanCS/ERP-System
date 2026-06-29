@@ -13,7 +13,7 @@ namespace Erp.Infrastructure.Authorization;
 /// </summary>
 public sealed class PermissionResolver(ErpDbContext context) : IPermissionResolver
 {
-    public async Task<EffectivePermissions> ResolveAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<EffectivePermissions> ResolveAsync(long userId, CancellationToken cancellationToken = default)
     {
         var roleIds = await context.UserRoles
             .Where(ur => ur.UserId == userId)

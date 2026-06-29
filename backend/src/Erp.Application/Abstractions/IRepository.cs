@@ -10,12 +10,12 @@ namespace Erp.Application.Abstractions;
 /// Hand-written, feature-specific repositories remain only for special queries.
 /// </summary>
 public interface IRepository<TEntity>
-    where TEntity : Entity
+    where TEntity : BaseEntity
 {
     /// <summary>Queryable root; global query filters (tenant + soft-delete) already applied.</summary>
     IQueryable<TEntity> Query();
 
-    Task<TEntity?> GetByIdAsync(Guid id, CancellationToken ct = default);
+    Task<TEntity?> GetByIdAsync(long id, CancellationToken ct = default);
 
     void Add(TEntity entity);
 

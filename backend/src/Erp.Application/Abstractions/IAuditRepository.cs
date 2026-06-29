@@ -5,7 +5,7 @@ namespace Erp.Application.Abstractions;
 public sealed record AuditQuery(
     DateTimeOffset? From,
     DateTimeOffset? To,
-    Guid? ActorUserId,
+    long? ActorUserId,
     string? Action,
     string? Module,
     AuditResult? Result,

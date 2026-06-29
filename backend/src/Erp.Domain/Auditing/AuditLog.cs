@@ -8,12 +8,12 @@ namespace Erp.Domain.Auditing;
 /// Tenant-owned (workspace_id) but never soft-deleted. Secrets must never be
 /// written here — callers pass already-safe old/new value JSON.
 /// </summary>
-public sealed class AuditLog : Entity, ITenantOwned
+public sealed class AuditLog : BaseEntity, ITenantOwned
 {
     private AuditLog() { } // EF
 
     public AuditLog(
-        Guid workspaceId,
+        long workspaceId,
         string action,
         string module,
         string resourceType,
@@ -21,10 +21,10 @@ public sealed class AuditLog : Entity, ITenantOwned
         AuditSource source,
         DateTimeOffset occurredAt,
         string correlationId,
-        Guid? actorUserId = null,
+        long? actorUserId = null,
         string? actorDisplayName = null,
-        Guid? organizationId = null,
-        Guid? clusterId = null,
+        long? organizationId = null,
+        long? clusterId = null,
         string? resourceId = null,
         string? oldValues = null,
         string? newValues = null,
@@ -52,14 +52,14 @@ public sealed class AuditLog : Entity, ITenantOwned
         Reason = reason;
     }
 
-    public Guid WorkspaceId { get; private set; }
-    public Guid? OrganizationId { get; private set; }
-    public Guid? ClusterId { get; private set; }
+    public long WorkspaceId { get; private set; }
+    public long? OrganizationId { get; private set; }
+    public long? ClusterId { get; private set; }
 
     public DateTimeOffset OccurredAt { get; private set; }
     public string CorrelationId { get; private set; } = null!;
 
-    public Guid? ActorUserId { get; private set; }
+    public long? ActorUserId { get; private set; }
     public string? ActorDisplayName { get; private set; }
 
     public string Module { get; private set; } = null!;

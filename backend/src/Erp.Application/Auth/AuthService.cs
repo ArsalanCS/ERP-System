@@ -137,7 +137,7 @@ public sealed class AuthService(
             return AuthErrors.InvalidRefreshToken();
         }
 
-        if (!existing.IsActive(now))
+        if (!existing.IsUsable(now))
         {
             // Re-use of an already-rotated token = theft. Revoke the whole chain.
             if (existing.RevokedAt is not null)
@@ -407,7 +407,7 @@ public sealed class AuthService(
     }
 
     private async Task<(AuthTokens Tokens, RefreshToken RefreshToken)> IssueTokensAsync(
-        Guid workspaceId, User user, string? ip, DateTimeOffset now, CancellationToken cancellationToken)
+        long workspaceId, User user, string? ip, DateTimeOffset now, CancellationToken cancellationToken)
     {
         // Resolve effective actions (deny-wins applied) for the access-token claims.
         var permissions = await permissionResolver.ResolveAsync(user.Id, cancellationToken);
@@ -430,14 +430,14 @@ public sealed class AuthService(
         return (tokens, refreshToken);
     }
 
-    private static string ComposeToken(Guid workspaceId, string secret) => $"{workspaceId:N}.{secret}";
+    private static string ComposeToken(long workspaceId, string secret) => $"{workspaceId}.{secret}";
 
-    private static bool TryGetWorkspace(string token, out Guid workspaceId)
+    private static bool TryGetWorkspace(string token, out long workspaceId)
     {
-        workspaceId = Guid.Empty;
+        workspaceId = 0;
         if (string.IsNullOrWhiteSpace(token)) return false;
         var dot = token.IndexOf('.');
         if (dot <= 0) return false;
-        return Guid.TryParseExact(token[..dot], "N", out workspaceId);
+        return long.TryParse(token[..dot], out workspaceId);
     }
 }

@@ -38,8 +38,8 @@ public sealed class AccountController(
     public async Task<IActionResult> Sessions(CancellationToken ct)
         => FromResult(await account.ListSessionsAsync(ct), Ok);
 
-    [HttpDelete("sessions/{id:guid}")]
-    public async Task<IActionResult> RevokeSession(Guid id, CancellationToken ct)
+    [HttpDelete("sessions/{id:long}")]
+    public async Task<IActionResult> RevokeSession(long id, CancellationToken ct)
         => FromResult(await account.RevokeSessionAsync(id, ct), NoContent);
 
     // ---- Two-factor (TOTP authenticator app, Identity spec §7) -------------

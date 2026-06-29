@@ -12,11 +12,11 @@ public sealed class Event : TenantEntity
 {
     private Event() { } // EF
 
-    public Event(Guid workspaceId, Guid eventTypeId)
+    public Event(long workspaceId, long eventTypeId)
     {
         AssignWorkspace(workspaceId);
         EventTypeId = eventTypeId;
     }
 
-    public Guid EventTypeId { get; private set; }
+    public long EventTypeId { get; private set; }
 }

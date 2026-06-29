@@ -12,7 +12,7 @@ public sealed class StructureNode : TenantEntity
 {
     private StructureNode() { } // EF
 
-    public StructureNode(Guid workspaceId, Guid? parentId, StructureNodeType nodeType, string name, string code)
+    public StructureNode(long workspaceId, long? parentId, StructureNodeType nodeType, string name, string code)
     {
         AssignWorkspace(workspaceId);
         ParentId = parentId;
@@ -23,7 +23,7 @@ public sealed class StructureNode : TenantEntity
     }
 
     /// <summary>Parent node id; null only for root (Organization) nodes.</summary>
-    public Guid? ParentId { get; private set; }
+    public long? ParentId { get; private set; }
 
     public StructureNodeType NodeType { get; private set; }
     public string Name { get; private set; } = null!;
@@ -31,14 +31,14 @@ public sealed class StructureNode : TenantEntity
     public string? Description { get; private set; }
 
     /// <summary>The user who manages/leads this node (head, manager, lead, …).</summary>
-    public Guid? ManagerId { get; private set; }
+    public long? ManagerId { get; private set; }
 
     /// <summary>Ordering hint among siblings.</summary>
     public int SortOrder { get; private set; }
 
     public StructureStatus Status { get; private set; }
 
-    public void Update(string name, string? description, Guid? managerId, int sortOrder)
+    public void Update(string name, string? description, long? managerId, int sortOrder)
     {
         Name = name;
         Description = description;
@@ -47,9 +47,9 @@ public sealed class StructureNode : TenantEntity
     }
 
     /// <summary>Re-parents the node (move within the tree). Caller guards against cycles.</summary>
-    public void MoveTo(Guid? parentId) => ParentId = parentId;
+    public void MoveTo(long? parentId) => ParentId = parentId;
 
-    public void Archive(Guid? by, DateTimeOffset when)
+    public void Archive(long? by, DateTimeOffset when)
     {
         Status = StructureStatus.Archived;
         SoftDelete(by, when);

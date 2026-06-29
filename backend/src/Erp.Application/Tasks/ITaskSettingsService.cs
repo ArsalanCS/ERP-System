@@ -10,10 +10,10 @@ namespace Erp.Application.Tasks;
 public interface ITaskSettingsService
 {
     Task<Result<IReadOnlyList<StatusDto>>> ListAsync(string statusTypeCode, CancellationToken ct = default);
-    Task<Result<Guid>> CreateStatusAsync(CreateStatusRequest request, CancellationToken ct = default);
-    Task<Result> UpdateStatusAsync(Guid id, UpdateStatusRequest request, CancellationToken ct = default);
+    Task<Result<long>> CreateStatusAsync(CreateStatusRequest request, CancellationToken ct = default);
+    Task<Result> UpdateStatusAsync(long id, UpdateStatusRequest request, CancellationToken ct = default);
     Task<Result> ReorderAsync(ReorderStatusesRequest request, CancellationToken ct = default);
-    Task<Result> DeleteStatusAsync(Guid id, CancellationToken ct = default);
+    Task<Result> DeleteStatusAsync(long id, CancellationToken ct = default);
 
     Task<Result<TaskSettingsDto>> GetSettingsAsync(CancellationToken ct = default);
     Task<Result> UpdateSettingsAsync(UpdateTaskSettingsRequest request, CancellationToken ct = default);

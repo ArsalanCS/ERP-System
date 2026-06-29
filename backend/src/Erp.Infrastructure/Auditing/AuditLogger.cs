@@ -20,7 +20,7 @@ public sealed class AuditLogger(
 {
     public Task LogAsync(AuditEntry entry, CancellationToken cancellationToken = default)
     {
-        var workspaceId = entry.WorkspaceId ?? tenant.WorkspaceId ?? currentUser.WorkspaceId ?? Guid.Empty;
+        var workspaceId = entry.WorkspaceId ?? tenant.WorkspaceId ?? currentUser.WorkspaceId ?? 0;
 
         var log = new AuditLog(
             workspaceId: workspaceId,

@@ -9,34 +9,34 @@ namespace Erp.Infrastructure.Tenancy;
 /// </summary>
 public sealed class TenantContext : ITenantContext
 {
-    private static readonly IReadOnlySet<Guid> Empty = new HashSet<Guid>();
+    private static readonly IReadOnlySet<long> Empty = new HashSet<long>();
 
-    public Guid? WorkspaceId { get; private set; }
-    public IReadOnlySet<Guid> ClusterIds { get; private set; } = Empty;
+    public long? WorkspaceId { get; private set; }
+    public IReadOnlySet<long> ClusterIds { get; private set; } = Empty;
     public bool IsPlatformAdmin { get; private set; }
 
     public bool HasScope => WorkspaceId.HasValue || IsPlatformAdmin;
 
-    public void SetScope(Guid workspaceId, IEnumerable<Guid> clusterIds, bool isPlatformAdmin = false)
+    public void SetScope(long? workspaceId, IEnumerable<long> clusterIds, bool isPlatformAdmin = false)
     {
         WorkspaceId = workspaceId;
-        ClusterIds = clusterIds as IReadOnlySet<Guid> ?? new HashSet<Guid>(clusterIds);
+        ClusterIds = clusterIds as IReadOnlySet<long> ?? new HashSet<long>(clusterIds);
         IsPlatformAdmin = isPlatformAdmin;
     }
 
-    public IDisposable BeginScope(Guid workspaceId, IEnumerable<Guid>? clusterIds = null, bool isPlatformAdmin = false)
+    public IDisposable BeginScope(long? workspaceId, IEnumerable<long>? clusterIds = null, bool isPlatformAdmin = false)
     {
         var restore = new ScopeRestore(this, WorkspaceId, ClusterIds, IsPlatformAdmin);
         WorkspaceId = workspaceId;
-        ClusterIds = clusterIds as IReadOnlySet<Guid> ?? new HashSet<Guid>(clusterIds ?? []);
+        ClusterIds = clusterIds as IReadOnlySet<long> ?? new HashSet<long>(clusterIds ?? []);
         IsPlatformAdmin = isPlatformAdmin;
         return restore;
     }
 
     private sealed class ScopeRestore(
         TenantContext owner,
-        Guid? workspaceId,
-        IReadOnlySet<Guid> clusterIds,
+        long? workspaceId,
+        IReadOnlySet<long> clusterIds,
         bool isPlatformAdmin) : IDisposable
     {
         public void Dispose()

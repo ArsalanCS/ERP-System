@@ -21,19 +21,19 @@ public sealed class MailController(IMailService mail) : ApiControllerBase
     public async Task<IActionResult> Outbox([FromQuery] OutboxQuery query, CancellationToken ct)
         => FromResult(await mail.ListOutboxAsync(query, ct), Ok);
 
-    [HttpGet("outbox/{id:guid}")]
+    [HttpGet("outbox/{id:long}")]
     [RequirePermission(PermissionCatalog.MailView)]
-    public async Task<IActionResult> Get(Guid id, CancellationToken ct)
+    public async Task<IActionResult> Get(long id, CancellationToken ct)
         => FromResult(await mail.GetAsync(id, ct), Ok);
 
-    [HttpPost("outbox/{id:guid}/retry")]
+    [HttpPost("outbox/{id:long}/retry")]
     [RequirePermission(PermissionCatalog.MailManage)]
-    public async Task<IActionResult> Retry(Guid id, CancellationToken ct)
+    public async Task<IActionResult> Retry(long id, CancellationToken ct)
         => FromResult(await mail.RetryAsync(id, ct), NoContent);
 
-    [HttpPost("outbox/{id:guid}/cancel")]
+    [HttpPost("outbox/{id:long}/cancel")]
     [RequirePermission(PermissionCatalog.MailManage)]
-    public async Task<IActionResult> Cancel(Guid id, CancellationToken ct)
+    public async Task<IActionResult> Cancel(long id, CancellationToken ct)
         => FromResult(await mail.CancelAsync(id, ct), NoContent);
 
     [HttpGet("templates")]
@@ -41,8 +41,8 @@ public sealed class MailController(IMailService mail) : ApiControllerBase
     public async Task<IActionResult> Templates(CancellationToken ct)
         => FromResult(await mail.ListTemplatesAsync(ct), Ok);
 
-    [HttpPut("templates/{id:guid}")]
+    [HttpPut("templates/{id:long}")]
     [RequirePermission(PermissionCatalog.MailManage)]
-    public async Task<IActionResult> UpdateTemplate(Guid id, [FromBody] UpdateMailTemplateRequest request, CancellationToken ct)
+    public async Task<IActionResult> UpdateTemplate(long id, [FromBody] UpdateMailTemplateRequest request, CancellationToken ct)
         => FromResult(await mail.UpdateTemplateAsync(id, request, ct), NoContent);
 }

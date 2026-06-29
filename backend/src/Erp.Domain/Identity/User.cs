@@ -12,7 +12,7 @@ public sealed class User : TenantEntity
 {
     private User() { } // EF
 
-    public User(Guid workspaceId, string email, string firstName, string lastName)
+    public User(long workspaceId, string email, string firstName, string lastName)
     {
         AssignWorkspace(workspaceId);
         SetEmail(email);
@@ -134,7 +134,7 @@ public sealed class User : TenantEntity
         AccessFailedCount = 0;
     }
 
-    public void Archive(Guid? by, DateTimeOffset when)
+    public void Archive(long? by, DateTimeOffset when)
     {
         Status = UserStatus.Archived;
         RotateSecurityStamp();

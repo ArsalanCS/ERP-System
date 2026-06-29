@@ -11,7 +11,7 @@ public sealed class EventAsset : TenantEntity
 {
     private EventAsset() { } // EF
 
-    public EventAsset(Guid workspaceId, Guid eventId, Guid assetId, string relationType, string? description)
+    public EventAsset(long workspaceId, long eventId, long assetId, string relationType, string? description)
     {
         AssignWorkspace(workspaceId);
         EventId = eventId;
@@ -20,8 +20,8 @@ public sealed class EventAsset : TenantEntity
         Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
     }
 
-    public Guid EventId { get; private set; }
-    public Guid AssetId { get; private set; }
+    public long EventId { get; private set; }
+    public long AssetId { get; private set; }
     public string RelationType { get; private set; } = default!;
     public string? Description { get; private set; }
 }

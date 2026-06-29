@@ -11,7 +11,7 @@ public sealed class Note : TenantEntity
 {
     private Note() { } // EF
 
-    public Note(Guid workspaceId, Guid assetId, string body, bool isPinned, bool isInternal)
+    public Note(long workspaceId, long assetId, string body, bool isPinned, bool isInternal)
     {
         AssignWorkspace(workspaceId);
         AssetId = assetId;
@@ -20,7 +20,7 @@ public sealed class Note : TenantEntity
         IsInternal = isInternal;
     }
 
-    public Guid AssetId { get; private set; }
+    public long AssetId { get; private set; }
     public string Body { get; private set; } = default!;
     public bool IsPinned { get; private set; }
     public bool IsInternal { get; private set; }

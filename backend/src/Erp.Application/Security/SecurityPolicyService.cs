@@ -62,7 +62,7 @@ public sealed class SecurityPolicyService(
         return Result.Success();
     }
 
-    private async Task<WorkspaceSecurityPolicy> GetOrCreateAsync(Guid workspaceId, CancellationToken ct)
+    private async Task<WorkspaceSecurityPolicy> GetOrCreateAsync(long workspaceId, CancellationToken ct)
     {
         var policy = await policies.GetForWorkspaceAsync(workspaceId, ct);
         if (policy is null)

@@ -24,9 +24,9 @@ public sealed class UsersController(
     public async Task<IActionResult> List([FromQuery] UserListQuery query, CancellationToken ct)
         => FromResult(await users.ListAsync(query, ct), Ok);
 
-    [HttpGet("{id:guid}")]
+    [HttpGet("{id:long}")]
     [RequirePermission(PermissionCatalog.UserView)]
-    public async Task<IActionResult> Get(Guid id, CancellationToken ct)
+    public async Task<IActionResult> Get(long id, CancellationToken ct)
         => FromResult(await users.GetAsync(id, ct), Ok);
 
     [HttpPost]
@@ -38,29 +38,29 @@ public sealed class UsersController(
         return FromResult(result, r => CreatedAtAction(nameof(Get), new { id = r.UserId }, r));
     }
 
-    [HttpPut("{id:guid}")]
+    [HttpPut("{id:long}")]
     [RequirePermission(PermissionCatalog.UserManage)]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserRequest request, CancellationToken ct)
+    public async Task<IActionResult> Update(long id, [FromBody] UpdateUserRequest request, CancellationToken ct)
     {
         if (await ValidateAsync(updateValidator, request, ct) is { } invalid) return invalid;
         return FromResult(await users.UpdateAsync(id, request, ct), NoContent);
     }
 
-    [HttpPost("{id:guid}/suspend")]
+    [HttpPost("{id:long}/suspend")]
     [RequirePermission(PermissionCatalog.UserManage)]
-    public async Task<IActionResult> Suspend(Guid id, [FromBody] SuspendUserRequest request, CancellationToken ct)
+    public async Task<IActionResult> Suspend(long id, [FromBody] SuspendUserRequest request, CancellationToken ct)
     {
         if (await ValidateAsync(suspendValidator, request, ct) is { } invalid) return invalid;
         return FromResult(await users.SuspendAsync(id, request, ct), NoContent);
     }
 
-    [HttpPost("{id:guid}/reactivate")]
+    [HttpPost("{id:long}/reactivate")]
     [RequirePermission(PermissionCatalog.UserManage)]
-    public async Task<IActionResult> Reactivate(Guid id, CancellationToken ct)
+    public async Task<IActionResult> Reactivate(long id, CancellationToken ct)
         => FromResult(await users.ReactivateAsync(id, ct), NoContent);
 
-    [HttpDelete("{id:guid}")]
+    [HttpDelete("{id:long}")]
     [RequirePermission(PermissionCatalog.UserManage)]
-    public async Task<IActionResult> Archive(Guid id, CancellationToken ct)
+    public async Task<IActionResult> Archive(long id, CancellationToken ct)
         => FromResult(await users.ArchiveAsync(id, ct), NoContent);
 }

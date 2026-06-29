@@ -28,7 +28,7 @@ public sealed class EventActivity : TenantEntity
 {
     private EventActivity() { } // EF
 
-    public EventActivity(Guid workspaceId, Guid eventId, EventActivityKind kind, string message, Guid? actorId, DateTimeOffset occurredAt)
+    public EventActivity(long workspaceId, long eventId, EventActivityKind kind, string message, long? actorId, DateTimeOffset occurredAt)
     {
         AssignWorkspace(workspaceId);
         EventId = eventId;
@@ -38,15 +38,15 @@ public sealed class EventActivity : TenantEntity
         OccurredAt = occurredAt;
     }
 
-    public Guid EventId { get; private set; }
+    public long EventId { get; private set; }
     public EventActivityKind Kind { get; private set; }
     public string Message { get; private set; } = default!;
-    public Guid? ActorId { get; private set; }
+    public long? ActorId { get; private set; }
     public DateTimeOffset OccurredAt { get; private set; }
-    public Guid? FromStatusId { get; private set; }
-    public Guid? ToStatusId { get; private set; }
+    public long? FromStatusId { get; private set; }
+    public long? ToStatusId { get; private set; }
 
-    public EventActivity WithStatusChange(Guid? fromStatusId, Guid? toStatusId)
+    public EventActivity WithStatusChange(long? fromStatusId, long? toStatusId)
     {
         FromStatusId = fromStatusId;
         ToStatusId = toStatusId;

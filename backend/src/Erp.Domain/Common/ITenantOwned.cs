@@ -7,5 +7,5 @@ namespace Erp.Domain.Common;
 /// </summary>
 public interface ITenantOwned
 {
-    Guid WorkspaceId { get; }
+    long WorkspaceId { get; }
 }

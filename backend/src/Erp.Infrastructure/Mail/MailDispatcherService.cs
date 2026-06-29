@@ -39,7 +39,7 @@ public sealed class MailDispatcherService(
             {
                 using var scope = scopeFactory.CreateScope();
                 var tenant = scope.ServiceProvider.GetRequiredService<ITenantContext>();
-                tenant.SetScope(Guid.Empty, [], isPlatformAdmin: true);
+                tenant.SetScope(null, [], isPlatformAdmin: true);
                 _ = scope.ServiceProvider.GetRequiredService<ErpDbContext>(); // ensure the scoped context shares the tenant scope
                 var dispatcher = scope.ServiceProvider.GetRequiredService<IMailDispatcher>();
                 await dispatcher.DispatchDueAsync(BatchSize, stoppingToken);

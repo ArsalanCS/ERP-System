@@ -11,7 +11,7 @@ public sealed class TaskSettings : TenantEntity
 {
     private TaskSettings() { } // EF
 
-    public TaskSettings(Guid workspaceId)
+    public TaskSettings(long workspaceId)
     {
         AssignWorkspace(workspaceId);
         AllowStatusChangeFromReport = true;

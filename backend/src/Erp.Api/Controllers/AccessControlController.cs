@@ -23,9 +23,9 @@ public sealed class AccessControlController(
     [RequirePermission(PermissionCatalog.RoleView)]
     public async Task<IActionResult> ListRoles(CancellationToken ct) => Ok(await roles.ListRolesAsync(ct));
 
-    [HttpGet("roles/{id:guid}")]
+    [HttpGet("roles/{id:long}")]
     [RequirePermission(PermissionCatalog.RoleView)]
-    public async Task<IActionResult> GetRole(Guid id, CancellationToken ct)
+    public async Task<IActionResult> GetRole(long id, CancellationToken ct)
         => FromResult(await roles.GetRoleAsync(id, ct), Ok);
 
     [HttpPost("roles")]
@@ -36,31 +36,31 @@ public sealed class AccessControlController(
         return FromResult(await roles.CreateRoleAsync(request, ct), id => CreatedAtAction(nameof(GetRole), new { id }, new { id }));
     }
 
-    [HttpPut("roles/{id:guid}")]
+    [HttpPut("roles/{id:long}")]
     [RequirePermission(PermissionCatalog.RoleManage)]
-    public async Task<IActionResult> UpdateRole(Guid id, [FromBody] UpdateRoleRequest request, CancellationToken ct)
+    public async Task<IActionResult> UpdateRole(long id, [FromBody] UpdateRoleRequest request, CancellationToken ct)
     {
         if (await ValidateAsync(updateValidator, request, ct) is { } invalid) return invalid;
         return FromResult(await roles.UpdateRoleAsync(id, request, ct), NoContent);
     }
 
-    [HttpPut("roles/{id:guid}/permissions")]
+    [HttpPut("roles/{id:long}/permissions")]
     [RequirePermission(PermissionCatalog.RoleManage)]
-    public async Task<IActionResult> SetPermissions(Guid id, [FromBody] SetRolePermissionsRequest request, CancellationToken ct)
+    public async Task<IActionResult> SetPermissions(long id, [FromBody] SetRolePermissionsRequest request, CancellationToken ct)
         => FromResult(await roles.SetPermissionsAsync(id, request, ct), NoContent);
 
-    [HttpDelete("roles/{id:guid}")]
+    [HttpDelete("roles/{id:long}")]
     [RequirePermission(PermissionCatalog.RoleManage)]
-    public async Task<IActionResult> DeleteRole(Guid id, CancellationToken ct)
+    public async Task<IActionResult> DeleteRole(long id, CancellationToken ct)
         => FromResult(await roles.DeleteRoleAsync(id, ct), NoContent);
 
-    [HttpGet("users/{userId:guid}/overrides")]
+    [HttpGet("users/{userId:long}/overrides")]
     [RequirePermission(PermissionCatalog.RoleView)]
-    public async Task<IActionResult> GetUserOverrides(Guid userId, CancellationToken ct)
+    public async Task<IActionResult> GetUserOverrides(long userId, CancellationToken ct)
         => FromResult(await roles.GetUserOverridesAsync(userId, ct), Ok);
 
-    [HttpPut("users/{userId:guid}/overrides")]
+    [HttpPut("users/{userId:long}/overrides")]
     [RequirePermission(PermissionCatalog.RoleManage)]
-    public async Task<IActionResult> SetUserOverrides(Guid userId, [FromBody] SetUserOverridesRequest request, CancellationToken ct)
+    public async Task<IActionResult> SetUserOverrides(long userId, [FromBody] SetUserOverridesRequest request, CancellationToken ct)
         => FromResult(await roles.SetUserOverridesAsync(userId, request, ct), NoContent);
 }

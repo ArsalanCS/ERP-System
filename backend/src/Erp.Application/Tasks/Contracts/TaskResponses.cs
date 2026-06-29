@@ -4,17 +4,17 @@ namespace Erp.Application.Tasks.Contracts;
 
 /// <summary>Read models for the UI. The task is identified by its <c>EventId</c>.</summary>
 public sealed record TaskListItemDto(
-    Guid EventId,
+    long EventId,
     string ReferenceNo,
     string Title,
-    Guid? StatusId,
+    long? StatusId,
     string? StatusName,
     string? StatusColor,
     bool StatusIsClosed,
-    Guid? PriorityStatusId,
+    long? PriorityStatusId,
     string? PriorityName,
     string? PriorityColor,
-    Guid? AssigneeId,
+    long? AssigneeId,
     string? AssigneeName,
     DateTimeOffset? DueAt,
     bool IsOverdue,
@@ -22,22 +22,22 @@ public sealed record TaskListItemDto(
     DateTimeOffset CreatedAt);
 
 public sealed record TaskDetailsDto(
-    Guid EventId,
+    long EventId,
     string ReferenceNo,
     string Title,
     string? Description,
-    Guid? StatusId,
+    long? StatusId,
     string? StatusName,
     string? StatusColor,
     bool StatusIsClosed,
-    Guid? PriorityStatusId,
+    long? PriorityStatusId,
     string? PriorityName,
     string? PriorityColor,
-    Guid? AssigneeId,
+    long? AssigneeId,
     string? AssigneeName,
-    Guid? ReporterId,
+    long? ReporterId,
     string? ReporterName,
-    Guid? ParentEventId,
+    long? ParentEventId,
     DateTimeOffset? StartAt,
     DateTimeOffset? DueAt,
     decimal? EstimatedTime,
@@ -48,56 +48,56 @@ public sealed record TaskDetailsDto(
     DateTimeOffset? UpdatedAt);
 
 public sealed record TaskActivityDto(
-    Guid Id,
+    long Id,
     EventActivityKind Kind,
     string Message,
-    Guid? ActorId,
+    long? ActorId,
     string? ActorName,
     DateTimeOffset OccurredAt);
 
 public sealed record TaskNoteDto(
-    Guid Id,
+    long Id,
     string Body,
     bool IsPinned,
     bool IsInternal,
-    Guid? AuthorId,
+    long? AuthorId,
     string? AuthorName,
     DateTimeOffset CreatedAt);
 
 public sealed record TaskDocumentDto(
-    Guid Id,
+    long Id,
     string FileName,
     string FilePath,
     string? MimeType,
-    Guid? UploadedById,
+    long? UploadedById,
     string? UploadedByName,
     DateTimeOffset CreatedAt);
 
 public sealed record TaskDependencyDto(
-    Guid Id,
-    Guid DependsOnEventId,
+    long Id,
+    long DependsOnEventId,
     string DependsOnReferenceNo,
     string DependsOnTitle,
     bool IsBlocking);
 
 public sealed record TaskDailyReportDto(
-    Guid Id,
+    long Id,
     DateOnly ReportDate,
     string Description,
     decimal? EstimatedTime,
     decimal? ActualTime,
     decimal? RemainingTime,
-    Guid? StatusId,
+    long? StatusId,
     string? StatusName,
     string? StatusColor,
-    Guid? AuthorId,
+    long? AuthorId,
     string? AuthorName,
     DateTimeOffset CreatedAt);
 
 /// <summary>A daily-report row for the workspace-wide reports view (carries its task identity).</summary>
 public sealed record TaskDailyReportRowDto(
-    Guid Id,
-    Guid EventId,
+    long Id,
+    long EventId,
     string ReferenceNo,
     string TaskTitle,
     DateOnly ReportDate,
@@ -105,23 +105,23 @@ public sealed record TaskDailyReportRowDto(
     decimal? EstimatedTime,
     decimal? ActualTime,
     decimal? RemainingTime,
-    Guid? StatusId,
+    long? StatusId,
     string? StatusName,
     string? StatusColor,
-    Guid? AuthorId,
+    long? AuthorId,
     string? AuthorName,
     DateTimeOffset CreatedAt);
 
 public sealed record TaskAuditDto(
-    Guid Id,
+    long Id,
     string Action,
     DateTimeOffset CreatedAt,
-    Guid? ActorUserId,
+    long? ActorUserId,
     string? ActorName);
 
 /// <summary>A status value (for status/priority dropdowns and settings).</summary>
 public sealed record StatusDto(
-    Guid Id,
+    long Id,
     string Code,
     string Name,
     string? Color,

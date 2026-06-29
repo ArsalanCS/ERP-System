@@ -16,7 +16,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 // ---- Services ---------------------------------------------------------------
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(o =>
+{
+    // BigInt ids are serialized as strings to survive JS number precision (2^53).
+    o.JsonSerializerOptions.Converters.Add(new Erp.Api.Serialization.LongAsStringConverter());
+    o.JsonSerializerOptions.Converters.Add(new Erp.Api.Serialization.NullableLongAsStringConverter());
+});
 
 // Correlation + current-user context (request-scoped, read from HttpContext).
 builder.Services.AddHttpContextAccessor();
